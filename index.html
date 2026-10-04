@@ -188,6 +188,24 @@ const K=18;
 for(const k0 of kickers){ for(let j=0;j<K;j++){ const u=j/(K-1); const v = u<.85 ? Math.pow(u/.85,1.6) : (1-u)/.15; ht[(k0+j)%NS]+=2.5*v; } }
 if(whoops!==undefined){ for(let j=0;j<66;j++){ ht[(whoops+j)%NS]+=0.38*(1-Math.cos(2*Math.PI*j/6))/2; } }
 
+// spectator spots: start gate, jump landings, whoops, inside of the tightest corners
+const crowdSpots=[];
+function lateral(i){ const t=tan[i]; return [-t.z,t.x]; }
+function cornerSide(i){ const a=tan[(i-22+NS)%NS], b=tan[(i+22)%NS], [nx,nz]=lateral(i); return ((b.x-a.x)*nx+(b.z-a.z)*nz)>0?1:-1; }
+function addSpot(i,side,label){
+  i=((i%NS)+NS)%NS;
+  if(crowdSpots.some(c=>Math.min(Math.abs(c.i-i),NS-Math.abs(c.i-i))<35 && c.side===side)) return;
+  const [nx,nz]=lateral(i), off=HALF+5.2;
+  crowdSpots.push({i,side,label,cx:pts[i].x+nx*off*side,cz:pts[i].z+nz*off*side,ex:0,cool:0});
+}
+addSpot(14,1,'start'); addSpot(14,-1,'start');
+kickers.forEach((k,n)=>addSpot(k+K+30,n%2?1:-1,'jump'));
+if(whoops!==undefined) addSpot(whoops+33,1,'whoops');
+{ const used=crowdSpots.map(c=>c.i);
+  const corners=[...Array(NS).keys()].sort((a,b)=>curv[b]-curv[a]);
+  let n=0; for(const i of corners){ if(n>=3) break; if(used.every(j=>Math.min(Math.abs(i-j),NS-Math.abs(i-j))>70)){ addSpot(i,cornerSide(i),'corner'); used.push(i); n++; } } }
+function nearCrowd(x,z){ return crowdSpots.some(c=>(x-c.cx)**2+(z-c.cz)**2<11*11); }
+
 // spatial buckets of track samples
 const CELL=30, grid=new Map();
 const gk=(ix,iz)=>(ix+100)*1000+(iz+100);
@@ -285,6 +303,7 @@ const trees=[], TCELL=8, tgrid=new Map(), rgrid=new Map();
     const x=(R()-.5)*(SIZE-12), z=(R()-.5)*(SIZE-12);
     nearest(x,z); const d=nD;
     if(d<HALF+3.2) continue;
+    if(nearCrowd(x,z)) continue;
     if(d>45 && R()<0.45) continue;
     const s=0.75+R()*0.9;
     trees.push({x,z,y:heightAt(x,z),s,r:0.28*s+0.5,type:R()<.78?0:1});
@@ -373,6 +392,125 @@ const dabR=box(0.12,0.64,0.13,mats.suit,-0.34,0.5,0.22); dabR.rotation.z=-0.55; 
 const helm=new THREE.Mesh(new THREE.SphereGeometry(0.2,12,10),mats.helmet); helm.position.set(0,1.74,0.18); helm.castShadow=true; leanG.add(helm);
 box(0.26,0.09,0.12,mats.visor,0,1.74,0.33); box(0.24,0.04,0.18,mats.plate,0,1.86,0.32,-0.2);
 
+// ---------- spectators ----------
+const crowd=[];
+{
+  const mobile=matchMedia('(pointer:coarse)').matches, perSpot=mobile?4:7;
+  const G={
+    leg:new THREE.BoxGeometry(0.16,0.8,0.18).translate(0,0.4,0),
+    body:new THREE.BoxGeometry(0.46,0.62,0.27).translate(0,0.31,0),
+    head:new THREE.SphereGeometry(0.15,10,8),
+    cap:new THREE.CylinderGeometry(0.165,0.17,0.09,10),
+    brim:new THREE.BoxGeometry(0.2,0.025,0.14),
+    arm:new THREE.BoxGeometry(0.12,0.6,0.13).translate(0,-0.28,0),
+    pole:new THREE.CylinderGeometry(0.018,0.018,1.3,5).translate(0,-0.65,0),
+    flag:new THREE.PlaneGeometry(0.72,0.46).translate(0.36,0,0),
+    post:new THREE.CylinderGeometry(0.04,0.05,1.15,6).translate(0,0.575,0)
+  };
+  const mc={}; const M=c=>mc[c]||(mc[c]=new THREE.MeshLambertMaterial({color:c}));
+  const SHIRT=[0xe2552a,0x2f4f7a,0xf2c230,0xf3efe2,0x3d7a4a,0xb8324f,0x262626,0x5aa0c8,0xff8a1f];
+  const PANTS=[0x2b2f3a,0x4a3b2a,0x1e2a44,0x555a4a,0x6b6b6b];
+  const SKIN=[0xe8c4a0,0xd6a77a,0xb07a4f,0xf0d2b4];
+  const FLAG=[0xe2552a,0xf2c230,0x2f8f4a,0x2f4f7a,0xf3efe2];
+  const flagMats=FLAG.map(c=>new THREE.MeshLambertMaterial({color:c,side:THREE.DoubleSide}));
+  const pick=a=>a[Math.floor(R()*a.length)];
+  // striped tape texture
+  const tc=document.createElement('canvas'); tc.width=64; tc.height=8; { const g=tc.getContext('2d'); for(let i=0;i<8;i++){ g.fillStyle=i%2?'#f3efe2':'#d8342a'; g.fillRect(i*8,0,8,8);} }
+  const tapeTex=new THREE.CanvasTexture(tc); tapeTex.wrapS=THREE.RepeatWrapping;
+  const addBlock=(x,z,r,top)=>{ const k=(Math.floor(x/TCELL)+200)*1000+(Math.floor(z/TCELL)+200); if(!rgrid.has(k)) rgrid.set(k,[]); rgrid.get(k).push({x,z,s:0.8,r,top,small:false,big:false}); };
+
+  for(const spot of crowdSpots){
+    const [nx,nz]=lateral(spot.i), t=tan[spot.i], side=spot.side;
+    // tape fence along the road edge
+    const fenceOff=HALF+2.6, posts=[];
+    for(let j=-10;j<=10;j+=4){ const q=pts[(spot.i+j+NS)%NS], [qx,qz]=lateral((spot.i+j+NS)%NS);
+      const x=q.x+qx*fenceOff*side, z=q.z+qz*fenceOff*side, y=heightAt(x,z);
+      const post=new THREE.Mesh(G.post,M(0xd9d4c4)); post.position.set(x,y-0.05,z); scene.add(post); posts.push([x,y,z]); addBlock(x,z,0.3,y+1.15); }
+    for(let j=0;j<posts.length-1;j++){ const [ax,ay,az]=posts[j], [bx,by,bz]=posts[j+1]; const len=Math.hypot(bx-ax,bz-az);
+      const tex=tapeTex.clone(); tex.needsUpdate=true; tex.repeat.set(len*2,1);
+      const tape=new THREE.Mesh(new THREE.BoxGeometry(len,0.07,0.015),new THREE.MeshLambertMaterial({map:tex}));
+      tape.position.set((ax+bx)/2,(ay+by)/2+1.0,(az+bz)/2); tape.rotation.y=-Math.atan2(bz-az,bx-ax); scene.add(tape); }
+    // the people, in two loose rows behind the tape
+    spot.people=[];
+    for(let n=0;n<perSpot;n++){
+      const row=n%2, along=(n-(perSpot-1)/2)*1.25+(R()-.5)*0.4, depth=HALF+3.8+row*1.3+(R()-.5)*0.3;
+      const q=pts[spot.i], x=q.x+nx*depth*side+t.x*along, z=q.z+nz*depth*side+t.z*along, y=heightAt(x,z);
+      const root=new THREE.Group(), bob=new THREE.Group(); root.add(bob);
+      const sc=0.9+R()*0.2; root.scale.setScalar(sc);
+      const pants=M(pick(PANTS)), shirt=M(pick(SHIRT)), skin=M(pick(SKIN));
+      const lL=new THREE.Mesh(G.leg,pants); lL.position.x=0.11; const lR=new THREE.Mesh(G.leg,pants); lR.position.x=-0.11;
+      const body=new THREE.Mesh(G.body,shirt); body.position.y=0.8;
+      const head=new THREE.Mesh(G.head,skin); head.position.y=1.6;
+      bob.add(lL,lR,body,head);
+      if(R()<0.6){ const capM=M(pick(SHIRT)); const cap=new THREE.Mesh(G.cap,capM); cap.position.y=1.71; const brim=new THREE.Mesh(G.brim,capM); brim.position.set(0,1.68,0.13); bob.add(cap,brim); }
+      const armL=new THREE.Group(), armR=new THREE.Group();
+      armL.position.set(0.3,1.38,0); armR.position.set(-0.3,1.38,0);
+      armL.add(new THREE.Mesh(G.arm,shirt)); armR.add(new THREE.Mesh(G.arm,shirt));
+      bob.add(armL,armR);
+      const r=R(), type = r<0.3?'flag' : r<0.55?'wave' : r<0.8?'jump' : 'clap';
+      let flag=null; if(type==='flag'){ const pole=new THREE.Mesh(G.pole,M(0x3a2e22)); pole.position.y=-0.56; flag=new THREE.Mesh(G.flag,pick(flagMats)); flag.position.y=-1.1; pole.add(flag); armR.add(pole); }
+      root.position.set(x,y,z);
+      const faceRoad=Math.atan2(q.x-x,q.z-z);
+      root.rotation.y=faceRoad;
+      scene.add(root);
+      addBlock(x,z,0.5,y+1.8);
+      spot.people.push({root,bob,armL,armR,flag,type,ph:R()*6.28,phase:R()*6.28,tempo:0.8+R()*0.4,react:0.6+R()*1.2,ex:0,look:0,faceRoad,x,z});
+    }
+    crowd.push(spot);
+  }
+}
+let crowdT=0;
+function turnTo(cur,target,k){ return cur+wrapA(target-cur)*k; }
+function updateCrowd(dt){
+  crowdT+=dt;
+  const live=mode==='race'||mode==='count';
+  for(const c of crowd){
+    const d=Math.hypot(st.x-c.cx,st.z-c.cz);
+    let target = live ? (d<32 ? 1-(d/32)*0.45 : d<70 ? 0.15 : 0) : 0.08;
+    if(live && !st.ground && st.air>0.3 && d<45) target=1;
+    c.ex+=(target-c.ex)*Math.min(1,dt*(target>c.ex?4:0.8));
+    c.cool=Math.max(0,c.cool-dt);
+    if(live && c.ex>0.6 && c.cool<=0){ cheer(c.ex); c.cool=4; }
+    const watch=live && d<75;
+    for(const p of c.people){
+      // each person catches the mood at their own pace, so the crowd never moves in lockstep
+      p.ex+=(c.ex-p.ex)*Math.min(1,dt*p.react);
+      const e=p.ex;
+      const want = watch ? Math.atan2(st.x-p.x,st.z-p.z) : p.faceRoad;
+      p.root.rotation.y=turnTo(p.root.rotation.y,want,Math.min(1,dt*2.2));
+      // tempo in beats per second; the phase is integrated so speeding up never makes limbs jump
+      const hz = p.type==='flag' ? 0.45+0.6*e : p.type==='wave' ? 0.7+0.8*e : p.type==='clap' ? 1.1+0.9*e : 0.6+1.0*e;
+      p.phase+=dt*hz*p.tempo*Math.PI*2;
+      const ph=p.phase, idle=Math.sin(crowdT*0.6+p.ph);
+      let jump=0, aL=0.12+0.04*idle, aR=0.12-0.04*idle, fwdL=0, fwdR=0, twist=0, lean=idle*0.03;
+      if(p.type==='flag'){
+        // a wide sweeping arc overhead, slightly figure-eight, with the body turning into it
+        aR=2.25+Math.sin(ph)*(0.28+0.22*e);
+        fwdR=Math.sin(ph*2)*0.18*(0.4+e);
+        twist=Math.sin(ph)*0.1*(0.5+e);
+        aL=0.2+0.35*e;
+        jump=Math.max(0,Math.sin(ph*2))*0.04*e;
+        if(p.flag){ p.flag.rotation.y=-Math.cos(ph)*0.7 + Math.sin(crowdT*7+p.ph)*0.07; p.flag.rotation.x=Math.sin(crowdT*5.3+p.ph)*0.06; }
+      }else if(p.type==='wave'){
+        const up=0.35+0.65*Math.max(e,0.15);
+        aR=0.2+2.1*up+Math.sin(ph)*0.32*up; fwdR=0.15*up;
+        aL=0.12+0.25*e; jump=Math.max(0,Math.sin(ph))*0.05*e; twist=Math.sin(ph)*0.04;
+      }else if(p.type==='clap'){
+        const up=0.15+0.85*e, beat=Math.max(0,Math.sin(ph));
+        aL=aR=0.25+2.0*up - beat*0.35*up; fwdL=fwdR=0.25*up;
+        jump=beat*0.07*e;
+      }else{ // jumper: hops on the spot with fists up when the bike is near
+        const hop=Math.max(0,Math.sin(ph));
+        jump=hop*hop*0.26*e; aL=aR=0.18+2.4*e+hop*0.2*e; fwdL=fwdR=0.1*e;
+      }
+      p.bob.position.y=jump;
+      p.bob.rotation.y=twist; p.bob.rotation.z=lean;
+      p.armL.rotation.z=aL; p.armR.rotation.z=-aR;
+      p.armL.rotation.x=-fwdL; p.armR.rotation.x=-fwdR;
+    }
+  }
+}
+
 // dust particles
 const DN=420, dPos=new Float32Array(DN*3).fill(-999), dVel=new Float32Array(DN*3), dLife=new Float32Array(DN);
 let dHead=0;
@@ -444,7 +582,7 @@ addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; });
 $('startBtn').addEventListener('click',startRace);
 
 // ---------- engine sound ----------
-let ac=null, o1, o2, gainN, filt, scrG, soundOn=true;
+let ac=null, o1, o2, gainN, filt, scrG, crowdBuf=null, soundOn=true;
 function initSound(){
   if(ac) return; try{
     ac=new (window.AudioContext||window.webkitAudioContext)();
@@ -454,7 +592,16 @@ function initSound(){
     const nb=ac.createBuffer(1,ac.sampleRate,ac.sampleRate), nd=nb.getChannelData(0); for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1;
     const ns=ac.createBufferSource(); ns.buffer=nb; ns.loop=true; const bp=ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=700; bp.Q.value=0.8;
     scrG=ac.createGain(); scrG.gain.value=0; ns.connect(bp); bp.connect(scrG); scrG.connect(ac.destination); ns.start();
+    // crowd: noise with a slow wobble so it sounds like many voices
+    crowdBuf=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate); { const cd=crowdBuf.getChannelData(0); let w=0; for(let i=0;i<cd.length;i++){ w+=0.0006*(Math.random()-.5); cd[i]=(Math.random()*2-1)*(0.6+0.4*Math.sin(i/ac.sampleRate*Math.PI*2*(5+3*Math.sin(i/9000))))*(1+w); } }
   }catch(e){ ac=null; }
+}
+function cheer(v){
+  if(!ac||!crowdBuf||!soundOn) return;
+  const t=ac.currentTime, src=ac.createBufferSource(); src.buffer=crowdBuf;
+  const b1=ac.createBiquadFilter(); b1.type='bandpass'; b1.frequency.value=900+R()*300; b1.Q.value=0.7;
+  const g=ac.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.11*v,t+0.2); g.gain.exponentialRampToValueAtTime(0.0008,t+1.9);
+  src.connect(b1); b1.connect(g); g.connect(ac.destination); src.start(t); src.stop(t+2);
 }
 function toggleSound(){ soundOn=!soundOn; }
 function updateSound(rpm,gear,thr){
@@ -518,6 +665,7 @@ function frame(now){
   step(dt);
   updateCamera(dt);
   updateDust(dt);
+  updateCrowd(dt);
   if(msgT>0){ msgT-=dt; if(msgT<=0) $('msg').textContent=''; }
   if(airT>0){ airT-=dt; if(airT<=0) $('air').style.opacity=0; }
   // HUD
