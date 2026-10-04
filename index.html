@@ -1,3 +1,6 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DIRT FURY</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Extra+Condensed:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
@@ -15,6 +18,7 @@
   --f-jp:'Zen Kaku Gothic New','Hiragino Sans','Noto Sans JP',system-ui,sans-serif;
   color-scheme:dark;
 }
+[hidden]{display:none!important}
 html,body{height:100%;margin:0;overflow:hidden;background:#1b2414;color:var(--paper);font-family:var(--f-jp);
   -webkit-user-select:none;user-select:none;touch-action:none}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block}
@@ -26,12 +30,25 @@ html,body{height:100%;margin:0;overflow:hidden;background:#1b2414;color:var(--pa
 .plate .big{font-size:38px;font-weight:800;font-variant-numeric:tabular-nums}
 .chip{background:var(--glass);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:5px 10px;
   font-family:var(--f-num);font-size:18px;letter-spacing:.04em;font-variant-numeric:tabular-nums;color:var(--paper)}
+.lives i{display:inline-block;width:14px;height:14px;border-radius:50% 50% 40% 40%;background:var(--plate);margin-right:5px;vertical-align:-1px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.25)}
+.lives i.lost{background:rgba(243,239,226,.18);box-shadow:none}
+.lives.hit{animation:hit .6s}
+@keyframes hit{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@media (prefers-reduced-motion:reduce){.lives.hit{animation:none}}
+h1.over{color:#e2552a}
+h1.over span{font-family:var(--f-jp);font-weight:700;font-size:.3em;letter-spacing:.06em;color:var(--paper)}
 .chip b{color:var(--plate);font-weight:700;margin-right:6px;font-size:13px;letter-spacing:.14em}
 #tr{top:calc(14px + env(safe-area-inset-top,0px));right:16px}
 #map{width:150px;height:150px;border-radius:50%;background:var(--glass);border:2px solid rgba(242,194,48,.55);display:block}
 #br{right:20px;bottom:calc(18px + env(safe-area-inset-bottom,0px));text-align:right;font-family:var(--f-num);line-height:.85}
 #spd{font-size:96px;font-weight:800;font-variant-numeric:tabular-nums;text-shadow:0 4px 16px rgba(0,0,0,.5)}
 #unit{font-size:18px;letter-spacing:.2em;color:var(--plate);font-weight:700}
+#tach{width:190px;height:9px;margin:4px 0 6px auto;border-radius:5px;background:rgba(18,22,12,.6);border:1px solid rgba(243,239,226,.18);overflow:hidden}
+#tach i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--leaf) 0%,var(--plate) 70%,#e2552a 92%);border-radius:5px}
+#gear.shift{animation:gearPop .25s}
+@keyframes gearPop{0%{transform:scale(1.5)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){#gear.shift{animation:none}}
+@media (pointer:coarse){#tach{width:140px;margin:4px auto 6px}}
 #gear{display:inline-block;margin-left:10px;background:var(--plate);color:var(--plate-ink);border-radius:4px;padding:2px 7px;font-size:18px}
 #msg{left:0;right:0;top:34%;text-align:center;font-family:var(--f-num);font-weight:800;font-size:clamp(56px,14vw,140px);
   color:var(--paper);text-shadow:0 6px 24px rgba(0,0,0,.55);letter-spacing:.02em}
@@ -41,12 +58,12 @@ html,body{height:100%;margin:0;overflow:hidden;background:#1b2414;color:var(--pa
   color:var(--leaf);opacity:0;transition:opacity .2s}
 
 /* Title / result overlay */
-#ov{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:flex-start;
+#ov{position:fixed;inset:0;z-index:5;display:flex;align-items:flex-start;justify-content:flex-start;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;
   padding:24px 16px;padding-left:max(16px,6vw);background:linear-gradient(90deg,rgba(14,18,9,.88) 0%,rgba(14,18,9,.55) 48%,rgba(14,18,9,0) 80%)}
-.card{max-width:460px;display:flex;flex-direction:column;gap:18px}
+.card{max-width:460px;display:flex;flex-direction:column;gap:clamp(8px,2.2vh,18px);margin-block:auto}
 .eyebrow{font-family:var(--f-num);letter-spacing:.32em;font-size:14px;color:var(--plate);font-weight:700}
 h1{margin:0;font-weight:900;font-size:clamp(44px,8vw,76px);line-height:1;letter-spacing:-.01em;text-wrap:balance}
-h1.logo{font-family:var(--f-num);font-weight:800;font-style:italic;font-size:clamp(64px,12vw,112px);letter-spacing:.01em;line-height:.9;color:var(--paper);text-shadow:4px 4px 0 var(--mud)}
+h1.logo{font-family:var(--f-num);font-weight:800;font-style:italic;font-size:clamp(48px,min(12vw,13vh),112px);letter-spacing:.01em;line-height:.9;color:var(--paper);text-shadow:4px 4px 0 var(--mud)}
 h1.logo span{font-family:var(--f-jp);font-style:normal;font-weight:900;font-size:.24em;letter-spacing:.3em;color:var(--plate);text-shadow:none;margin-top:12px}
 h1 span{display:block;font-family:var(--f-num);font-weight:800;font-size:.42em;letter-spacing:.18em;color:var(--dim);margin-top:8px}
 .lead{margin:0;color:var(--dim);line-height:1.7;font-size:15px;max-width:38ch}
@@ -70,10 +87,10 @@ h1 span{display:block;font-family:var(--f-num);font-weight:800;font-size:.42em;l
   .tb{position:fixed;z-index:3;width:76px;height:76px;border-radius:50%;background:rgba(18,22,12,.55);border:2px solid rgba(243,239,226,.35);
     color:var(--paper);font-family:var(--f-num);font-weight:800;font-size:26px;display:flex;align-items:center;justify-content:center;touch-action:none}
   .tb.on{background:rgba(242,194,48,.85);color:var(--plate-ink)}
-  #tL{left:18px;bottom:calc(26px + env(safe-area-inset-bottom,0px))}
-  #tR{left:106px;bottom:calc(26px + env(safe-area-inset-bottom,0px))}
-  #tG{right:18px;bottom:calc(26px + env(safe-area-inset-bottom,0px));width:92px;height:92px;font-size:18px}
-  #tB{right:122px;bottom:calc(30px + env(safe-area-inset-bottom,0px));font-size:15px}
+  #btnL{left:18px;bottom:calc(26px + env(safe-area-inset-bottom,0px))}
+  #btnR{left:106px;bottom:calc(26px + env(safe-area-inset-bottom,0px))}
+  #btnG{right:18px;bottom:calc(26px + env(safe-area-inset-bottom,0px));width:92px;height:92px;font-size:18px}
+  #btnB{right:122px;bottom:calc(30px + env(safe-area-inset-bottom,0px));font-size:15px}
   #br{right:auto;left:50%;transform:translateX(-50%);bottom:auto;top:calc(12px + env(safe-area-inset-top,0px));text-align:center}
   #spd{font-size:60px}
   #map{width:110px;height:110px}
@@ -81,6 +98,15 @@ h1 span{display:block;font-family:var(--f-num);font-weight:800;font-size:.42em;l
   .pc{display:none}
 }
 @media (max-width:560px){ #ov{background:rgba(14,18,9,.8)} }
+/* short screens (laptops, phones held sideways): tighten the title screen so the start button stays visible */
+@media (max-height:720px){
+  .card{max-width:640px}
+  .lead{font-size:13px;line-height:1.55;max-width:52ch}
+  .keys{grid-template-columns:auto 1fr auto 1fr;font-size:13px;gap:5px 12px}
+  .keys kbd{font-size:13px}
+  .btn{padding:11px 24px;font-size:16px}
+}
+@media (max-height:460px){ .card .lead{display:none} }
 @media (prefers-reduced-motion:reduce){ #air{transition:none} }
 </style>
 
@@ -90,18 +116,19 @@ h1 span{display:block;font-family:var(--f-num);font-weight:800;font-size:.42em;l
   <div class="plate"><div class="lbl">LAP</div><div class="big" id="lap">1/3</div></div>
   <div class="chip"><b>TIME</b><span id="time">0:00.00</span></div>
   <div class="chip"><b>BEST</b><span id="bestHud">--:--.--</span></div>
+  <div class="chip lives"><b>LIFE</b><span id="lives"></span></div>
 </div>
 <div class="hud" id="tr"><canvas id="map" width="300" height="300"></canvas></div>
-<div class="hud" id="br"><div id="spd">0</div><div id="unit">KM/H<span id="gear">N</span></div></div>
+<div class="hud" id="br"><div id="spd">0</div><div id="tach"><i id="tachBar"></i></div><div id="unit">KM/H<span id="gear">N</span></div></div>
 <div class="hud" id="msg"></div>
 <div class="hud" id="air"></div>
 <div class="hud" id="offroad">オフロード — 林道に戻ろう</div>
 
 <div id="touch">
-  <div class="tb" id="tL" data-k="left">◀</div>
-  <div class="tb" id="tR" data-k="right">▶</div>
-  <div class="tb" id="tB" data-k="down">BRAKE</div>
-  <div class="tb" id="tG" data-k="up">GAS</div>
+  <div class="tb" id="btnL" data-k="left">◀</div>
+  <div class="tb" id="btnR" data-k="right">▶</div>
+  <div class="tb" id="btnB" data-k="down">BRAKE</div>
+  <div class="tb" id="btnG" data-k="up">GAS</div>
 </div>
 
 <div id="ov">
@@ -113,9 +140,11 @@ h1 span{display:block;font-family:var(--f-num);font-weight:800;font-size:.42em;l
       <kbd>W / ↑</kbd><span>アクセル</span>
       <kbd>S / ↓</kbd><span>ブレーキ・バック</span>
       <kbd>A D / ← →</kbd><span>ハンドル</span>
+      <kbd>Shift / SPACE</kbd><span>リアブレーキ・スライド</span>
       <kbd>R</kbd><span>コースに復帰</span>
       <kbd>M</kbd><span>エンジン音 ON/OFF</span>
     </div>
+    <p class="lead">転倒できるのは3回まで。コツ：カーブ中にアクセルを開けると後輪が流れる。滑りすぎたら逆ハンドルで立て直そう。</p>
     <button class="btn" id="startBtn">スタート <span class="pc">（SPACE）</span></button>
     <div class="best" id="bestTitle"></div>
   </div>
@@ -176,7 +205,12 @@ function heightAt(x,z){
   nearest(x,z);
   const n=noise(x,z);
   if(nI<0) return n+6;
-  const rh=ht[nI], d=nD;
+  // interpolate the road height along the segment we are on (no steps between samples)
+  let i0=nI, i1=(nI+1)%NS, A=pts[i0], B=pts[i1];
+  let t=((x-A.x)*(B.x-A.x)+(z-A.z)*(B.z-A.z))/((B.x-A.x)**2+(B.z-A.z)**2);
+  if(t<0){ i1=i0; i0=(nI-1+NS)%NS; A=pts[i0]; B=pts[i1]; t=((x-A.x)*(B.x-A.x)+(z-A.z)*(B.z-A.z))/((B.x-A.x)**2+(B.z-A.z)**2); }
+  t=clamp(t,0,1);
+  const rh=ht[i0]+(ht[i1]-ht[i0])*t, d=nD;
   if(d<=HALF) return rh;
   return lerp(rh, n+6*sstep(HALF+6,30,d), sstep(HALF,HALF+12,d));
 }
@@ -244,7 +278,7 @@ scene.add(sun); scene.add(sun.target);
 }
 
 // trees (instanced) + collision grid
-const trees=[], TCELL=8, tgrid=new Map();
+const trees=[], TCELL=8, tgrid=new Map(), rgrid=new Map();
 {
   const tries=14000, max=3400;
   for(let t=0;t<tries && trees.length<max;t++){
@@ -270,12 +304,15 @@ const trees=[], TCELL=8, tgrid=new Map();
   pine.forEach((t,i)=>{ c1.setMatrixAt(i,t.m); c2.setMatrixAt(i,t.m); C.setHSL(0.27+R()*0.06,0.42+R()*0.15,0.2+R()*0.08); c1.setColorAt(i,C); C.offsetHSL(0,0,0.04); c2.setColorAt(i,C); });
   broad.forEach((t,i)=>{ b1.setMatrixAt(i,t.m); C.setHSL(0.17+R()*0.1,0.45+R()*0.2,0.3+R()*0.08); b1.setColorAt(i,C); });
   for(const m of [trunk,c1,c2,b1]){ m.castShadow=true; m.receiveShadow=false; scene.add(m); }
-  // rocks along the shoulder (visual only)
+  // rocks along the shoulder (with collision)
   const rockG=new THREE.DodecahedronGeometry(0.6,0);
   const rocks=new THREE.InstancedMesh(rockG,new THREE.MeshPhongMaterial({color:0x8a8576,flatShading:true,shininess:0,specular:0x000000}),220);
   for(let i=0;i<220;i++){ const j=Math.floor(R()*NS), p=pts[j], tn=tan[j], side=R()<.5?-1:1, off=HALF+1+R()*2.5;
     const x=p.x-tn.z*off*side, z=p.z+tn.x*off*side; const s=0.4+R()*1.1;
-    Q.setFromEuler(new THREE.Euler(R()*3,R()*3,R()*3)); S.set(s,s*0.7,s); V.set(x,heightAt(x,z)+0.1,z); M.compose(V,Q,S); rocks.setMatrixAt(i,M); }
+    const ry=heightAt(x,z)+0.1;
+    Q.setFromEuler(new THREE.Euler(R()*3,R()*3,R()*3)); S.set(s,s*0.7,s); V.set(x,ry,z); M.compose(V,Q,S); rocks.setMatrixAt(i,M);
+    const rk={x,z,s,r:0.55*s+0.3,top:ry+0.42*s,small:s<0.65,big:s>1.05};
+    const k=(Math.floor(x/TCELL)+200)*1000+(Math.floor(z/TCELL)+200); if(!rgrid.has(k)) rgrid.set(k,[]); rgrid.get(k).push(rk); }
   rocks.castShadow=true; scene.add(rocks);
 }
 
@@ -331,6 +368,8 @@ box(0.13,0.42,0.14,mats.suit,0.16,0.98,-0.02,0.9); box(0.13,0.42,0.14,mats.suit,
 box(0.12,0.4,0.13,mats.suit,0.18,0.75,0.12,-0.3); box(0.12,0.4,0.13,mats.suit,-0.18,0.75,0.12,-0.3);
 box(0.42,0.56,0.26,mats.suit2,0,1.36,-0.02,0.45);
 box(0.1,0.42,0.1,mats.suit,0.27,1.33,0.25,-0.9); box(0.1,0.42,0.1,mats.suit,-0.27,1.33,0.25,-0.9);
+const dabL=box(0.12,0.64,0.13,mats.suit,0.34,0.5,0.22); dabL.rotation.z=0.55; dabL.visible=false;
+const dabR=box(0.12,0.64,0.13,mats.suit,-0.34,0.5,0.22); dabR.rotation.z=-0.55; dabR.visible=false;
 const helm=new THREE.Mesh(new THREE.SphereGeometry(0.2,12,10),mats.helmet); helm.position.set(0,1.74,0.18); helm.castShadow=true; leanG.add(helm);
 box(0.26,0.09,0.12,mats.visor,0,1.74,0.33); box(0.24,0.04,0.18,mats.plate,0,1.86,0.32,-0.2);
 
@@ -343,6 +382,20 @@ const dust=new THREE.Points(dGeo,new THREE.PointsMaterial({size:1.6,map:new THRE
 dust.frustumCulled=false; scene.add(dust);
 function emitDust(x,y,z,vx,vz){ const i=dHead; dHead=(dHead+1)%DN; dPos[i*3]=x+(R()-.5)*.4; dPos[i*3+1]=y+.15; dPos[i*3+2]=z+(R()-.5)*.4;
   dVel[i*3]=vx+(R()-.5)*2; dVel[i*3+1]=1+R()*2.2; dVel[i*3+2]=vz+(R()-.5)*2; dLife[i]=0.9+R()*0.6; }
+
+// skid marks (ring buffer of flat quads)
+const SKN=900; let skHead=0;
+const skG=new THREE.PlaneGeometry(0.26,1.05); skG.rotateX(-Math.PI/2);
+const skids=new THREE.InstancedMesh(skG,new THREE.MeshBasicMaterial({color:0x2e2013,transparent:true,opacity:0.42,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-6,polygonOffsetUnits:-6}),SKN);
+{ const M0=new THREE.Matrix4().makeScale(0,0,0); for(let i=0;i<SKN;i++) skids.setMatrixAt(i,M0); }
+skids.frustumCulled=false; scene.add(skids);
+const _skM=new THREE.Matrix4(), _skQ=new THREE.Quaternion(), _skP=new THREE.Vector3(), _skS=new THREE.Vector3(), _up=new THREE.Vector3(0,1,0);
+let skLastX=1e9, skLastZ=1e9;
+function addSkid(x,z,yaw,w){
+  if(Math.hypot(x-skLastX,z-skLastZ)<0.45) return; skLastX=x; skLastZ=z;
+  _skP.set(x,heightAt(x,z)+0.09,z); _skQ.setFromAxisAngle(_up,yaw); _skS.set(w,1,1);
+  _skM.compose(_skP,_skQ,_skS); skids.setMatrixAt(skHead,_skM); skHead=(skHead+1)%SKN; skids.instanceMatrix.needsUpdate=true;
+}
 
 // ---------- minimap ----------
 const map=document.getElementById('map'), mctx=map.getContext('2d');
@@ -362,20 +415,21 @@ function drawMap(){
 }
 
 // ---------- state ----------
-const st={dist:0,x:0,y:0,z:0,h:0,speed:0,vy:0,ground:true,steer:0,pitch:0,lean:0,air:0,crash:0,spin:0,shake:0};
-let mode='title', countT=0, raceT=0, lapT0=0, lap=1, lastIdx=0, cps=new Set(), best=Infinity, lapTimes=[], bestAir=0, titleT=0;
+const st={gear:1,rpm:0,rpmShow:0.2,thrPos:0,brkPos:0,shiftT:0,stun:0,vx:0,vz:0,slip:0,slideT:0,bump:0,dist:0,x:0,y:0,z:0,h:0,speed:0,vy:0,ground:true,steer:0,pitch:0,lean:0,air:0,crash:0,spin:0,shake:0};
+const LIVES=3; let lives=LIVES, mode='title', countT=0, raceT=0, lapT0=0, lap=1, lastIdx=0, cps=new Set(), best=Infinity, lapTimes=[], bestAir=0, bestSlide=0, titleT=0;
 try{ const b=parseFloat(localStorage.getItem('rindo-scramble-best')); if(isFinite(b)) best=b; }catch(e){}
 const $=id=>document.getElementById(id);
+function renderLives(){ $('lives').innerHTML=Array.from({length:LIVES},(_,i)=>`<i class="${i<lives?'':'lost'}"></i>`).join(''); }
 function refreshBest(){ $('bestHud').textContent=fmt(best); $('bestTitle').textContent=isFinite(best)?'自己ベスト '+fmt(best):''; }
-refreshBest();
-function placeAt(i){ const p=pts[i], t=tan[i]; st.x=p.x; st.z=p.z; st.h=Math.atan2(t.x,t.z); st.y=heightAt(p.x,p.z); st.vy=0; st.speed=0; st.ground=true; st.air=0; st.crash=0; st.pitch=0; st.lean=0; }
+refreshBest(); renderLives();
+function placeAt(i){ const p=pts[i], t=tan[i]; st.x=p.x; st.z=p.z; st.h=Math.atan2(t.x,t.z); st.y=heightAt(p.x,p.z); st.vy=0; st.speed=0; st.vx=0; st.vz=0; st.gear=1; st.rpm=0; st.thrPos=0; st.brkPos=0; st.shiftT=0; st.slip=0; st.slideT=0; st.ground=true; st.air=0; st.crash=0; st.pitch=0; st.lean=0; }
 placeAt(NS-6);
 
-const keys={up:false,down:false,left:false,right:false};
-const KM={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right'};
+const keys={up:false,down:false,left:false,right:false,slide:false};
+const KM={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ShiftLeft:'slide',ShiftRight:'slide',Space:'slide'};
 addEventListener('keydown',e=>{
   if(KM[e.code]){ keys[KM[e.code]]=true; e.preventDefault(); }
-  if((e.code==='Space'||e.code==='Enter') && (mode==='title'||mode==='finish')){ e.preventDefault(); startRace(); }
+  if((e.code==='Space'||e.code==='Enter') && (mode==='title'||mode==='finish'||mode==='over')){ e.preventDefault(); startRace(); }
   if(e.code==='KeyR' && mode==='race' && !st.crash){ nearest(st.x,st.z); placeAt(nI); }
   if(e.code==='KeyM') toggleSound();
 });
@@ -390,27 +444,32 @@ addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; });
 $('startBtn').addEventListener('click',startRace);
 
 // ---------- engine sound ----------
-let ac=null, o1, o2, gainN, filt, soundOn=true;
+let ac=null, o1, o2, gainN, filt, scrG, soundOn=true;
 function initSound(){
   if(ac) return; try{
     ac=new (window.AudioContext||window.webkitAudioContext)();
     o1=ac.createOscillator(); o1.type='sawtooth'; o2=ac.createOscillator(); o2.type='square'; o2.detune.value=-1200;
     filt=ac.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=800; gainN=ac.createGain(); gainN.gain.value=0;
     o1.connect(filt); o2.connect(filt); filt.connect(gainN); gainN.connect(ac.destination); o1.start(); o2.start();
+    const nb=ac.createBuffer(1,ac.sampleRate,ac.sampleRate), nd=nb.getChannelData(0); for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1;
+    const ns=ac.createBufferSource(); ns.buffer=nb; ns.loop=true; const bp=ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=700; bp.Q.value=0.8;
+    scrG=ac.createGain(); scrG.gain.value=0; ns.connect(bp); bp.connect(scrG); scrG.connect(ac.destination); ns.start();
   }catch(e){ ac=null; }
 }
 function toggleSound(){ soundOn=!soundOn; }
-function updateSound(gearFrac,gear,thr){
+function updateSound(rpm,gear,thr){
   if(!ac) return;
-  const f=48+gearFrac*95+gear*6, t=ac.currentTime;
-  o1.frequency.setTargetAtTime(f,t,0.05); o2.frequency.setTargetAtTime(f,t,0.05);
-  filt.frequency.setTargetAtTime(500+thr*900+gearFrac*400,t,0.08);
-  gainN.gain.setTargetAtTime(soundOn&&mode!=='title'?0.035+thr*0.03:0,t,0.1);
+  const f=38+rpm*125, t=ac.currentTime;
+  o1.frequency.setTargetAtTime(f,t,0.03); o2.frequency.setTargetAtTime(f,t,0.03);
+  filt.frequency.setTargetAtTime(450+thr*1000+rpm*600,t,0.06);
+  gainN.gain.setTargetAtTime(soundOn&&(mode==='race'||mode==='count')?0.035+thr*0.03:0,t,0.1);
+  const sa=st.ground&&!st.crash?clamp((Math.abs(st.slip)-0.1)*2.2,0,1)*clamp(Math.hypot(st.vx,st.vz)/15,0,1):0;
+  scrG.gain.setTargetAtTime(soundOn&&mode==='race'?sa*0.09:0,t,0.05);
 }
 
 function startRace(){
   initSound(); if(ac&&ac.state==='suspended') ac.resume();
-  $('ov').hidden=true; placeAt(NS-6); mode='count'; countT=3.2; raceT=0; lap=1; lapTimes=[]; cps=new Set(); bestAir=0;
+  $('ov').hidden=true; placeAt(NS-6); mode='count'; countT=3.2; raceT=0; lap=1; lapTimes=[]; cps=new Set(); bestAir=0; bestSlide=0; lives=LIVES; renderLives();
   nearest(st.x,st.z); lastIdx=nI; canvas.focus&&canvas.focus();
 }
 function finishRace(){
@@ -421,12 +480,26 @@ function finishRace(){
     <h1>${nb?'ベスト更新！':'ゴール！'}<span>TOTAL ${fmt(raceT)}</span></h1>
     <div class="res">${lapTimes.map((t,i)=>`<div>LAP ${i+1}</div>`).join('')}
       ${lapTimes.map(t=>`<strong class="${t===Math.min(...lapTimes)?'new':''}">${fmt(t)}</strong>`).join('')}</div>
-    <div class="best">最長エアタイム ${bestAir.toFixed(2)}秒　·　自己ベスト ${fmt(best)}</div>
+    <div class="best">残りライフ ${lives}/${LIVES}　·　最長エアタイム ${bestAir.toFixed(2)}秒　·　最長スライド ${bestSlide.toFixed(1)}秒　·　自己ベスト ${fmt(best)}</div>
     <button class="btn" id="again">もう一度走る <span class="pc">（SPACE）</span></button>`;
   $('again').addEventListener('click',startRace);
   $('ov').hidden=false;
 }
-function crash(){ st.crash=1.6; st.speed=0; showMsg('転倒！',1.2); }
+function gameOver(){
+  mode='over';
+  $('card').innerHTML=`<div class="eyebrow">3 CRASHES · RACE OVER</div>
+    <h1 class="over">GAME OVER<span>${Math.min(lap,LAPS)}周目でリタイア · ${fmt(raceT)}</span></h1>
+    <div class="best">完走したラップ ${lapTimes.length}/${LAPS}${lapTimes.length?'　·　ベストラップ '+fmt(Math.min(...lapTimes)):''}　·　最長エアタイム ${bestAir.toFixed(2)}秒</div>
+    <p class="lead">木や大きな岩に高速で当たる、滑りすぎて立て直せない、の3回でゲームオーバー。</p>
+    <button class="btn" id="again">もう一度走る <span class="pc">（SPACE）</span></button>`;
+  $('again').addEventListener('click',startRace);
+  $('ov').hidden=false;
+}
+function crash(m){
+  st.crash=1.6; st.speed=0; st.vx=0; st.vz=0; st.slideT=0; dabL.visible=dabR.visible=false;
+  if(mode==='race'){ lives=Math.max(0,lives-1); renderLives(); const el=document.querySelector('.lives'); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }
+  showMsg(lives<=0&&mode==='race' ? 'GAME OVER' : (m||'転倒！')+'  残り'+lives, 1.5);
+}
 let msgT=0; function showMsg(s,t){ $('msg').textContent=s; msgT=t; }
 let airT=0; function showAir(s){ $('air').textContent=s; $('air').style.opacity=1; airT=1.3; }
 
@@ -450,24 +523,32 @@ function frame(now){
   // HUD
   const kmh=Math.abs(st.speed)*3.6;
   $('spd').textContent=Math.round(kmh);
-  const gear=st.speed<0.5?0:Math.min(5,Math.floor(st.speed/6.5)+1);
-  $('gear').textContent=st.speed<-0.3?'R':gear?String(gear):'N';
+  const rpmT = st.crash>0 ? 0.15 : st.ground ? Math.max(0.18, st.shiftT>0 ? st.rpm*0.6 : Math.min(1.02,st.rpm)) : 0.3+0.72*st.thrPos;
+  st.rpmShow+=(rpmT-st.rpmShow)*Math.min(1,dt*(st.shiftT>0?18:9));
+  $('gear').textContent=st.speed<-0.3?'R':(Math.abs(st.speed)<0.5&&st.thrPos<0.05)?'N':String(st.gear);
+  $('tachBar').style.width=(clamp(st.rpmShow,0,1.02)*100)+'%';
   $('time').textContent=fmt(raceT);
   $('lap').textContent=Math.min(lap,LAPS)+'/'+LAPS;
   $('offroad').style.opacity=(mode==='race'&&st.dist>HALF+1.5&&!st.crash)?1:0;
   drawMap();
-  const gf=gear?((st.speed-(gear-1)*6.5)/6.5):Math.abs(st.speed)/6;
-  updateSound(clamp(gf,0,1),gear,keys.up&&mode==='race'?1:0);
+  updateSound(st.rpmShow,st.gear,mode==='race'?st.thrPos:0);
   sun.position.set(st.x+40,st.y+70,st.z+25); sun.target.position.set(st.x,st.y,st.z);
   renderer.render(scene,camera);
 }
 
+// 5-speed gearbox: top speed (m/s) and drive force (m/s^2) per gear
+const GEAR_TOP=[0,9.5,15.5,21.5,27,32], GEAR_F=[0,9,7.2,5.6,4.6,3.8];
+function torque(r){ return 0.62+0.38*Math.sin(Math.PI*Math.min(1,r)); }   // fat midrange, softer at idle and redline
+let gearEl=null;
+function shiftFlash(){ gearEl=gearEl||$('gear'); gearEl.classList.remove('shift'); void gearEl.offsetWidth; gearEl.classList.add('shift'); }
+function wrapA(a){ while(a>Math.PI) a-=Math.PI*2; while(a<-Math.PI) a+=Math.PI*2; return a; }
+function surfaceGrip(onRoad){ return onRoad?1.0:0.8; }   // future: puddles, leaves, mud
 function step(dt){
   const racing=mode==='race';
   nearest(st.x,st.z); const idx=nI, onRoad=nD<HALF+0.6;
   if(st.crash>0){
     st.crash-=dt; leanG.rotation.z+=dt*5; st.speed*=0.9;
-    if(st.crash<=0){ leanG.rotation.z=0; placeAt(idx); }
+    if(st.crash<=0){ leanG.rotation.z=0; if(lives<=0 && mode==='race'){ gameOver(); return; } placeAt(idx); }
     bike.position.set(st.x,st.y,st.z); return;
   }
   const thr=racing&&keys.up?1:0, brk=racing&&keys.down?1:0;
@@ -475,34 +556,93 @@ function step(dt){
   st.steer+= (sIn-st.steer)*Math.min(1,dt*7);
   const maxV=onRoad?31:13;
   // slope along heading
-  const fx=Math.sin(st.h), fz=Math.cos(st.h);
+  let fx=Math.sin(st.h), fz=Math.cos(st.h), lx=Math.cos(st.h), lz=-Math.sin(st.h);
   const hA=heightAt(st.x+fx*1.1,st.z+fz*1.1), hB=heightAt(st.x-fx*1.1,st.z-fz*1.1);
   const slope=Math.atan2(hA-hB,2.2);
   nearest(st.x,st.z);
+  // velocity split into forward / lateral (lateral = sliding)
+  st.speed=st.vx*fx+st.vz*fz;
+  let rearSlide=false, power=false;
   if(st.ground){
-    let a=thr*17*(1-Math.max(0,st.speed)/(maxV*1.06));
-    if(st.speed>maxV) a-=onRoad?4:14;
-    if(brk){ a-= st.speed>0.3?28:6; }
+    // throttle opens and the brake bites progressively
+    st.thrPos+=((thr?1:0)-st.thrPos)*Math.min(1,dt*(thr?3:6));
+    st.brkPos = brk ? Math.min(1,st.brkPos+dt*2.5) : 0;
+    const fwd=Math.max(0,st.speed);
+    // automatic gearbox with a short torque cut on each shift
+    if(st.shiftT>0) st.shiftT-=dt;
+    st.rpm=fwd/GEAR_TOP[st.gear];
+    if(st.shiftT<=0){
+      if(st.rpm>0.95 && st.gear<5 && st.thrPos>0.3){ st.gear++; st.shiftT=0.26; shiftFlash(); }
+      else if(st.gear>1 && fwd/GEAR_TOP[st.gear-1]<0.6){ st.gear--; st.shiftT=0.12; shiftFlash(); }
+      st.rpm=fwd/GEAR_TOP[st.gear];
+    }
+    let a=0;
+    if(st.shiftT<=0 && st.rpm<1) a+=st.thrPos*torque(st.rpm)*GEAR_F[st.gear]*(onRoad?1:0.8);
+    if(st.rpm>=1 && st.thrPos>0.1) a-=1.2;                       // rev limiter
+    if(st.thrPos<0.15 && fwd>0.5) a-=0.4+Math.min(1,st.rpm)*1.4/st.gear*2;   // engine braking, stronger in low gears
+    if(st.speed>maxV) a-=onRoad?4:12;
+    rearSlide = racing && st.speed>8 && (keys.slide || (brk && Math.abs(st.steer)>0.4));
+    if(brk){ a-= st.speed>0.3 ? 3+11*st.brkPos : 3; }
+    if(keys.slide&&racing&&!brk){ a-= st.speed>0.3?5:0; }
     st.speed+=a*dt;
-    if(st.speed<-5) st.speed=-5;
+    if(st.speed<-4) st.speed=-4;
     st.speed-=Math.sin(slope)*9.8*0.55*dt;
-    const roll=(onRoad?0.7:3)+Math.abs(st.speed)*0.05;
-    if(!thr||Math.abs(st.speed)<0.4){ if(st.speed>0) st.speed=Math.max(0,st.speed-roll*dt); else if(st.speed<0) st.speed=Math.min(0,st.speed+roll*dt); }
-    const turn=1.75*Math.min(1,Math.abs(st.speed)/5)*(1-0.42*Math.min(1,Math.abs(st.speed)/31))*Math.sign(st.speed);
-    st.h+=st.steer*turn*dt;
+    const roll=(onRoad?0.35:2.2)+Math.abs(st.speed)*0.025;
+    if(st.speed>0) st.speed=Math.max(0,st.speed-roll*dt); else if(st.speed<0) st.speed=Math.min(0,st.speed+roll*dt);
+    const sp=Math.abs(st.speed);
+    const turn=1.75*Math.min(1,sp/5)*(1-0.42*Math.min(1,sp/31))*Math.sign(st.speed);
+    power = thr && Math.abs(st.steer)>0.85 && st.speed>18;
+    const extra = st.steer*((power?0.3:0)+(rearSlide?1.1:0))*Math.min(1,sp/20);
+    // rebuild velocity with new forward speed, keep lateral, then rotate the bike
+    const vl0=st.vx*lx+st.vz*lz;
+    st.vx=fx*st.speed+lx*vl0; st.vz=fz*st.speed+lz*vl0;
+    st.h+=(st.steer*turn+extra)*dt;
+    fx=Math.sin(st.h); fz=Math.cos(st.h); lx=Math.cos(st.h); lz=-Math.sin(st.h);
+    let vf=st.vx*fx+st.vz*fz, vl=st.vx*lx+st.vz*lz;
+    let grip=14*surfaceGrip(onRoad);
+    if(power) grip*=0.55;
+    if(rearSlide) grip*=0.2;
+    if(Math.abs(vl)>1 && Math.sign(st.steer)===Math.sign(vl) && Math.abs(st.steer)>0.3) grip*=1.7; // countersteer
+    const dvl=vl*Math.min(1,grip*dt);
+    vl-=dvl;
+    const slipNow=Math.abs(Math.atan2(vl,Math.max(1,Math.abs(vf))));
+    if(thr && slipNow>0.12 && slipNow<0.6) vf+=Math.abs(dvl)*0.35;   // a clean slide drives you out of the corner
+    st.vx=fx*vf+lx*vl; st.vz=fz*vf+lz*vl; st.speed=vf;
+    st.slip=Math.atan2(vl,Math.max(1,Math.abs(vf)));
   }else{
-    st.h+=st.steer*0.35*dt; st.speed*=1-0.02*dt;
+    const dh=st.steer*0.35*dt, c=Math.cos(dh), sn=Math.sin(dh);   // in the air the bike and its path turn together
+    const ovx=st.vx, ovz=st.vz; st.vx=(ovx*c+ovz*sn)*(1-0.02*dt); st.vz=(-ovx*sn+ovz*c)*(1-0.02*dt); st.h+=dh;
+    fx=Math.sin(st.h); fz=Math.cos(st.h); lx=Math.cos(st.h); lz=-Math.sin(st.h);
+    st.speed=st.vx*fx+st.vz*fz;
+    st.slip=Math.atan2(st.vx*lx+st.vz*lz,Math.max(1,Math.abs(st.speed)));
   }
-  let nx=st.x+Math.sin(st.h)*st.speed*dt, nz=st.z+Math.cos(st.h)*st.speed*dt;
+  const vAbs=Math.hypot(st.vx,st.vz);
+  st.stun=Math.max(0,st.stun-dt);
+  if(racing && st.ground && st.stun<=0 && st.slideT>0.25 && Math.abs(st.slip)>1.05 && vAbs>9){ crash('スリップダウン！'); return; }
+  let nx=st.x+st.vx*dt, nz=st.z+st.vz*dt;
   const lim=SIZE/2-8; nx=clamp(nx,-lim,lim); nz=clamp(nz,-lim,lim);
-  // tree collisions
+  // tree + rock collisions
   const ix=Math.floor(nx/TCELL), iz=Math.floor(nz/TCELL);
+  st.bump=Math.max(0,st.bump-dt);
   outer: for(let dx=-1;dx<=1;dx++) for(let dz=-1;dz<=1;dz++){
-    const arr=tgrid.get((ix+dx+200)*1000+(iz+dz+200)); if(!arr) continue;
-    for(const t of arr){ const ex=nx-t.x, ez=nz-t.z, d=Math.hypot(ex,ez);
+    const key=(ix+dx+200)*1000+(iz+dz+200);
+    const arr=tgrid.get(key);
+    if(arr) for(const t of arr){ const ex=nx-t.x, ez=nz-t.z, d=Math.hypot(ex,ez);
       if(d<t.r && st.y-t.y<4){
-        if(Math.abs(st.speed)>11 && racing){ crash(); return; }
-        nx=t.x+ex/d*t.r; nz=t.z+ez/d*t.r; st.speed*=-0.25; st.shake=0.4; break outer; } }
+        if(vAbs>11 && racing){ crash(); return; }
+        nx=t.x+ex/d*t.r; nz=t.z+ez/d*t.r; st.vx*=-0.25; st.vz*=-0.25; st.shake=0.4; st.stun=0.8; break outer; } }
+    const rarr=rgrid.get(key);
+    if(rarr) for(const r of rarr){ const ex=nx-r.x, ez=nz-r.z, d=Math.hypot(ex,ez);
+      if(d<r.r && st.y<r.top-0.05){
+        if(r.small){ // ride over small rocks with a kick
+          if(st.bump<=0 && st.ground){ st.bump=0.35; st.vy=2.5+vAbs*0.08; st.y+=0.05; st.ground=false; st.air=0; st.vx*=0.9; st.vz*=0.9; st.shake=0.35; }
+          continue;
+        }
+        if(r.big && vAbs>15 && racing){ crash('岩に激突！'); return; }
+        nx=r.x+ex/d*r.r; nz=r.z+ez/d*r.r;
+        const ux=ex/d, uz=ez/d, vn=st.vx*ux+st.vz*uz;          // reflect only the part going into the rock
+        if(vn<0){ st.vx-=1.4*vn*ux; st.vz-=1.4*vn*uz; st.vx*=0.55; st.vz*=0.55; }
+        st.shake=0.45; st.stun=0.8; break outer; } }
   }
   st.x=nx; st.z=nz;
   const g=22, h=heightAt(st.x,st.z); st.dist=nD;
@@ -514,21 +654,38 @@ function step(dt){
     st.vy-=g*dt; st.y+=st.vy*dt; st.air+=dt;
     if(st.y<=h){
       const impact=-st.vy; st.y=h; st.ground=true; st.vy=0;
-      if(impact>13){ st.speed*=0.8; st.shake=0.5; } else st.shake=Math.max(st.shake,0.2);
+      if(impact>13){ st.vx*=0.8; st.vz*=0.8; st.shake=0.5; } else st.shake=Math.max(st.shake,0.2);
       if(st.air>0.45){ showAir('AIR '+st.air.toFixed(2)+'s'); if(racing) bestAir=Math.max(bestAir,st.air); }
-      for(let i=0;i<14;i++) emitDust(st.x,st.y,st.z,-Math.sin(st.h)*st.speed*0.2,-Math.cos(st.h)*st.speed*0.2);
+      for(let i=0;i<14;i++) emitDust(st.x,st.y,st.z,-st.vx*0.2,-st.vz*0.2);
     }
   }
   // dust
-  if(st.ground && Math.abs(st.speed)>4){
-    const n=(Math.abs(st.speed)/31)*(onRoad?2.2:1.2)*(thr?1.3:0.7);
-    for(let i=0;i<n;i++){ if(R()<n-i) emitDust(st.x-Math.sin(st.h)*0.8,st.y,st.z-Math.cos(st.h)*0.8,-Math.sin(st.h)*st.speed*0.25,-Math.cos(st.h)*st.speed*0.25); }
+  if(st.ground && vAbs>4){
+    const n=(vAbs/31)*(onRoad?2.2:1.2)*(thr?1.3:0.7);
+    for(let i=0;i<n;i++){ if(R()<n-i) emitDust(st.x-fx*0.8,st.y,st.z-fz*0.8,-st.vx*0.25,-st.vz*0.25); }
   }
-  if(!onRoad && st.ground && Math.abs(st.speed)>3) st.shake=Math.max(st.shake,0.08);
+  // slide effects: roost, skid marks, dab foot, slide timer
+  const slipA=Math.abs(st.slip), sliding=st.ground && slipA>0.17 && vAbs>6;
+  if(sliding){
+    const rx=st.x-fx*0.72, rz=st.z-fz*0.72, out=Math.sign(st.slip)||1;
+    const n=Math.min(5,slipA*9);
+    for(let i=0;i<n;i++) if(R()<n-i) emitDust(rx,st.y,rz,(lx*out*5-fx*4)+(R()-.5)*2,(lz*out*5-fz*4)+(R()-.5)*2);
+    addSkid(rx,rz,Math.atan2(st.vx,st.vz),clamp(slipA*2.2,0.7,2.4));
+    st.slideT+=dt;
+  }else if(st.ground && brk && vAbs>10){
+    addSkid(st.x-fx*0.72,st.z-fz*0.72,st.h,0.8);
+  }
+  if(!sliding && st.slideT>0){
+    if(st.slideT>0.7 && racing){ showAir('SLIDE '+st.slideT.toFixed(1)+'s'); bestSlide=Math.max(bestSlide,st.slideT); }
+    st.slideT=0;
+  }
+  const dab=sliding && slipA>0.25;
+  dabL.visible=dab && st.steer>0.1; dabR.visible=dab && st.steer<-0.1;
+  if(!onRoad && st.ground && vAbs>3) st.shake=Math.max(st.shake,0.08);
   // pose
-  const pt=st.ground?-slope:-Math.atan2(st.vy,Math.max(6,st.speed))*0.75;
+  const pt=st.ground?-slope:-Math.atan2(st.vy,Math.max(6,vAbs))*0.75;
   st.pitch+=(pt-st.pitch)*Math.min(1,dt*(st.ground?12:3));
-  const lt=-st.steer*Math.min(1,Math.abs(st.speed)/12)*0.5;
+  const lt=-st.steer*Math.min(1,vAbs/12)*0.5 - st.slip*0.35;
   st.lean+=(lt-st.lean)*Math.min(1,dt*6);
   bike.position.set(st.x,st.y,st.z); bike.rotation.y=st.h; pitchG.rotation.x=st.pitch; leanG.rotation.z=st.lean;
   st.spin+=st.speed*dt/0.385; wF.rotation.x=st.spin; wR.rotation.x=st.spin;
@@ -552,7 +709,9 @@ function updateCamera(dt){
     camera.position.set(p.x+Math.sin(a)*14,ht[0]+5.5,p.z+Math.cos(a)*14);
     camera.lookAt(st.x,st.y+1,st.z); camInit=false; return;
   }
-  const fx=Math.sin(st.h), fz=Math.cos(st.h);
+  const vA=Math.hypot(st.vx,st.vz);
+  const camH = vA>4 ? st.h + wrapA(Math.atan2(st.vx,st.vz)-st.h)*0.6 : st.h;
+  const fx=Math.sin(camH), fz=Math.cos(camH);
   const want=new THREE.Vector3(st.x-fx*6.4,st.y+2.6,st.z-fz*6.4);
   const gh=heightAt(want.x,want.z)+1.3; if(want.y<gh) want.y=gh;
   const look=new THREE.Vector3(st.x+fx*3.5,st.y+1.1,st.z+fz*3.5);
