@@ -21,6 +21,9 @@
 [hidden]{display:none!important}
 html,body{height:100%;margin:0;overflow:hidden;background:#1b2414;color:var(--paper);font-family:var(--f-jp);
   -webkit-user-select:none;user-select:none;touch-action:none}
+#glare,#dim{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0}
+#glare{background:#fffdf3}
+#dim{background:#000}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block}
 .hud{position:fixed;pointer-events:none;z-index:2}
 #tl{top:calc(14px + env(safe-area-inset-top,0px));left:16px;display:flex;flex-direction:column;gap:6px}
@@ -37,13 +40,14 @@ html,body{height:100%;margin:0;overflow:hidden;background:#1b2414;color:var(--pa
 @media (prefers-reduced-motion:reduce){.lives.hit{animation:none}}
 h1.over{color:#e2552a}
 h1.over span{font-family:var(--f-jp);font-weight:700;font-size:.3em;letter-spacing:.06em;color:var(--paper)}
-.courses{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:460px}
-.course{pointer-events:auto;cursor:pointer;text-align:left;display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:baseline;padding:10px 12px;border-radius:10px;
+.courses{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;max-width:560px}
+.course{pointer-events:auto;cursor:pointer;text-align:left;display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center;padding:10px 12px;border-radius:10px;
   background:rgba(18,22,12,.55);border:2px solid rgba(243,239,226,.18);color:var(--paper);font-family:var(--f-jp)}
-.course b{font-size:15px;font-weight:900}
+.course b{grid-column:1/-1;font-size:14px;font-weight:900;white-space:nowrap}
 .course em{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.1em;padding:1px 7px;border-radius:4px;background:var(--leaf);color:var(--plate-ink)}
+.course em.mid{background:var(--plate);color:var(--plate-ink)}
 .course em.hard{background:#e2552a;color:var(--paper)}
-.course small{grid-column:1/-1;font-size:12px;color:var(--dim)}
+.course small{font-size:11px;line-height:1.35;color:var(--dim)}
 .course[aria-checked="true"]{border-color:var(--plate);background:rgba(242,194,48,.14)}
 .course:focus-visible{outline:3px solid var(--paper);outline-offset:2px}
 .btnrow{display:flex;flex-wrap:wrap;gap:10px}
@@ -73,7 +77,7 @@ h1.over span{font-family:var(--f-jp);font-weight:700;font-size:.3em;letter-spaci
 /* Title / result overlay */
 #ov{position:fixed;inset:0;z-index:5;display:flex;align-items:flex-start;justify-content:flex-start;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;
   padding:24px 16px;padding-left:max(16px,6vw);background:linear-gradient(90deg,rgba(14,18,9,.88) 0%,rgba(14,18,9,.55) 48%,rgba(14,18,9,0) 80%)}
-.card{max-width:460px;display:flex;flex-direction:column;gap:clamp(8px,2.2vh,18px);margin-block:auto}
+.card{max-width:560px;display:flex;flex-direction:column;gap:clamp(8px,2.2vh,18px);margin-block:auto}
 .eyebrow{font-family:var(--f-num);letter-spacing:.32em;font-size:14px;color:var(--plate);font-weight:700}
 h1{margin:0;font-weight:900;font-size:clamp(44px,8vw,76px);line-height:1;letter-spacing:-.01em;text-wrap:balance}
 h1.logo{font-family:var(--f-num);font-weight:800;font-style:italic;font-size:clamp(48px,min(12vw,13vh),112px);letter-spacing:.01em;line-height:.9;color:var(--paper);text-shadow:4px 4px 0 var(--mud)}
@@ -133,6 +137,7 @@ h1 span{display:block;font-family:var(--f-num);font-weight:800;font-size:.42em;l
 </div>
 <div class="hud" id="tr"><canvas id="map" width="300" height="300"></canvas></div>
 <div class="hud" id="br"><div id="spd">0</div><div id="tach"><i id="tachBar"></i></div><div id="unit">KM/H<span id="gear">N</span></div></div>
+<div id="dim"></div><div id="glare"></div>
 <div class="hud" id="msg"></div>
 <div class="hud" id="air"></div>
 <div class="hud" id="offroad">オフロード — 林道に戻ろう</div>
@@ -150,6 +155,7 @@ h1 span{display:block;font-family:var(--f-num);font-weight:800;font-size:.42em;l
     <h1 class="logo">DIRT FURY<span>林道爆走モトクロス</span></h1>
     <div class="courses" id="courses" role="radiogroup" aria-label="コース">
       <button class="course" data-c="forest" role="radio"><b>森の林道</b><em>初級</em><small>ジャンプ台とウォッシュボード</small></button>
+      <button class="course" data-c="mine" role="radio"><b>廃坑トンネル</b><em class="mid">中級</em><small>暗いトンネル・トロッコ・落盤</small></button>
       <button class="course" data-c="canyon" role="radio"><b>渓谷アドベンチャー</b><em class="hard">上級</em><small>吊橋・大岩の門・崖沿いの細道</small></button>
     </div>
     <p class="lead" id="courseLead">山あいの未舗装林道を3周するタイムアタック。ジャンプ台で飛んで、ウォッシュボードを抜けて、木にはぶつからないように。</p>
@@ -188,16 +194,20 @@ const COURSES={
   forest:{id:'forest',name:'森の林道',level:'初級',tag:'ジャンプ台とウォッシュボード',
     eyebrow:'MOTOCROSS · FOREST TRAIL · 3 LAPS',
     lead:'山あいの未舗装林道を3周するタイムアタック。ジャンプ台で飛んで、ウォッシュボードを抜けて、木にはぶつからないように。',
-    seed:20261004, NC:14, rad:128, radVar:84, ns:1300, width:9, size:560, seg:340, fog:0xbfd0b2, adventure:false},
+    seed:20261004, NC:14, rad:128, radVar:84, ns:1300, width:9, size:560, seg:340, fog:0xbfd0b2, adventure:false, type:'forest'},
+  mine:{id:'mine',name:'廃坑トンネル',level:'中級',tag:'暗いトンネル・トロッコ・落盤',
+    eyebrow:'ADVENTURE · ABANDONED MINE · 3 LAPS',
+    lead:'鉱山跡の山に掘られた廃坑を走り抜ける。ヘッドライトだけが頼りのトンネルに、トロッコと落盤。出口は目がくらむほどまぶしい。',
+    seed:4417, NC:15, rad:160, radVar:56, ns:1700, width:8, size:640, seg:400, fog:0xb4b4a6, adventure:true, type:'mine'},
   canyon:{id:'canyon',name:'渓谷アドベンチャー',level:'上級',tag:'吊橋・大岩の門・崖沿いの細道',
     eyebrow:'ADVENTURE · CANYON RUN · 3 LAPS',
     lead:'渓流に架かる吊橋、大岩の門、岩の迷路、倒木、断崖の細道。踏み外して落ちたら1ミスの上級コース。',
-    seed:9157, NC:16, rad:180, radVar:58, ns:1800, width:8, size:680, seg:440, fog:0xb7c5c2, adventure:true}
+    seed:9157, NC:16, rad:180, radVar:58, ns:1800, width:8, size:680, seg:440, fog:0xb7c5c2, adventure:true, type:'canyon'}
 };
 const LAPS=3, K=18, CELL=30, TCELL=8, BRIDGE_HALF=1.7;
 let course=COURSES.forest, W=9, HALF=4.5, SIZE=560;
 let NS=0, curve=null, pts=[], tan=[], ht=null, curv=[], kickers=[], whoops, crowdSpots=[], grid=new Map();
-let roadHalf=null, feat=null, cliffW=null, cliffSide=1, river=null, adv=null, featMarks=[];
+let roadHalf=null, feat=null, cliffW=null, cliffSide=1, river=null, adv=null, featMarks=[], tunnel=null, tunW=null;
 let trees=[], tgrid=new Map(), rgrid=new Map(), crowd=[], world=null, waterTex=null, bridgeG=null;
 function cdist(a,b){ const d=Math.abs(a-b)%NS; return Math.min(d,NS-d); }
 
@@ -233,6 +243,13 @@ function carve(h,x,z){
   const [d,y]=riverInfo(x,z); if(d>60) return h;
   return Math.min(h, d<5.5 ? y-1.3 : y-1.3+(d-5.5)*1.05);   // river bed and steep banks
 }
+// the mine mountain: an elongated hill over the tunnel
+function mtnAt(x,z){
+  if(!tunnel) return -1e9; const m=tunnel.mtn, dx=x-m.cx, dz=z-m.cz;
+  const u=(dx*m.ax+dz*m.az)/m.Ra, v=(dx*m.az-dz*m.ax)/m.Rb, r=Math.sqrt(u*u+v*v);
+  if(r>=1) return -1e9;
+  return m.base+m.peak*sstep(1,0.18,r)+2.4*Math.sin(x*0.11+z*0.07)*sstep(1,0.5,r)+1.2*Math.sin(x*0.31-z*0.23);
+}
 // ground height. mesh=true is used when building the terrain mesh (no bridge deck in it)
 function heightAt(x,z,mesh){
   nearest(x,z);
@@ -245,6 +262,11 @@ function heightAt(x,z,mesh){
   t=clamp(t,0,1);
   const rh=ht[i0]+(ht[i1]-ht[i0])*t, d=nD;
   const nat=n+6*sstep(HALF+6,30,d);
+  if(feat[nI]===3){                                   // mine tunnel: the road runs inside the mountain
+    const T=tunnel, cover=rh+T.ceil+1.5-Math.max(0,d-T.TH-2)*0.8;
+    if(d<=T.TH && !mesh) return rh;
+    return Math.max(cover, mtnAt(x,z), lerp(rh,nat,sstep(T.TH,T.TH+12,d)));
+  }
   if(feat[nI]===1){                                   // suspension bridge: only the deck, a ravine underneath
     if(d<=BRIDGE_HALF+0.35 && !mesh) return rh;          // a little wider than it looks, so the hand ropes catch you first
     return carve(Math.min(nat,rh-2),x,z);
@@ -255,6 +277,7 @@ function heightAt(x,z,mesh){
   const cw=cliffW[nI];
   if(cw>0){ const [lx,lz]=lateral(nI), lat=(x-pts[nI].x)*lx+(z-pts[nI].z)*lz;
     if(lat*cliffSide>0) h=Math.min(h, rh-16*cw*sstep(hw+0.3,hw+4,d)); }   // sheer drop on the valley side
+  if(tunnel){ const m=mtnAt(x,z); if(m>h) h=lerp(h,m,sstep(hw+0.5,hw+4,d)); }   // cutting through the mountain flank
   return carve(h,x,z);
 }
 
@@ -271,7 +294,7 @@ function buildTrack(c){
   ht=new Float32Array(NS);
   for(let i=0;i<NS;i++){ let s=0; for(let k=-35;k<=35;k++) s+=raw[(i+k+NS)%NS]; ht[i]=s/71; }
   curv=pts.map((p,i)=>1 - tan[(i-22+NS)%NS].dot(tan[(i+22)%NS]));
-  roadHalf=new Float32Array(NS).fill(HALF); feat=new Uint8Array(NS); cliffW=new Float32Array(NS); river=null; adv=null; featMarks=[];
+  roadHalf=new Float32Array(NS).fill(HALF); feat=new Uint8Array(NS); cliffW=new Float32Array(NS); tunW=new Float32Array(NS); river=null; adv=null; featMarks=[]; tunnel=null;
   grid=new Map(); pts.forEach((p,i)=>{ const k=gk(Math.floor(p.x/CELL),Math.floor(p.z/CELL)); if(!grid.has(k)) grid.set(k,[]); grid.get(k).push(i); });
   crowdSpots=[];
   if(!c.adventure){
@@ -282,7 +305,7 @@ function buildTrack(c){
     kickers=picks.slice(0,4); whoops=picks[4];
   }else{
     whoops=undefined;
-    buildAdventure();
+    if(c.type==='mine') buildMine(); else buildAdventure();
   }
   for(const k0 of kickers){ for(let j=0;j<K;j++){ const u=j/(K-1); const v = u<.85 ? Math.pow(u/.85,1.6) : (1-u)/.15; ht[(k0+j)%NS]+=2.5*v; } }
   if(whoops!==undefined){ for(let j=0;j<66;j++){ ht[(whoops+j)%NS]+=0.38*(1-Math.cos(2*Math.PI*j/6))/2; } }
@@ -296,6 +319,37 @@ function buildTrack(c){
     let n=0; for(const i of corners){ if(n>=(c.adventure?1:3)) break;
       if(adv && (feat[i] || cliffW[i]>0)) continue;
       if(used.every(j=>Math.min(Math.abs(i-j),NS-Math.abs(i-j))>70)){ addSpot(i,cornerSide(i),'corner'); used.push(i); n++; } } }
+}
+
+// ---------- mine course layout ----------
+function buildMine(){
+  const taken=[0];
+  const free=(i,gap)=>taken.every(j=>cdist(i,j)>gap);
+  const pickStraight=(f0,f1,gap,win)=>{ let best=-1,bc=1e9;
+    for(let i=Math.floor(NS*f0);i<Math.floor(NS*f1);i++){ const ii=i%NS; if(!free(ii,gap)) continue;
+      let cv=0; for(let k=-win;k<=win;k+=5) cv=Math.max(cv,curv[(ii+k+NS)%NS]);
+      if(cv<bc){bc=cv;best=ii;} }
+    if(best>=0) taken.push(best); return best; };
+  adv={spots:[],props:[]};
+  // tunnel: ~190 m through the middle of the lap
+  const L=300, mid=pickStraight(0.42,0.58,200,60), b0=(mid-L/2+NS)%NS, b1=(mid+L/2)%NS;
+  const TH=3.3, ceil=4.7;
+  // keep the floor gentle inside: smooth the heights over the span
+  { const tmp=new Float32Array(L+1); for(let k=0;k<=L;k++){ let a=0,c=0; for(let q=-40;q<=40;q++){ const kk=k+q; a+=ht[(b0+kk+NS)%NS]; c++; } tmp[k]=a/c; }
+    for(let k=0;k<=L;k++){ const i=(b0+k)%NS, w=sstep(0,25,k)*sstep(L,L-25,k); ht[i]=lerp(ht[i],tmp[k],w); } }
+  for(let k=0;k<=L;k++){ const i=(b0+k)%NS; feat[i]=3; roadHalf[i]=TH; tunW[i]=sstep(0,16,k)*sstep(L,L-16,k); }
+  for(let k=1;k<=26;k++){ const w=sstep(26,4,k), hw=lerp(HALF,TH+0.4,w); for(const i of [(b0-k+NS)%NS,(b1+k)%NS]) roadHalf[i]=Math.min(roadHalf[i],hw); }
+  const A=pts[b0], B=pts[b1], C=pts[mid]; let ax=B.x-A.x, az=B.z-A.z; const chord=Math.hypot(ax,az); ax/=chord; az/=chord;
+  let hmax=-1e9; for(let k=0;k<=L;k++) hmax=Math.max(hmax,ht[(b0+k)%NS]);
+  tunnel={b0,b1,L,TH,ceil,mid,
+    mtn:{cx:(A.x+B.x)/2*0.5+C.x*0.5, cz:(A.z+B.z)/2*0.5+C.z*0.5, ax, az, Ra:chord/2+34, Rb:62, base:hmax-5, peak:30},
+    shafts:[Math.round(L*0.36),Math.round(L*0.72)], carts:[[0.2,0,0],[0.5,1,1],[0.84,0,0]], rubble:0.62};
+  featMarks.push({i:(b0-14+NS)%NS,label:'廃坑トンネル'},{i:(b0+Math.round(L*0.2)-30+NS)%NS,label:'トロッコ'},{i:(b0+Math.round(L*0.62)-28)%NS,label:'落盤'},{i:(b1+6)%NS,label:'出口'});
+  adv.spots.push([b0-24,1,'portal'],[b1+24,-1,'portal']);
+  taken.push(b0,b1);
+  // spoil-heap kickers outside
+  kickers=[]; for(let n=0;n<3;n++){ const k=pickStraight(0.05,0.95,110,15); if(k>=0) kickers.push(k); }
+  kickers.sort((a,b)=>a-b);
 }
 
 // ---------- adventure course layout ----------
@@ -383,7 +437,7 @@ const FOG=0xbfd0b2;
 scene.background=new THREE.Color(FOG);
 scene.fog=new THREE.Fog(FOG,45,250);
 const camera=new THREE.PerspectiveCamera(64,1,0.1,600);
-scene.add(new THREE.HemisphereLight(0xdfeaff,0x4b5a2c,0.78));
+const hemi=new THREE.HemisphereLight(0xdfeaff,0x4b5a2c,0.78); scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff0d0,0.95);
 sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
 Object.assign(sun.shadow.camera,{left:-28,right:28,top:28,bottom:-28,near:1,far:140});
@@ -421,6 +475,8 @@ box(0.42,0.56,0.26,mats.suit2,0,1.36,-0.02,0.45);
 box(0.1,0.42,0.1,mats.suit,0.27,1.33,0.25,-0.9); box(0.1,0.42,0.1,mats.suit,-0.27,1.33,0.25,-0.9);
 const dabL=box(0.12,0.64,0.13,mats.suit,0.34,0.5,0.22); dabL.rotation.z=0.55; dabL.visible=false;
 const dabR=box(0.12,0.64,0.13,mats.suit,-0.34,0.5,0.22); dabR.rotation.z=-0.55; dabR.visible=false;
+const head=new THREE.SpotLight(0xfff1d6,0,60,0.52,0.55,1.2); head.position.set(0,1.15,0.85); leanG.add(head); head.target.position.set(0,0.2,16); leanG.add(head.target);
+const headLamp=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.1,0.04),new THREE.MeshBasicMaterial({color:0xfff6d8})); headLamp.position.set(0,1.0,0.69); headLamp.rotation.x=-0.35; leanG.add(headLamp);
 const helm=new THREE.Mesh(new THREE.SphereGeometry(0.2,12,10),mats.helmet); helm.position.set(0,1.74,0.18); helm.castShadow=true; leanG.add(helm);
 box(0.26,0.09,0.12,mats.visor,0,1.74,0.33); box(0.24,0.04,0.18,mats.plate,0,1.86,0.32,-0.2);
 
@@ -526,7 +582,8 @@ function buildCourse(id){
   buildTrack(course);
   scene.fog.color.setHex(course.fog); scene.background.setHex(course.fog);
   buildTerrain(); buildRoad(); buildTrees(); buildGate();
-  if(course.adventure) buildAdventureProps();
+  if(course.type==='canyon') buildAdventureProps();
+  if(course.type==='mine') buildMineProps();
   buildSpectators();
   computeMap();
   // clear transient effects from the previous course
@@ -537,10 +594,11 @@ function buildCourse(id){
 function buildTerrain(){
   const SEG=course.seg;
   const geo=new THREE.PlaneGeometry(SIZE,SIZE,SEG,SEG); geo.rotateX(-Math.PI/2);
-  const pos=geo.attributes.position, col=new Float32Array(pos.count*3);
+  const pos=geo.attributes.position, col=new Float32Array(pos.count*3), hole=tunnel?new Uint8Array(pos.count):null;
   const dirt=new THREE.Color(0x6e4f31), grass=new THREE.Color(course.adventure?0x435c2a:0x46642a), grass2=new THREE.Color(course.adventure?0x56702e:0x5d7a30), c=new THREE.Color();
   for(let i=0;i<pos.count;i++){
     const x=pos.getX(i), z=pos.getZ(i), y=heightAt(x,z,true); pos.setY(i,y);
+    if(hole && nI>=0 && feat[nI]===3 && nD<=tunnel.TH+0.6) hole[i]=1;
     const g=0.5+0.5*Math.sin(x*0.13+z*0.07)*Math.cos(z*0.11-x*0.05);
     c.copy(grass).lerp(grass2,g);
     const t=sstep(HALF+0.3,HALF+5,nD);
@@ -556,6 +614,7 @@ function buildTerrain(){
       col[i*3]=lerp(col[i*3],k.r,steep); col[i*3+1]=lerp(col[i*3+1],k.g,steep); col[i*3+2]=lerp(col[i*3+2],k.b,steep); }
   }
   geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  if(hole){ const src=geo.index.array, keep=[]; for(let t=0;t<src.length;t+=3){ if(!hole[src[t]]&&!hole[src[t+1]]&&!hole[src[t+2]]) keep.push(src[t],src[t+1],src[t+2]); } geo.setIndex(keep); }   // the tunnel shell is the roof here
   const m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({vertexColors:true}));
   m.receiveShadow=true; world.add(m);
 }
@@ -576,7 +635,7 @@ function buildRoad(){
     const y=ht[i]+0.05;
     P.set([p.x+nx*hw,y,p.z+nz*hw, p.x-nx*hw,y,p.z-nz*hw], j*6);
     UV.set([0.5-hw/9,acc/9, 0.5+hw/9,acc/9], j*4);
-    if(j<n-1 && !feat[i] && !feat[(j+1)%NS]){ const a=j*2; idx.push(a,a+1,a+2, a+1,a+3,a+2); }   // no dirt on the bridge
+    if(j<n-1 && feat[i]!==1 && feat[(j+1)%NS]!==1){ const a=j*2; idx.push(a,a+1,a+2, a+1,a+3,a+2); }   // no dirt on the bridge
   }
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.BufferAttribute(P,3)); geo.setAttribute('uv',new THREE.BufferAttribute(UV,2));
@@ -592,7 +651,7 @@ function buildTrees(){
     nearest(x,z); const d=nD;
     if(d<HALF+3.2) continue;
     if(nearCrowd(x,z)) continue;
-    if(course.adventure){ if(river && riverInfo(x,z)[0]<12) continue; if(nearProp(x,z,3)) continue; if(nI>=0 && feat[nI]) continue; }
+    if(course.adventure){ if(river && riverInfo(x,z)[0]<12) continue; if(nearProp(x,z,3)) continue; if(nI>=0 && feat[nI]===1) continue; }
     if(d>45 && R()<0.45) continue;
     const s=0.75+R()*0.9;
     trees.push({x,z,y:heightAt(x,z),s,r:0.28*s+0.5,type:R()<.78?0:1});
@@ -616,7 +675,8 @@ function buildTrees(){
   const rockG=new THREE.DodecahedronGeometry(0.6,0);
   const rocks=new THREE.InstancedMesh(rockG,new THREE.MeshPhongMaterial({color:0x8a8576,flatShading:true,shininess:0,specular:0x000000}),220);
   for(let i=0;i<220;i++){ let j=Math.floor(R()*NS), side=R()<.5?-1:1; const off=HALF+1+R()*2.5;
-    if(course.adventure){ if(feat[j]) j=(j+60)%NS; if(cliffW[j]>0) side=-cliffSide; }
+    if(course.type==='canyon'){ if(feat[j]) j=(j+60)%NS; if(cliffW[j]>0) side=-cliffSide; }
+    else if(course.adventure){ let g=0; while(feat[j] && g++<60) j=(j+37)%NS; }
     const p=pts[j], tn=tan[j];
     const x=p.x-tn.z*off*side, z=p.z+tn.x*off*side; const s=0.4+R()*1.1;
     const ry=heightAt(x,z)+0.1;
@@ -778,6 +838,112 @@ function buildBridge(){
     for(const sd of [-1,1]) addBlock(pts[i].x+nx*sd*(BRIDGE_HALF+0.25),pts[i].z+nz*sd*(BRIDGE_HALF+0.25),{r:0.42,top:ht[i]+1.2,rope:true}); }
 }
 
+
+// ---------- mine props: tunnel shell, timber sets, rails, lamps, light shafts, carts, rubble, portals ----------
+let lampMat=null;
+function glowTex(inner,outer){ const c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d'), gr=g.createRadialGradient(64,64,0,64,64,64);
+  gr.addColorStop(0,inner); gr.addColorStop(1,outer); g.fillStyle=gr; g.fillRect(0,0,128,128); return new THREE.CanvasTexture(c); }
+function buildMineProps(){
+  const T=tunnel, {b0,L,TH,ceil}=T, at=k=>(b0+k+NS)%NS;
+  // tunnel shell: an arched rock profile swept along the span
+  const prof=[[TH+0.05,-0.3],[TH+0.1,1.2],[TH,2.6],[TH*0.86,3.6],[TH*0.55,4.35],[0,ceil],[-TH*0.55,4.35],[-TH*0.86,3.6],[-TH,2.6],[-TH-0.1,1.2],[-TH-0.05,-0.3]];
+  const P=[], Cc=[], I=[], c=new THREE.Color(), rock=new THREE.Color(0x5a5248), ore=new THREE.Color(0x7a6a4c), dark=new THREE.Color(0x35302a);
+  for(let k=-1;k<=L+1;k++){ const i=at(k), [nx,nz]=lateral(i), p=pts[i], y0=ht[i];
+    for(let q=0;q<prof.length;q++){ const [o,h]=prof[q], jag=(q>0&&q<prof.length-1)?(0.12+0.18*Math.sin(k*0.9+q*2.1)*Math.sin(k*0.31-q)):0;
+      const oo=o+Math.sign(o)*jag, hh=h+(q===5?jag:0);
+      P.push(p.x+nx*oo,y0+hh,p.z+nz*oo);
+      c.copy(rock).lerp(dark,0.5+0.5*Math.sin(k*0.47+q*1.3)); if(Math.sin(k*0.13+q*0.9)>0.82) c.lerp(ore,0.7);
+      const v=(0.85+R()*0.25)*lerp(1,0.32,sstep(0,22,Math.min(k,L-k))); Cc.push(c.r*v,c.g*v,c.b*v); }
+    if(k<=L){ const base=(k+1)*prof.length; for(let q=0;q<prof.length-1;q++){ const a=base+q, b=a+prof.length; I.push(a,b,a+1, a+1,b,b+1); } } }
+  const tg=new THREE.BufferGeometry(); tg.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); tg.setAttribute('color',new THREE.Float32BufferAttribute(Cc,3)); tg.setIndex(I); tg.computeVertexNormals();
+  const shell=new THREE.Mesh(tg,new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide})); shell.receiveShadow=true; world.add(shell);
+  // timber sets (支保工) every ~3.7 m, rails and sleepers along the floor and out of both portals
+  const M=new THREE.Matrix4(), Q=new THREE.Quaternion(), S=new THREE.Vector3(1,1,1), V=new THREE.Vector3(), up=new THREE.Vector3(0,1,0);
+  const yawAt=i=>Math.atan2(tan[i].x,tan[i].z);
+  const sets=Math.floor(L/6)+1, wood=new THREE.MeshLambertMaterial({color:0x6b4a2e});
+  const posts=new THREE.InstancedMesh(new THREE.BoxGeometry(0.26,3.3,0.26).translate(0,1.65,0),wood,sets*2), caps=new THREE.InstancedMesh(new THREE.BoxGeometry(TH*2-0.2,0.3,0.3),wood,sets);
+  let pi=0;
+  for(let n=0;n<sets;n++){ const i=at(n*6), [nx,nz]=lateral(i); Q.setFromAxisAngle(up,yawAt(i));
+    for(const sd of [-1,1]){ V.set(pts[i].x+nx*sd*(TH-0.2),ht[i],pts[i].z+nz*sd*(TH-0.2)); M.compose(V,Q,S); posts.setMatrixAt(pi++,M); }
+    V.set(pts[i].x,ht[i]+3.38,pts[i].z); M.compose(V,Q,S); caps.setMatrixAt(n,M); }
+  world.add(posts,caps);
+  const RS=-8, RE=L+8, nR=RE-RS;
+  const rails=new THREE.InstancedMesh(new THREE.BoxGeometry(0.07,0.1,1),new THREE.MeshLambertMaterial({color:0x6e4b37}),nR*2);
+  const sleep=new THREE.InstancedMesh(new THREE.BoxGeometry(1.2,0.07,0.2),new THREE.MeshLambertMaterial({color:0x3e2f22}),nR);
+  let ri=0;
+  for(let k=RS;k<RE;k++){ const i=at(k), j=at(k+1), [nx,nz]=lateral(i), len=pts[i].distanceTo(pts[j]); Q.setFromAxisAngle(up,yawAt(i));
+    V.set(pts[i].x,ht[i]+0.07,pts[i].z); M.compose(V,Q,S); sleep.setMatrixAt(k-RS,M);
+    for(const sd of [-1,1]){ V.set((pts[i].x+pts[j].x)/2+nx*sd*0.38,(ht[i]+ht[j])/2+0.14,(pts[i].z+pts[j].z)/2+nz*sd*0.38); M.compose(V,Q,new THREE.Vector3(1,1,len+0.02)); rails.setMatrixAt(ri++,M); } }
+  world.add(rails,sleep);
+  // dim lamps hanging from the caps, with a pool of light on the floor
+  lampMat=new THREE.MeshBasicMaterial({color:0xffc070});
+  const nl=Math.floor(L/18), lamps=new THREE.InstancedMesh(new THREE.SphereGeometry(0.13,8,6),lampMat,nl);
+  const pools=new THREE.InstancedMesh(new THREE.PlaneGeometry(7,7).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:glowTex('rgba(255,190,110,.55)','rgba(255,190,110,0)'),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,polygonOffset:true,polygonOffsetFactor:-8}),nl);
+  for(let n=0;n<nl;n++){ const i=at(9+n*18); V.set(pts[i].x,ht[i]+3.12,pts[i].z); M.compose(V,Q.identity(),S); lamps.setMatrixAt(n,M); V.set(pts[i].x,ht[i]+0.1,pts[i].z); M.compose(V,Q,S); pools.setMatrixAt(n,M); }
+  world.add(lamps,pools);
+  // light shafts falling through holes in the roof
+  const beamTex=(()=>{ const c=document.createElement('canvas'); c.width=4; c.height=128; const g=c.getContext('2d'), gr=g.createLinearGradient(0,0,0,128); gr.addColorStop(0,'rgba(255,248,225,.75)'); gr.addColorStop(1,'rgba(255,248,225,0.05)'); g.fillStyle=gr; g.fillRect(0,0,4,128); return new THREE.CanvasTexture(c); })();
+  for(const k of T.shafts){ const i=at(k), y=ht[i];
+    const beam=new THREE.Mesh(new THREE.CylinderGeometry(1.1,2.3,ceil+6,20,1,true),new THREE.MeshBasicMaterial({map:beamTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,opacity:0.8}));
+    beam.position.set(pts[i].x,y+(ceil+6)/2-0.1,pts[i].z); world.add(beam);
+    const pool=new THREE.Mesh(new THREE.PlaneGeometry(7,7).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({map:glowTex('rgba(255,250,230,.8)','rgba(255,250,230,0)'),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,polygonOffset:true,polygonOffsetFactor:-8}));
+    pool.position.set(pts[i].x,y+0.1,pts[i].z); world.add(pool);
+    const hole=new THREE.Mesh(new THREE.CircleGeometry(1.15,16).rotateX(Math.PI/2),new THREE.MeshBasicMaterial({color:0xf4f6ee})); hole.position.set(pts[i].x,y+ceil-0.15,pts[i].z); world.add(hole);
+    // ferns and moss where the light gets in
+    for(let q=0;q<6;q++){ const [x,z]=onTrack(i,(R()<.5?-1:1)*(TH-0.4-R()*0.6),(R()-.5)*4); const f=new THREE.Mesh(new THREE.ConeGeometry(0.35+R()*0.3,0.5,6),new THREE.MeshLambertMaterial({color:0x4f7a32})); f.position.set(x,heightAt(x,z)+0.2,z); world.add(f); }
+  }
+  // mine carts: two on the rails, one derailed on its side
+  const rust=new THREE.MeshLambertMaterial({color:0x7d4a2b}), iron=new THREE.MeshLambertMaterial({color:0x3a3632}), oreM=new THREE.MeshLambertMaterial({color:0x5c5850});
+  for(const [f,derail,full] of T.carts){ const k=Math.round(L*f), i=at(k), lat=derail?TH-1.4:0;
+    const g=new THREE.Group(), body=new THREE.Mesh(new THREE.BoxGeometry(1.25,0.8,1.8),rust); body.position.y=0.75; g.add(body);
+    const rim=new THREE.Mesh(new THREE.BoxGeometry(1.4,0.1,1.95),iron); rim.position.y=1.17; g.add(rim);
+    for(const wx of [-0.45,0.45]) for(const wz of [-0.6,0.6]){ const w=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,0.12,12).rotateZ(Math.PI/2),iron); w.position.set(wx,0.24,wz); g.add(w); }
+    if(full){ const heap=new THREE.Mesh(new THREE.DodecahedronGeometry(0.62,0),oreM); heap.scale.set(1,0.5,1.3); heap.position.y=1.2; g.add(heap); }
+    const [x,z]=onTrack(i,lat); g.position.set(x,ht[i],z); g.rotation.y=yawAt(i)+(derail?0.5:0);
+    if(derail){ g.rotation.z=1.25; g.position.y+=0.55; }
+    g.traverse(o=>{ if(o.isMesh){ o.castShadow=true; } }); world.add(g);
+    const t=tan[i]; for(const sd of [-0.55,0.55]) addBlock(x+t.x*sd,z+t.z*sd,{r:0.85,top:ht[i]+1.4,big:true,msg:'トロッコに激突！'});
+    adv.props.push([x,z,1.5]); }
+  // rock fall: boulders choking one side, rubble across the floor
+  { const k0=Math.round(L*T.rubble), sd=R()<.5?-1:1;
+    for(let q=0;q<5;q++){ const i=at(k0+q*4-8), r=0.7+R()*0.6, [x,z]=onTrack(i,sd*(TH-0.9-R()*0.9)), y=ht[i];
+      const b=makeBoulder(r,r*0.8,r*1.1,q*1.7+3); b.position.set(x,y+r*0.3,z); b.rotation.y=R()*6; world.add(b);
+      addBlock(x,z,{r:r*0.9+0.2,top:y+r*1.2,big:r>1.1}); }
+    const sg=new THREE.DodecahedronGeometry(0.26,0), sm=new THREE.InstancedMesh(sg,new THREE.MeshPhongMaterial({color:0x6d675d,flatShading:true,shininess:0,specular:0}),22);
+    for(let q=0;q<22;q++){ const i=at(k0-14+Math.floor(R()*34)), [x,z]=onTrack(i,(R()-.5)*2*(TH-0.4)), y=ht[i];
+      Q.setFromEuler(new THREE.Euler(R()*3,R()*3,R()*3)); V.set(x,y+0.08,z); M.compose(V,Q,new THREE.Vector3(1,1,1).multiplyScalar(0.8+R()*0.6)); sm.setMatrixAt(q,M);
+      addBlock(x,z,{r:0.42,top:y+0.35,small:true}); }
+    world.add(sm); }
+  // daylight at each mouth, seen from inside only
+  { const sh=new THREE.Shape(); prof.forEach(([o,h],q)=>{ q?sh.lineTo(o,Math.max(h,0)):sh.moveTo(o,Math.max(h,0)); }); sh.lineTo(prof[0][0],0);
+    const dayM=new THREE.MeshBasicMaterial({color:0xf3f6ec,fog:false});
+    for(const [k,dir] of [[-2,1],[L+2,-1]]){ const i=at(k), m=new THREE.Mesh(new THREE.ShapeGeometry(sh),dayM);
+      m.position.set(pts[i].x,ht[i]-0.05,pts[i].z); m.rotation.y=yawAt(i)+(dir>0?0:Math.PI); world.add(m); } }   // normal points into the tunnel
+  // rock face around each mouth, with the arch cut out of it
+  { const face=new THREE.Shape(); const FW=TH+6, FH=ceil+4.5; face.moveTo(-FW,-0.6); face.lineTo(FW,-0.6); face.lineTo(FW,FH); face.lineTo(-FW,FH); face.lineTo(-FW,-0.6);
+    const arch=new THREE.Path(); prof.forEach(([o,h],q)=>{ const hh=Math.max(h,-0.2); q?arch.lineTo(o*0.98,hh):arch.moveTo(o*0.98,hh); }); face.holes.push(arch);
+    const fg=new THREE.ShapeGeometry(face), fm=new THREE.MeshLambertMaterial({color:0x6a6156,side:THREE.DoubleSide});
+    for(const k of [0,L]){ const i=at(k), m=new THREE.Mesh(fg,fm); m.position.set(pts[i].x,ht[i],pts[i].z); m.rotation.y=yawAt(i); m.castShadow=true; m.receiveShadow=true; world.add(m); } }
+  // portals: heavy timber frames with a sign over the entrance
+  for(const [k,label] of [[0,'第三坑'],[L,'第三坑 出口']]){ const i=at(k), [nx,nz]=lateral(i), y=ht[i], g=new THREE.Group();
+    for(const sd of [-1,1]){ const post=new THREE.Mesh(new THREE.BoxGeometry(0.45,4.4,0.45),wood); post.position.set(sd*(TH+0.1),2.2,0); post.castShadow=true; g.add(post); }
+    const lint=new THREE.Mesh(new THREE.BoxGeometry(TH*2+1.4,0.5,0.5),wood); lint.position.y=4.45; g.add(lint);
+    const cv=document.createElement('canvas'); cv.width=256; cv.height=96; const cg=cv.getContext('2d'); cg.fillStyle='#4a3420'; cg.fillRect(0,0,256,96);
+    cg.strokeStyle='#d9cfb8'; cg.lineWidth=4; cg.strokeRect(6,6,244,84); cg.fillStyle='#efe6cf'; cg.font='900 46px "Zen Kaku Gothic New", sans-serif'; cg.textAlign='center'; cg.textBaseline='middle'; cg.fillText(label,128,50);
+    const sign=new THREE.Mesh(new THREE.PlaneGeometry(2.2,0.82),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(cv)})); sign.position.set(0,5.25,k===0?-0.3:0.3); if(k!==0) sign.rotation.y=Math.PI; g.add(sign);
+    g.position.set(pts[i].x,y,pts[i].z); g.rotation.y=yawAt(i); world.add(g); }
+  // miners' shack and ore heaps outside the entrance
+  { const i=at(-38), sd=1, [x,z]=onTrack(i,sd*(HALF+7)), y=heightAt(x,z), g=new THREE.Group();
+    const walls=new THREE.Mesh(new THREE.BoxGeometry(4.2,2.6,3.2),new THREE.MeshLambertMaterial({color:0x5d4430})); walls.position.y=1.3; g.add(walls);
+    const roof=new THREE.Mesh(new THREE.BoxGeometry(4.8,0.15,3.9),new THREE.MeshLambertMaterial({color:0x5b6066})); roof.position.y=2.75; roof.rotation.z=0.18; g.add(roof);
+    const door=new THREE.Mesh(new THREE.PlaneGeometry(0.9,1.8),new THREE.MeshLambertMaterial({color:0x2b2018})); door.position.set(0,0.9,1.61); g.add(door);
+    g.position.set(x,y,z); g.rotation.y=yawAt(i)+Math.PI/2; g.traverse(o=>{ if(o.isMesh) o.castShadow=true; }); world.add(g);
+    addBlock(x,z,{r:2.6,top:y+3}); adv.props.push([x,z,3]);
+    for(let q=0;q<3;q++){ const [hx,hz]=onTrack(at(-60+q*9),-sd*(HALF+5+R()*4)), hy=heightAt(hx,hz), r=2+R()*1.5;
+      const heap=new THREE.Mesh(new THREE.ConeGeometry(r,r*0.9,9),new THREE.MeshLambertMaterial({color:0x6b665c})); heap.position.set(hx,hy+r*0.4,hz); world.add(heap);
+      addBlock(hx,hz,{r:r*0.85,top:hy+r}); adv.props.push([hx,hz,r]); } }
+}
+
 // ---------- spectators ----------
 function buildSpectators(){
   const mobile=MOBILE, perSpot=mobile?4:7;
@@ -860,6 +1026,7 @@ function drawMap(){
   pts.forEach((p,i)=>{const [x,y]=mp(p.x,p.z); i?mctx.lineTo(x,y):mctx.moveTo(x,y);}); mctx.closePath(); mctx.stroke();
   mctx.lineWidth=7; mctx.strokeStyle='#c49a63'; mctx.stroke();
   if(river){ mctx.strokeStyle='#7a5534'; mctx.lineWidth=7; mctx.beginPath(); for(let k=0,i=river.b0;k<=((river.b1-river.b0+NS)%NS);k++,i=(i+1)%NS){ const [x,y]=mp(pts[i].x,pts[i].z); k?mctx.lineTo(x,y):mctx.moveTo(x,y);} mctx.stroke(); }
+  if(tunnel){ mctx.strokeStyle='#2c2822'; mctx.lineWidth=7; mctx.setLineDash([6,5]); mctx.beginPath(); for(let k=0;k<=tunnel.L;k++){ const i=(tunnel.b0+k)%NS, [x,y]=mp(pts[i].x,pts[i].z); k?mctx.lineTo(x,y):mctx.moveTo(x,y);} mctx.stroke(); mctx.setLineDash([]); }
   for(const k of kickers){ const p=pts[(k+K-1)%NS]; const [x,y]=mp(p.x,p.z); mctx.fillStyle='#e2552a'; mctx.beginPath(); mctx.arc(x,y,5,0,7); mctx.fill(); }
   const [sx,sy]=mp(pts[0].x,pts[0].z); mctx.fillStyle='#f3efe2'; mctx.fillRect(sx-6,sy-6,12,12);
   const [bx,by]=mp(st.x,st.z);
@@ -888,7 +1055,7 @@ addEventListener('keydown',e=>{
   if((e.code==='Space'||e.code==='Enter') && !building && (mode==='title'||mode==='finish'||mode==='over')){ e.preventDefault(); startRace(); }
   if(e.code==='KeyR' && mode==='race' && !st.crash){ nearest(st.x,st.z); placeAt(nI>=0?nI:st.lastIdx); }
   if(e.code==='KeyM') toggleSound();
-  if(mode==='title' && (e.code==='Digit1'||e.code==='Digit2')) selectCourse(e.code==='Digit1'?'forest':'canyon');
+  if(mode==='title' && ({Digit1:'forest',Digit2:'mine',Digit3:'canyon'})[e.code]) selectCourse(({Digit1:'forest',Digit2:'mine',Digit3:'canyon'})[e.code]);
 });
 addEventListener('keyup',e=>{ if(KM[e.code]) keys[KM[e.code]]=false; });
 document.querySelectorAll('.tb').forEach(b=>{
@@ -990,10 +1157,11 @@ let msgT=0; function showMsg(s,t){ $('msg').textContent=s; msgT=t; }
 let airT=0; function showAir(s){ $('air').textContent=s; $('air').style.opacity=1; airT=1.3; }
 
 // ---------- loop ----------
-const camPos=new THREE.Vector3(), camLook=new THREE.Vector3(); let camInit=false;
+const camPos=new THREE.Vector3(), camLook=new THREE.Vector3(); let camInit=false, camTun=0;
 function resize(){ const w=innerWidth,h=innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); }
 addEventListener('resize',resize); resize();
 
+const DARKC=new THREE.Color(0x08090b); let eye=0;
 let last=performance.now();
 function frame(now){
   requestAnimationFrame(frame);
@@ -1022,6 +1190,17 @@ function frame(now){
   $('offroad').style.opacity=(mode==='race'&&st.dist>st.hw+1.5&&!st.crash&&st.ground)?1:0;
   drawMap();
   updateSound(st.rpmShow,st.gear,mode==='race'?st.thrPos:0);
+  // mine: darkness inside the tunnel, the headlight, and eyes that take a moment to adjust
+  let dark=0;
+  if(tunnel && mode!=='title'){ nearest(st.x,st.z); const i=nI>=0?nI:st.lastIdx; let w=tunW[i];
+    if(w>0){ const k=(i-tunnel.b0+NS)%NS; let sh=0; for(const q of tunnel.shafts) sh=Math.max(sh,Math.exp(-(((k-q)/9)**2))); w*=1-0.6*sh; } dark=w; }
+  hemi.intensity=lerp(0.78,0.15,dark); sun.intensity=lerp(0.95,0.02,dark);
+  scene.fog.color.setHex(course.fog).lerp(DARKC,dark); scene.background.copy(scene.fog.color);
+  scene.fog.near=lerp(45,5,dark); scene.fog.far=lerp(250,85,dark);
+  head.intensity=Math.min(1,dark*1.5)*2.4;
+  eye+=(dark-eye)*Math.min(1,dt*(dark>eye?1.3:0.75));
+  $('glare').style.opacity=clamp((eye-dark)*1.7,0,0.92); $('dim').style.opacity=clamp((dark-eye)*0.85,0,0.65);
+  if(lampMat) lampMat.color.setHSL(0.09,1,0.62+0.05*Math.sin(raceT*23)*Math.sin(raceT*7.3));
   sun.position.set(st.x+40,st.y+70,st.z+25); sun.target.position.set(st.x,st.y,st.z);
   renderer.render(scene,camera);
 }
@@ -1133,12 +1312,19 @@ function step(dt){
           continue;
         }
         if(r.rope && vAbs>12) continue;                          // too fast: straight through the hand rope
-        if(r.big && vAbs>15 && racing){ crash('岩に激突！'); return; }
+        if(r.big && vAbs>15 && racing){ crash(r.msg||'岩に激突！'); return; }
         nx=r.x+ex/d*r.r; nz=r.z+ez/d*r.r;
         const ux=ex/d, uz=ez/d, vn=st.vx*ux+st.vz*uz;          // reflect only the part going into the rock
         if(vn<0){ st.vx-=1.4*vn*ux; st.vz-=1.4*vn*uz; st.vx*=0.55; st.vz*=0.55; }
         st.shake=0.45; st.stun=0.8; break outer; } }
   }
+  // steep walls (tunnel sides, cuttings): you slide along them instead of riding up
+  if(st.ground){ const md=Math.hypot(nx-st.x,nz-st.z), hn=heightAt(nx,nz);
+    if(md>1e-4 && hn-st.y>0.04 && (hn-st.y)/md>1.7){
+      const i=nI>=0?nI:st.lastIdx, [wx,wz]=lateral(i), lat=(nx-pts[i].x)*wx+(nz-pts[i].z)*wz, sg=Math.sign(lat)||1, ux=wx*sg, uz=wz*sg, vn=st.vx*ux+st.vz*uz;
+      if(vn>0){ if(racing && vn>14){ crash(feat[i]===3?'坑道の壁に激突！':'岩壁に激突！'); return; }
+        st.vx-=1.3*vn*ux; st.vz-=1.3*vn*uz; st.vx*=0.85; st.vz*=0.85; st.shake=Math.max(st.shake,0.25); }
+      nx=st.x; nz=st.z; } }
   st.x=nx; st.z=nz;
   const g=22, h=heightAt(st.x,st.z); st.dist=nD; st.hw=nI>=0?roadHalf[nI]:HALF;
   if(st.ground){
@@ -1147,6 +1333,7 @@ function step(dt){
     else { st.vy=nvy; st.y=h; }
   }else{
     st.vy-=g*dt; st.y+=st.vy*dt; st.air+=dt;
+    if(tunnel && nI>=0 && feat[nI]===3 && nD<tunnel.TH){ const top=ht[nI]+tunnel.ceil-1.95; if(st.y>top){ st.y=top; if(st.vy>0) st.vy=0; } }   // no flying through the roof
     if(st.y<=h){
       const impact=-st.vy; st.y=h; st.ground=true; st.vy=0;
       const wet=river && riverInfo(st.x,st.z)[0]<8, offRoad=nI<0 || nD>roadHalf[nI]+0.6 || (feat[nI]===1 && nD>BRIDGE_HALF+0.35);
@@ -1216,8 +1403,11 @@ function updateCamera(dt){
   const vA=Math.hypot(st.vx,st.vz);
   const camH = vA>4 ? st.h + wrapA(Math.atan2(st.vx,st.vz)-st.h)*0.6 : st.h;
   const fx=Math.sin(camH), fz=Math.cos(camH);
-  const want=new THREE.Vector3(st.x-fx*6.4,st.y+2.6,st.z-fz*6.4);
-  const gh=heightAt(want.x,want.z)+1.3; if(want.y<gh) want.y=gh;
+  let inT=0; if(tunnel){ nearest(st.x,st.z); const i=nI>=0?nI:st.lastIdx; inT=feat[i]===3?1:0; }
+  camTun+=(inT-camTun)*Math.min(1,dt*4);
+  const back=6.4-1.5*camTun;
+  const want=new THREE.Vector3(st.x-fx*back,st.y+2.6-0.75*camTun,st.z-fz*back);
+  const gh=heightAt(want.x,want.z)+1.3; if(want.y<gh && !(camTun>0.05 && gh>st.y+2.6)) want.y=gh;
   const look=new THREE.Vector3(st.x+fx*3.5,st.y+1.1,st.z+fz*3.5);
   if(!camInit){ camPos.copy(want); camLook.copy(look); camInit=true; }
   const k=1-Math.exp(-dt*5), kl=1-Math.exp(-dt*9);
