@@ -125,6 +125,14 @@ body.menu #touch{display:none}
   .pc{display:none}
 }
 @media (max-width:560px){ #ov{background:rgba(14,18,9,.8)} }
+/* phone held upright: much bigger buttons, brake stacked above the throttle */
+@media (pointer:coarse) and (orientation:portrait){
+  .tb{width:100px;height:100px;font-size:34px}
+  #btnG{left:14px;bottom:calc(24px + env(safe-area-inset-bottom,0px));width:118px;height:118px;font-size:24px}
+  #btnB{left:24px;bottom:calc(158px + env(safe-area-inset-bottom,0px));width:98px;height:98px;font-size:19px}
+  #btnL{right:122px;bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+  #btnR{right:12px;bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+}
 /* short screens (laptops, phones held sideways): tighten the title screen so the start button stays visible */
 @media (max-height:720px){
   .card{max-width:640px}
@@ -1897,6 +1905,11 @@ function goFull(){
   if(!MOBILE) return; const d=document.documentElement;
   try{ if(!document.fullscreenElement && d.requestFullscreen){ d.requestFullscreen({navigationUI:'hide'}).then(()=>{ try{ screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} }).catch(()=>{}); }
        else if(!document.webkitFullscreenElement && d.webkitRequestFullscreen) d.webkitRequestFullscreen(); }catch(e){}
+}
+// rotating the phone can drop full screen; the next tap during the race brings it back (a tap is needed: browsers only allow full screen on a user action)
+if(MOBILE){
+  document.addEventListener('touchend',()=>{ if((mode==='race'||mode==='count') && !document.fullscreenElement && !document.webkitFullscreenElement) goFull(); },{passive:true});
+  document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement && mode==='race') showMsg('画面をタップで全画面に戻ります',2.2); });
 }
 function startRace(){
   goFull();
