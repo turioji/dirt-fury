@@ -108,30 +108,39 @@ body.menu #touch{display:none}
 /* Touch controls */
 #touch{display:none}
 .sp{display:none}
+.padsw{display:none;gap:6px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--dim)}
+.padsw button{pointer-events:auto;font:inherit;font-weight:700;color:var(--paper);background:rgba(18,22,12,.6);border:1px solid rgba(243,239,226,.3);border-radius:8px;padding:7px 10px;cursor:pointer}
+.padsw button[aria-pressed="true"]{background:var(--plate);color:var(--plate-ink);border-color:var(--plate)}
 @media (pointer:coarse){
   .sp{display:block}
+  .padsw{display:flex}
   #touch{display:block}
   .tb{position:fixed;z-index:3;width:76px;height:76px;border-radius:50%;background:rgba(18,22,12,.55);border:2px solid rgba(243,239,226,.35);
     color:var(--paper);font-family:var(--f-num);font-weight:800;font-size:26px;display:flex;align-items:center;justify-content:center;touch-action:none}
   .tb.on{background:rgba(242,194,48,.85);color:var(--plate-ink)}
-  #btnL{right:106px;bottom:calc(26px + env(safe-area-inset-bottom,0px))}
-  #btnR{right:18px;bottom:calc(26px + env(safe-area-inset-bottom,0px))}
-  #btnG{left:18px;bottom:calc(26px + env(safe-area-inset-bottom,0px));width:92px;height:92px;font-size:18px}
-  #btnB{left:122px;bottom:calc(30px + env(safe-area-inset-bottom,0px));font-size:15px}
+  #btnL{left:18px;bottom:calc(26px + env(safe-area-inset-bottom,0px))}
+  #btnR{left:106px;bottom:calc(26px + env(safe-area-inset-bottom,0px))}
+  #btnG{right:18px;bottom:calc(26px + env(safe-area-inset-bottom,0px));width:92px;height:92px;font-size:18px}
+  #btnB{right:122px;bottom:calc(30px + env(safe-area-inset-bottom,0px));font-size:15px}
+  body.gasL #btnL{left:auto;right:106px} body.gasL #btnR{left:auto;right:18px}
+  body.gasL #btnG{right:auto;left:18px} body.gasL #btnB{right:auto;left:122px}
   #br{right:auto;left:50%;transform:translateX(-50%);bottom:auto;top:calc(12px + env(safe-area-inset-top,0px));text-align:center}
   #spd{font-size:60px}
   #map{width:110px;height:110px}
   #offroad{bottom:auto;top:calc(96px + env(safe-area-inset-top,0px))}
+  #btnRe{right:18px;top:calc(138px + env(safe-area-inset-top,0px));width:54px;height:54px;font-size:26px}
   .pc{display:none}
 }
 @media (max-width:560px){ #ov{background:rgba(14,18,9,.8)} }
 /* phone held upright: much bigger buttons, brake stacked above the throttle */
 @media (pointer:coarse) and (orientation:portrait){
   .tb{width:100px;height:100px;font-size:34px}
-  #btnG{left:14px;bottom:calc(24px + env(safe-area-inset-bottom,0px));width:118px;height:118px;font-size:24px}
-  #btnB{left:24px;bottom:calc(158px + env(safe-area-inset-bottom,0px));width:98px;height:98px;font-size:19px}
-  #btnL{right:122px;bottom:calc(30px + env(safe-area-inset-bottom,0px))}
-  #btnR{right:12px;bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+  #btnG{left:auto;right:14px;bottom:calc(24px + env(safe-area-inset-bottom,0px));width:118px;height:118px;font-size:24px}
+  #btnB{left:auto;right:24px;bottom:calc(158px + env(safe-area-inset-bottom,0px));width:98px;height:98px;font-size:19px}
+  #btnL{right:auto;left:12px;bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+  #btnR{right:auto;left:122px;bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+  body.gasL #btnG{right:auto;left:14px} body.gasL #btnB{right:auto;left:24px}
+  body.gasL #btnL{left:auto;right:122px} body.gasL #btnR{left:auto;right:12px}
 }
 /* short screens (laptops, phones held sideways): tighten the title screen so the start button stays visible */
 @media (max-height:720px){
@@ -165,6 +174,7 @@ body.menu #touch{display:none}
   <div class="tb" id="btnR" data-k="right">▶</div>
   <div class="tb" id="btnB" data-k="down">BRAKE</div>
   <div class="tb" id="btnG" data-k="up">GAS</div>
+  <div class="tb" id="btnRe">↺</div>
 </div>
 
 <div id="ov">
@@ -191,7 +201,8 @@ body.menu #touch{display:none}
       <kbd>M</kbd><span>エンジン音 ON/OFF</span>
     </div>
     <p class="lead">転倒できるのは3回まで。コツ：カーブ中にアクセルを開けると後輪が流れる。滑りすぎたら逆ハンドルで立て直そう。</p>
-    <p class="lead sp">スマホの操作：「スタート」→ 3・2・1のあと、左下の <b>GAS</b> を押しっぱなしで加速、右下の <b>◀ ▶</b> でハンドル、<b>BRAKE</b> で減速（ハンドルと一緒に押すと後輪が滑る）。横持ちがおすすめ。</p>
+    <p class="lead sp">スマホの操作：「スタート」→ 3・2・1のあと、<b>GAS</b> を押しっぱなしで加速、<b>◀ ▶</b> でハンドル、<b>BRAKE</b> で減速（ハンドルと一緒に押すと後輪が滑る、止まっている時に押し続けるとバック）。動けなくなったら右上の <b>↺</b> でコースに戻る。横持ちがおすすめ。</p>
+    <div class="padsw" role="group" aria-label="ボタン配置">ボタン配置：<button type="button" data-pad="steerL">ハンドル左（ファミコン式）</button><button type="button" data-pad="gasL">アクセル左</button></div>
     <button class="btn" id="startBtn">スタート <span class="pc">（SPACE）</span></button>
     <div class="best" id="bestTitle"></div>
   </div>
@@ -1818,14 +1829,16 @@ const KM={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',K
 addEventListener('keydown',e=>{
   if(KM[e.code]){ keys[KM[e.code]]=true; e.preventDefault(); }
   if((e.code==='Space'||e.code==='Enter') && !building && (mode==='title'||mode==='finish'||mode==='over')){ e.preventDefault(); startRace(); }
-  if(e.code==='KeyR' && mode==='race' && !st.crash){ if(OPEN){ placeAt(st.progress); } else { nearest(st.x,st.z); placeAt(nI>=0?nI:st.lastIdx); } }
+  if(e.code==='KeyR') backOnCourse();
   if(e.code==='KeyM') toggleSound();
   if(mode==='title' && ({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'tanada',Digit5:'koyo',Digit6:'circuit',Digit7:'trial'})[e.code]) selectCourse(({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'tanada',Digit5:'koyo',Digit6:'circuit',Digit7:'trial'})[e.code]);
 });
 addEventListener('keyup',e=>{ if(KM[e.code]) keys[KM[e.code]]=false; });
+function backOnCourse(){ if(mode!=='race' || st.crash) return; if(OPEN){ placeAt(st.progress); return; } if(xo) hintY=st.y; nearest(st.x,st.z); hintY=null; placeAt(nI>=0?nI:st.lastIdx); }
+{ const rb=$('btnRe'); if(rb){ rb.addEventListener('touchend',e=>{ e.preventDefault(); backOnCourse(); },{passive:false}); rb.addEventListener('click',backOnCourse); } }
 // touch buttons: real touch events (a long press must not turn into a context menu or cancel the press), pointer events for mouse/pen
 document.querySelectorAll('.tb').forEach(b=>{
-  const k=b.dataset.k, held=new Set();
+  const k=b.dataset.k, held=new Set(); if(!k) return;
   const set=v=>{ keys[k]=v; b.classList.toggle('on',v); };
   b.addEventListener('touchstart',e=>{ e.preventDefault(); for(const t of e.changedTouches) held.add(t.identifier); set(true); },{passive:false});
   const tend=e=>{ e.preventDefault(); for(const t of e.changedTouches) held.delete(t.identifier); if(!held.size) set(false); };
@@ -1837,7 +1850,12 @@ document.querySelectorAll('.tb').forEach(b=>{
 });
 addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; });
 const titleHTML=$('card').innerHTML;
+function padLayout(){ try{ return localStorage.getItem('dirt-fury-pad')==='gasL'?'gasL':'steerL'; }catch(e){ return 'steerL'; } }
+function applyPad(v){ document.body.classList.toggle('gasL',v==='gasL'); document.querySelectorAll('.padsw button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pad===v))); }
+applyPad(padLayout());
 function wireTitle(){
+  document.querySelectorAll('.padsw button').forEach(b=>b.addEventListener('click',()=>{ try{ localStorage.setItem('dirt-fury-pad',b.dataset.pad); }catch(e){} applyPad(b.dataset.pad); }));
+  applyPad(padLayout());
   $('startBtn').addEventListener('click',startRace);
   document.querySelectorAll('.course').forEach(b=>b.addEventListener('click',()=>selectCourse(b.dataset.c)));
   syncTitle();
@@ -2072,12 +2090,12 @@ function stepInner(dt){
     if(st.thrPos<0.15 && fwd>0.5) a-=0.4+Math.min(1,st.rpm)*1.4/st.gear*2;   // engine braking, stronger in low gears
     if(st.speed>maxV) a-=onRoad?(mud>0.2?10:4):12;
     rearSlide = racing && st.speed>8 && (keys.slide || (brk && Math.abs(st.steer)>0.4));
-    if(brk){ a-= st.speed>0.3 ? 3+11*st.brkPos : 3; }
+    if(brk){ a-= st.speed>0.3 ? 3+11*st.brkPos : 6.5; }   // holding brake at a standstill reverses, strongly enough to back up a bank
     if(keys.slide&&racing&&!brk){ a-= st.speed>0.3?5:0; }
     st.speed+=a*dt;
-    if(st.speed<-4) st.speed=-4;
+    if(st.speed<-5) st.speed=-5;
     st.speed-=Math.sin(slope)*9.8*0.55*dt;
-    const roll=(onRoad?0.35:2.2)+Math.abs(st.speed)*0.025;
+    const roll=(st.speed<0&&brk?0.5:onRoad?0.35:2.2)+Math.abs(st.speed)*0.025;
     if(st.speed>0) st.speed=Math.max(0,st.speed-roll*dt); else if(st.speed<0) st.speed=Math.min(0,st.speed+roll*dt);
     const sp=Math.abs(st.speed);
     const turn=1.75*Math.min(1,sp/5)*(1-0.42*Math.min(1,sp/31))*Math.sign(st.speed);
