@@ -40,12 +40,13 @@ html,body{height:100%;margin:0;overflow:hidden;background:#1b2414;color:var(--pa
 @media (prefers-reduced-motion:reduce){.lives.hit{animation:none}}
 h1.over{color:#e2552a}
 h1.over span{font-family:var(--f-jp);font-weight:700;font-size:.3em;letter-spacing:.06em;color:var(--paper)}
-.courses{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;max-width:560px}
+.courses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-width:460px}
 .course{pointer-events:auto;cursor:pointer;text-align:left;display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center;padding:10px 12px;border-radius:10px;
   background:rgba(18,22,12,.55);border:2px solid rgba(243,239,226,.18);color:var(--paper);font-family:var(--f-jp)}
 .course b{grid-column:1/-1;font-size:14px;font-weight:900;white-space:nowrap}
 .course em{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.1em;padding:1px 7px;border-radius:4px;background:var(--leaf);color:var(--plate-ink)}
 .course em.mid{background:var(--plate);color:var(--plate-ink)}
+.course em.trial{background:#5aa0c8;color:#0f1a20}
 .course em.hard{background:#e2552a;color:var(--paper)}
 .course small{font-size:11px;line-height:1.35;color:var(--dim)}
 .course[aria-checked="true"]{border-color:var(--plate);background:rgba(242,194,48,.14)}
@@ -67,7 +68,7 @@ h1.over span{font-family:var(--f-jp);font-weight:700;font-size:.3em;letter-spaci
 @media (prefers-reduced-motion:reduce){#gear.shift{animation:none}}
 @media (pointer:coarse){#tach{width:140px;margin:4px auto 6px}}
 #gear{display:inline-block;margin-left:10px;background:var(--plate);color:var(--plate-ink);border-radius:4px;padding:2px 7px;font-size:18px}
-#msg{left:0;right:0;top:34%;text-align:center;font-family:var(--f-num);font-weight:800;font-size:clamp(56px,14vw,140px);
+#msg{left:0;right:0;top:34%;text-align:center;font-family:var(--f-num);font-weight:800;font-size:clamp(40px,8vw,96px);line-height:1.05;padding-inline:16px;
   color:var(--paper);text-shadow:0 6px 24px rgba(0,0,0,.55);letter-spacing:.02em}
 #air{left:0;right:0;top:22%;text-align:center;font-family:var(--f-num);font-weight:800;font-size:44px;color:var(--plate);
   text-shadow:0 4px 14px rgba(0,0,0,.5);opacity:0;transition:opacity .25s}
@@ -130,7 +131,7 @@ h1 span{display:block;font-family:var(--f-num);font-weight:800;font-size:.42em;l
 <canvas id="c"></canvas>
 
 <div class="hud" id="tl">
-  <div class="plate"><div class="lbl">LAP</div><div class="big" id="lap">1/3</div></div>
+  <div class="plate"><div class="lbl" id="lapLbl">LAP</div><div class="big" id="lap">1/3</div></div>
   <div class="chip"><b>TIME</b><span id="time">0:00.00</span></div>
   <div class="chip"><b>BEST</b><span id="bestHud">--:--.--</span></div>
   <div class="chip lives"><b>LIFE</b><span id="lives"></span></div>
@@ -157,6 +158,7 @@ h1 span{display:block;font-family:var(--f-num);font-weight:800;font-size:.42em;l
       <button class="course" data-c="forest" role="radio"><b>森の林道</b><em>初級</em><small>ジャンプ台とウォッシュボード</small></button>
       <button class="course" data-c="mine" role="radio"><b>廃坑トンネル</b><em class="mid">中級</em><small>暗いトンネル・トロッコ・落盤</small></button>
       <button class="course" data-c="canyon" role="radio"><b>渓谷アドベンチャー</b><em class="hard">上級</em><small>吊橋・大岩の門・崖沿いの細道</small></button>
+      <button class="course" data-c="trial" role="radio"><b>フィヨルド・ダウンヒル</b><em class="trial">トライアル</em><small>つづら折り・ガレ場・断崖ジャンプ</small></button>
     </div>
     <p class="lead" id="courseLead">山あいの未舗装林道を3周するタイムアタック。ジャンプ台で飛んで、ウォッシュボードを抜けて、木にはぶつからないように。</p>
     <div class="keys pc">
@@ -202,19 +204,23 @@ const COURSES={
   canyon:{id:'canyon',name:'渓谷アドベンチャー',level:'上級',tag:'吊橋・大岩の門・崖沿いの細道',
     eyebrow:'ADVENTURE · CANYON RUN · 3 LAPS',
     lead:'渓流に架かる吊橋、大岩の門、岩の迷路、倒木、断崖の細道。踏み外して落ちたら1ミスの上級コース。',
-    seed:9157, NC:16, rad:180, radVar:58, ns:1800, width:8, size:680, seg:440, fog:0xb7c5c2, adventure:true, type:'canyon'}
+    seed:9157, NC:16, rad:180, radVar:58, ns:1800, width:8, size:680, seg:440, fog:0xb7c5c2, adventure:true, type:'canyon'},
+  trial:{id:'trial',name:'フィヨルド・ダウンヒル',level:'トライアル',tag:'つづら折り・ガレ場・断崖ジャンプ',
+    eyebrow:'TRIAL · FJORD DOWNHILL · ONE RUN',
+    lead:'雪の残る山頂から一本道で駆け下りる。つづら折り、ガレ場、岩棚の先は、下の見えない断崖ジャンプ。全開で飛ばないとフィヨルドに落ちる。',
+    seed:6203, width:7, size:760, seg:420, fog:0xbccad2, adventure:true, type:'trial', open:true}
 };
 const LAPS=3, K=18, CELL=30, TCELL=8, BRIDGE_HALF=1.7;
 let course=COURSES.forest, W=9, HALF=4.5, SIZE=560;
 let NS=0, curve=null, pts=[], tan=[], ht=null, curv=[], kickers=[], whoops, crowdSpots=[], grid=new Map();
 let roadHalf=null, feat=null, cliffW=null, cliffSide=1, river=null, adv=null, featMarks=[], tunnel=null, tunW=null;
 let trees=[], tgrid=new Map(), rgrid=new Map(), crowd=[], world=null, waterTex=null, bridgeG=null;
-function cdist(a,b){ const d=Math.abs(a-b)%NS; return Math.min(d,NS-d); }
+function cdist(a,b){ if(OPEN) return Math.abs(a-b); const d=Math.abs(a-b)%NS; return Math.min(d,NS-d); }
 
 function lateral(i){ const t=tan[i]; return [-t.z,t.x]; }
 function cornerSide(i){ const a=tan[(i-22+NS)%NS], b=tan[(i+22)%NS], [nx,nz]=lateral(i); return ((b.x-a.x)*nx+(b.z-a.z)*nz)>0?1:-1; }
 function addSpot(i,side,label){
-  i=((i%NS)+NS)%NS;
+  i=wrapI(i);
   if(crowdSpots.some(c=>Math.min(Math.abs(c.i-i),NS-Math.abs(c.i-i))<35 && c.side===side)) return;
   const [nx,nz]=lateral(i), off=HALF+5.2;
   crowdSpots.push({i,side,label,cx:pts[i].x+nx*off*side,cz:pts[i].z+nz*off*side,ex:0,cool:0});
@@ -254,14 +260,16 @@ function mtnAt(x,z){
 function heightAt(x,z,mesh){
   nearest(x,z);
   const n=noise(x,z);
-  if(nI<0) return carve(n+6,x,z);
+  if(nI<0) return baseGrid ? fjordCarve(baseH(x,z)+n*0.35,x,z) : carve(n+6,x,z);
   // interpolate the road height along the segment we are on (no steps between samples)
-  let i0=nI, i1=(nI+1)%NS, A=pts[i0], B=pts[i1];
-  let t=((x-A.x)*(B.x-A.x)+(z-A.z)*(B.z-A.z))/((B.x-A.x)**2+(B.z-A.z)**2);
-  if(t<0){ i1=i0; i0=(nI-1+NS)%NS; A=pts[i0]; B=pts[i1]; t=((x-A.x)*(B.x-A.x)+(z-A.z)*(B.z-A.z))/((B.x-A.x)**2+(B.z-A.z)**2); }
+  let i0=nI, i1=wrapI(nI+1), A=pts[i0], B=pts[i1];
+  const seg=(A,B)=>{ const L2=(B.x-A.x)**2+(B.z-A.z)**2; return L2>0 ? ((x-A.x)*(B.x-A.x)+(z-A.z)*(B.z-A.z))/L2 : 0; };
+  let t=seg(A,B);
+  if(t<0){ i1=i0; i0=wrapI(nI-1); A=pts[i0]; B=pts[i1]; t=seg(A,B); }
   t=clamp(t,0,1);
   const rh=ht[i0]+(ht[i1]-ht[i0])*t, d=nD;
-  const nat=n+6*sstep(HALF+6,30,d);
+  const nat=baseGrid ? baseH(x,z)+n*0.35 : n+6*sstep(HALF+6,30,d);
+  if(feat[nI]===4) return fjordCarve(nat,x,z);        // the gap before the landing hill: only the fjord below
   if(feat[nI]===3){                                   // mine tunnel: the road runs inside the mountain
     const T=tunnel, cover=rh+T.ceil+1.5-Math.max(0,d-T.TH-2)*0.8;
     if(d<=T.TH && !mesh) return rh;
@@ -273,16 +281,156 @@ function heightAt(x,z,mesh){
   }
   const hw=roadHalf[nI];
   if(d<=hw) return rh;
-  let h=lerp(rh, nat, sstep(hw,hw+12,d));
+  let h=lerp(rh, nat, sstep(hw,hw+(OPEN?6:12),d));
   const cw=cliffW[nI];
   if(cw>0){ const [lx,lz]=lateral(nI), lat=(x-pts[nI].x)*lx+(z-pts[nI].z)*lz;
     if(lat*cliffSide>0) h=Math.min(h, rh-16*cw*sstep(hw+0.3,hw+4,d)); }   // sheer drop on the valley side
   if(tunnel){ const m=mtnAt(x,z); if(m>h) h=lerp(h,m,sstep(hw+0.5,hw+4,d)); }   // cutting through the mountain flank
+  if(trial) h=fjordCarve(h,x,z);
   return carve(h,x,z);
+}
+
+// ---------- trial: one-way downhill course ending in a fjord cliff jump ----------
+let OPEN=false, trial=null, baseGrid=null, gripMul=null;
+function wrapI(i){ return OPEN ? (i<0?0:i>=NS?NS-1:i) : ((i%NS)+NS)%NS; }
+// broad mountain surface built from the road heights, so the hillside follows the descent
+function baseH(x,z){ const g=baseGrid, fx=(x-g.x0)/g.cs, fz=(z-g.z0)/g.cs;
+  const ix=clamp(Math.floor(fx),0,g.n-2), iz=clamp(Math.floor(fz),0,g.n-2), tx=clamp(fx-ix,0,1), tz=clamp(fz-iz,0,1);
+  const a=g.h[iz*g.n+ix], b=g.h[iz*g.n+ix+1], c=g.h[(iz+1)*g.n+ix], d=g.h[(iz+1)*g.n+ix+1];
+  return lerp(lerp(a,b,tx),lerp(c,d,tx),tz); }
+// the fjord: a sea channel with sheer walls across the end of the run-up
+function fjordCarve(h,x,z){ if(!trial) return h; const f=trial.fj, rx=x-f.x, rz=z-f.z;
+  const across=Math.abs(rx*f.hx+rz*f.hz);
+  if(across<f.hw) return Math.min(h,-7);
+  if(across<f.hw+2.5) return Math.min(h,lerp(-7,h,(across-f.hw)/2.5));
+  return h; }
+
+function buildTrialTrack(c){
+  R=rng(c.seed); W=c.width; HALF=W/2; SIZE=c.size; OPEN=true;
+  // turtle path: straight runs, hairpins and bends, each point tagged with its section
+  const D=[]; let x=0,z=0,a=Math.PI,y=0; const st=0.5;
+  const fwd=(len,slope,sec)=>{ for(let s=0;s<len;s+=st){ x+=Math.sin(a)*st; z+=Math.cos(a)*st; y+=slope*st; D.push([x,z,y,sec]); } };
+  const arc=(deg,r,slope,sec)=>{ const ang=deg*Math.PI/180, n=Math.ceil(Math.abs(ang)*r/st), da=ang/n; for(let k=0;k<n;k++){ a+=da; x+=Math.sin(a)*st; z+=Math.cos(a)*st; y+=slope*st; D.push([x,z,y,sec]); } };
+  fwd(34,0,'start'); arc(90,16,-0.04,'sw'); fwd(72,-0.11,'sw');
+  arc(-180,11,-0.07,'hp'); fwd(72,-0.11,'sw');
+  arc(180,11,-0.07,'hp'); fwd(72,-0.11,'sw');
+  arc(-180,11,-0.07,'hp'); fwd(72,-0.11,'sw');
+  arc(180,11,-0.07,'hp'); fwd(40,-0.1,'sw'); arc(-90,18,-0.05,'sw');
+  fwd(85,-0.40,'scree');
+  arc(25,40,-0.10,'link'); fwd(72,-0.05,'ledge'); arc(-25,40,-0.06,'link');
+  fwd(100,-0.04,'runup'); fwd(14,0,'ramp');
+  fwd(40,0,'gap'); fwd(50,0,'land'); fwd(72,-0.035,'runout'); fwd(16,0,'end');
+  // shape the special sections
+  let secStart={}; D.forEach((p,i)=>{ if(secStart[p[3]]===undefined) secStart[p[3]]=i; });
+  let lipY=0;
+  for(let i=0;i<D.length;i++){ const sec=D[i][3], k=(i-secStart[sec])*st;
+    if(sec==='ledge'){ D[i][2]-=2.0*Math.min(4,Math.floor(k/15)); }
+    if(sec==='ramp'){ const u=k/14; D[i][2]+=3.4*Math.pow(u,1.5); lipY=D[i][2]; } }
+  // carry the ledge drops into everything after them
+  { const drop=2.0*4; let after=false; for(let i=0;i<D.length;i++){ if(D[i][3]==='link' && i>secStart.ledge){ after=true; } if(after) D[i][2]-=drop; } lipY-=drop; }
+  const landTop=lipY-26;
+  for(let i=0;i<D.length;i++){ const sec=D[i][3], k=(i-secStart[sec])*st;
+    if(sec==='gap'){ D[i][2]=lerp(lipY,landTop,k/40); }
+    if(sec==='land'){ const u=k/50; D[i][2]=landTop-50*(0.75*u-0.325*u*u); } }
+  const landEnd=landTop-50*(0.75-0.325);
+  { let base=null; for(let i=0;i<D.length;i++){ const sec=D[i][3]; if(sec==='runout'||sec==='end'){ if(base===null){ base=i; } const k=(i-base)*st; D[i][2]=landEnd-0.035*Math.min(k,72); } } }
+  // lift everything so the lip sits 72 m above the sea, and centre the map
+  const lift=72-lipY; let mnx=1e9,mxx=-1e9,mnz=1e9,mxz=-1e9; D.forEach(p=>{ p[2]+=lift; mnx=Math.min(mnx,p[0]);mxx=Math.max(mxx,p[0]);mnz=Math.min(mnz,p[1]);mxz=Math.max(mxz,p[1]); });
+  const cx=(mnx+mxx)/2, cz=(mnz+mxz)/2;
+  // resample to ~0.62 m spacing
+  const cum=[0]; for(let i=1;i<D.length;i++) cum.push(cum[i-1]+Math.hypot(D[i][0]-D[i-1][0],D[i][1]-D[i-1][1]));
+  const total=cum[cum.length-1]; NS=Math.round(total/0.62);
+  pts=[]; ht=new Float32Array(NS); const secs=[]; let q=0;
+  for(let i=0;i<NS;i++){ const s=i/(NS-1)*total; while(q<cum.length-2 && cum[q+1]<s) q++;
+    const u=(s-cum[q])/((cum[q+1]-cum[q])||1), A=D[q], B=D[q+1];
+    pts.push(new THREE.Vector3(lerp(A[0],B[0],u)-cx,0,lerp(A[1],B[1],u)-cz)); ht[i]=lerp(A[2],B[2],u); secs.push(u<0.5?A[3]:B[3]); }
+  // smooth the grade where sections join, so the bike doesn't hop off every kink (jumps, ledges and the landing keep their shape)
+  { const keep=new Set(['ledge','ramp','gap','land']), src=ht.slice();
+    for(let i=0;i<NS;i++){ if(keep.has(secs[i])) continue; let a=0,c=0; for(let k=-16;k<=16;k++){ const j=i+k; if(j<0||j>=NS||keep.has(secs[j])) continue; a+=src[j]; c++; } ht[i]=a/c; } }
+  curve=null;
+  tan=pts.map((p,i)=>{ const a=pts[Math.max(0,i-1)], b=pts[Math.min(NS-1,i+1)]; return new THREE.Vector3(b.x-a.x,0,b.z-a.z).normalize(); });
+  curv=pts.map((p,i)=>1 - tan[Math.max(0,i-22)].dot(tan[Math.min(NS-1,i+22)]));
+  roadHalf=new Float32Array(NS).fill(HALF); feat=new Uint8Array(NS); cliffW=new Float32Array(NS); tunW=new Float32Array(NS); gripMul=new Float32Array(NS).fill(1);
+  river=null; adv={spots:[],props:[]}; featMarks=[]; tunnel=null; kickers=[]; whoops=undefined;
+  const first=s=>secs.indexOf(s), last=s=>secs.lastIndexOf(s);
+  for(let i=0;i<NS;i++){ if(secs[i]==='gap') feat[i]=4; if(secs[i]==='scree') gripMul[i]=0.6; }
+  grid=new Map(); pts.forEach((p,i)=>{ const k=gk(Math.floor(p.x/CELL),Math.floor(p.z/CELL)); if(!grid.has(k)) grid.set(k,[]); grid.get(k).push(i); });
+  const lip=last('ramp'), g0=first('gap'), g1=last('gap'), gm=(g0+g1)>>1, l0=first('land'), l1=last('land');
+  const h=tan[gm];
+  trial={lip, g0, g1, l0, l1, runup:first('runup')+4, finish:last('runout')-2, secs,
+    fj:{x:pts[gm].x,z:pts[gm].z,hx:h.x,hz:h.z,hw:20}, lipPos:{x:pts[lip].x,z:pts[lip].z,y:ht[lip]}, side:lateral(lip)};
+  // mountain surface: smooth blend of road heights, sinking into the sea at the edges
+  { const cs=8, n=Math.ceil(SIZE/cs)+2, x0=-SIZE/2-cs, z0=-SIZE/2-cs, hh=new Float32Array(n*n);
+    const S=[]; for(let i=0;i<NS;i+=3) if(feat[i]!==4) S.push(i);
+    for(let iz=0;iz<n;iz++) for(let ix=0;ix<n;ix++){ const X=x0+ix*cs, Z=z0+iz*cs; let sw=0, sh=0;
+      for(const i of S){ const dx=pts[i].x-X, dz=pts[i].z-Z, w=1/(1+((dx*dx+dz*dz)/(26*26))**2); sw+=w; sh+=w*ht[i]; }
+      const edge=sstep(SIZE/2-10,SIZE/2-90,Math.max(Math.abs(X),Math.abs(Z)));
+      hh[iz*n+ix]=lerp(-12,sh/sw,edge); }
+    baseGrid={cs,n,x0,z0,h:hh}; }
+  // labels and spectators
+  featMarks.push({i:first('hp')-40,label:'つづら折り'},{i:first('scree')-20,label:'ガレ場'},{i:first('ledge')-10,label:'岩棚'},{i:first('runup')+6,label:'断崖ジャンプ 全開で飛べ！'});
+  crowdSpots=[];
+  addSpot(14,1,'start'); addSpot(14,-1,'start');
+  const hp2=secs.indexOf('hp',first('hp')+120); if(hp2>0) addSpot(hp2+20,cornerSide(hp2+20),'corner');
+  addSpot(first('scree')+80,1,'scree');
+  addSpot(l1+50,1,'finish'); addSpot(l1+50,-1,'finish');
+  addSpot(trial.runup+60,-1,'runup');
+}
+
+function buildTrialProps(){
+  const T=trial;
+  // the sea, reaching to the horizon
+  { const c=document.createElement('canvas'); c.width=c.height=256; const g=c.getContext('2d'); g.fillStyle='#2f5f6e'; g.fillRect(0,0,256,256);
+    for(let k=0;k<260;k++){ const x=R()*256, y=R()*256, l=6+R()*18; g.strokeStyle=`rgba(220,240,245,${0.08+R()*0.18})`; g.lineWidth=1; g.beginPath(); g.moveTo(x,y); g.quadraticCurveTo(x+l/2,y-2,x+l,y); g.stroke(); }
+    waterTex=new THREE.CanvasTexture(c); waterTex.wrapS=waterTex.wrapT=THREE.RepeatWrapping; waterTex.repeat.set(40,40);
+    const sea=new THREE.Mesh(new THREE.PlaneGeometry(4000,4000).rotateX(-Math.PI/2),new THREE.MeshPhongMaterial({map:waterTex,color:0xffffff,shininess:70,specular:0x7799aa}));
+    sea.position.y=0; world.add(sea); }
+  // snowy peaks around the fjord
+  { const mm=new THREE.MeshLambertMaterial({color:0x5f6a70,flatShading:true}), sm=new THREE.MeshLambertMaterial({color:0xf2f5f7,flatShading:true});
+    for(let k=0;k<9;k++){ const ang=k/9*Math.PI*2+R()*0.3, rad=SIZE*0.62+R()*120, hgt=160+R()*140, r=120+R()*80;
+      const g=new THREE.Group(); const body=new THREE.Mesh(new THREE.ConeGeometry(r,hgt,7),mm); body.position.y=hgt/2-25; g.add(body);
+      const cap=new THREE.Mesh(new THREE.ConeGeometry(r*0.36,hgt*0.36,7),sm); cap.position.y=hgt-25-hgt*0.18+0.5; g.add(cap);
+      g.position.set(Math.cos(ang)*rad,0,Math.sin(ang)*rad); g.rotation.y=R()*6; world.add(g); } }
+  // run-up: banner, then flags and boards at the lip
+  const yawAt=i=>Math.atan2(tan[i].x,tan[i].z);
+  const banner=(i,text,bg,fg)=>{ const p=pts[i], t=tan[i], [nx,nz]=lateral(i), y=ht[i], postM=new THREE.MeshLambertMaterial({color:0x2b2b25});
+    for(const s of [-1,1]){ const post=new THREE.Mesh(new THREE.BoxGeometry(0.3,5,0.3),postM); post.position.set(p.x+nx*(HALF+0.7)*s,y+2.5,p.z+nz*(HALF+0.7)*s); world.add(post); }
+    const cv=document.createElement('canvas'); cv.width=1024; cv.height=128; const g=cv.getContext('2d'); g.fillStyle=bg; g.fillRect(0,0,1024,128); g.fillStyle=fg;
+    for(let k=0;k<32;k++) g.fillRect(k*32,(k%2)*112,32,16);
+    g.font='italic 800 76px "Saira Extra Condensed", Impact, sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(text,512,68);
+    const ban=new THREE.Mesh(new THREE.BoxGeometry(W+1.6,1.2,0.12),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(cv)}));
+    ban.position.set(p.x,y+4.6,p.z); ban.rotation.y=yawAt(i)+Math.PI; world.add(ban); };
+  banner(T.runup,'FJORD JUMP  ·  FULL THROTTLE','#e2552a','#16170f');
+  banner(T.finish,'DIRT FURY  ·  FINISH','#f2c230','#16170f');
+  for(const k of [T.lip-30,T.lip-15,T.lip]) for(const sd of [-1,1]){ const [nx,nz]=lateral(k), f=new THREE.Mesh(new THREE.ConeGeometry(0.28,1.3,4),new THREE.MeshLambertMaterial({color:k===T.lip?0xf2c230:0xe2552a}));
+    f.position.set(pts[k].x+nx*(HALF+0.4)*sd,ht[k]+0.65,pts[k].z+nz*(HALF+0.4)*sd); world.add(f); }
+  // timber ramp sides so the kicker reads as a built jump
+  { const wood=new THREE.MeshLambertMaterial({color:0x7a5534}); const r0=T.lip-22;
+    for(let k=r0;k<T.lip;k+=2) for(const sd of [-1,1]){ const [nx,nz]=lateral(k), b=new THREE.Mesh(new THREE.BoxGeometry(0.25,Math.max(0.3,ht[k]-ht[r0]+0.6),1.3),wood);
+      b.position.set(pts[k].x+nx*(HALF+0.15)*sd,(ht[k]+ht[r0])/2-0.1,pts[k].z+nz*(HALF+0.15)*sd); b.rotation.y=yawAt(k); world.add(b); } }
+  // distance markers on the landing hill, measured from the lip
+  { const lp=T.lipPos;
+    for(let m=30;m<=110;m+=10){ let best=-1, bd=1e9; for(let i=T.l0;i<=Math.min(NS-1,T.l1+60);i++){ const d=Math.abs(Math.hypot(pts[i].x-lp.x,pts[i].z-lp.z)-m); if(d<bd){bd=d;best=i;} } if(best<0||bd>1) continue;
+      const i=best, y=ht[i], stripe=new THREE.Mesh(new THREE.PlaneGeometry(W,0.35).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:m%50===0?0xe2552a:0xf3efe2,polygonOffset:true,polygonOffsetFactor:-6}));
+      stripe.position.set(pts[i].x,y+0.08,pts[i].z); stripe.rotation.y=yawAt(i); world.add(stripe);
+      const cv=document.createElement('canvas'); cv.width=128; cv.height=64; const g=cv.getContext('2d'); g.fillStyle='#f3efe2'; g.fillRect(0,0,128,64); g.fillStyle='#16170f'; g.font='800 44px "Saira Extra Condensed", Impact, sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(m+'m',64,34);
+      for(const sd of [-1,1]){ const [nx,nz]=lateral(i), board=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.7),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(cv),side:THREE.DoubleSide}));
+        board.position.set(pts[i].x+nx*(HALF+1)*sd,y+0.9,pts[i].z+nz*(HALF+1)*sd); board.rotation.y=yawAt(i)+Math.PI; world.add(board); } } }
+  // loose stones in the scree chute (they bump you about)
+  { const i0=T.secs.indexOf('scree'), i1=T.secs.lastIndexOf('scree'), sg=new THREE.DodecahedronGeometry(0.24,0), n=40, sm=new THREE.InstancedMesh(sg,new THREE.MeshPhongMaterial({color:0x8a8478,flatShading:true,shininess:0,specular:0}),n);
+    const M=new THREE.Matrix4(), Q=new THREE.Quaternion(), V=new THREE.Vector3(), S=new THREE.Vector3();
+    for(let k=0;k<n;k++){ const i=i0+Math.floor(R()*(i1-i0)), [x,z]=onTrack(i,(R()-.5)*2*(HALF-0.4)), y=heightAt(x,z);
+      Q.setFromEuler(new THREE.Euler(R()*3,R()*3,R()*3)); S.setScalar(0.8+R()*0.7); V.set(x,y+0.06,z); M.compose(V,Q,S); sm.setMatrixAt(k,M); addBlock(x,z,{r:0.4,top:y+0.32,small:true}); }
+    world.add(sm); }
+  // the edge of each rock ledge
+  { const i0=T.secs.indexOf('ledge'), rockM=new THREE.MeshPhongMaterial({color:0x6f6a60,flatShading:true,shininess:0,specular:0});
+    for(let s=1;s<=4;s++){ const i=Math.min(NS-1,i0+Math.round(s*15/0.62)-1); for(const sd of [-1,1]){ const [x,z]=onTrack(i,sd*(HALF+0.6)); const b=makeBoulder(0.8,0.6,0.9,s*2+sd); b.position.set(x,heightAt(x,z)+0.2,z); world.add(b); } } }
 }
 
 // ---------- track generation ----------
 function buildTrack(c){
+  trial=null; baseGrid=null; gripMul=null; OPEN=false;
+  if(c.type==='trial'){ buildTrialTrack(c); return; }
   R=rng(c.seed); W=c.width; HALF=W/2; SIZE=c.size;
   const ctrl=[];
   for(let i=0;i<c.NC;i++){ const a=i/c.NC*Math.PI*2; const r=c.rad+(R()-.5)*c.radVar; ctrl.push(new THREE.Vector3(Math.cos(a)*r,0,Math.sin(a)*r*.85)); }
@@ -584,6 +732,7 @@ function buildCourse(id){
   buildTerrain(); buildRoad(); buildTrees(); buildGate();
   if(course.type==='canyon') buildAdventureProps();
   if(course.type==='mine') buildMineProps();
+  if(course.type==='trial') buildTrialProps();
   buildSpectators();
   computeMap();
   // clear transient effects from the previous course
@@ -606,6 +755,7 @@ function buildTerrain(){
     const v=0.92+R()*0.12; col[i*3]=c.r*v; col[i*3+1]=c.g*v; col[i*3+2]=c.b*v;
   }
   geo.computeVertexNormals();
+  if(trial){ const snow=new THREE.Color(0xeef2f4); for(let i=0;i<pos.count;i++){ const y=pos.getY(i), k=sstep(128,150,y)*(0.75+0.25*Math.sin(pos.getX(i)*0.2)); if(k>0){ col[i*3]=lerp(col[i*3],snow.r,k); col[i*3+1]=lerp(col[i*3+1],snow.g,k); col[i*3+2]=lerp(col[i*3+2],snow.b,k); } } }
   if(course.adventure){ // river banks and cliff faces: bare rock with moss
     const nrm=geo.attributes.normal, rock=new THREE.Color(0x7b7466), moss=new THREE.Color(0x58693a), k=new THREE.Color();
     for(let i=0;i<pos.count;i++){ const steep=sstep(0.86,0.6,nrm.getY(i)); if(steep<=0) continue;
@@ -627,7 +777,7 @@ function buildRoad(){
     for(let y=0;y<=256;y+=8){ const x=cx+Math.sin(y/256*Math.PI*2)*4; y?g.lineTo(x,y):g.moveTo(x,y);} g.stroke(); }
   g.fillStyle='rgba(40,30,18,.25)'; g.fillRect(0,0,8,256); g.fillRect(120,0,8,256);
   const tex=new THREE.CanvasTexture(cv); tex.wrapS=tex.wrapT=THREE.RepeatWrapping; tex.anisotropy=4;
-  const n=NS+1, P=new Float32Array(n*2*3), UV=new Float32Array(n*2*2), idx=[];
+  const n=OPEN?NS:NS+1, P=new Float32Array(n*2*3), UV=new Float32Array(n*2*2), idx=[];
   let acc=0;
   for(let j=0;j<n;j++){
     const i=j%NS, p=pts[i], t=tan[i], nx=-t.z, nz=t.x, hw=roadHalf[i];
@@ -635,7 +785,7 @@ function buildRoad(){
     const y=ht[i]+0.05;
     P.set([p.x+nx*hw,y,p.z+nz*hw, p.x-nx*hw,y,p.z-nz*hw], j*6);
     UV.set([0.5-hw/9,acc/9, 0.5+hw/9,acc/9], j*4);
-    if(j<n-1 && feat[i]!==1 && feat[(j+1)%NS]!==1){ const a=j*2; idx.push(a,a+1,a+2, a+1,a+3,a+2); }   // no dirt on the bridge
+    if(j<n-1 && feat[i]!==1 && feat[(j+1)%NS]!==1 && feat[i]!==4 && feat[(j+1)%NS]!==4){ const a=j*2; idx.push(a,a+1,a+2, a+1,a+3,a+2); }   // no dirt on the bridge
   }
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.BufferAttribute(P,3)); geo.setAttribute('uv',new THREE.BufferAttribute(UV,2));
@@ -651,7 +801,7 @@ function buildTrees(){
     nearest(x,z); const d=nD;
     if(d<HALF+3.2) continue;
     if(nearCrowd(x,z)) continue;
-    if(course.adventure){ if(river && riverInfo(x,z)[0]<12) continue; if(nearProp(x,z,3)) continue; if(nI>=0 && feat[nI]===1) continue; }
+    if(course.adventure){ if(river && riverInfo(x,z)[0]<12) continue; if(nearProp(x,z,3)) continue; if(nI>=0 && (feat[nI]===1||feat[nI]===4)) continue; if(trial && heightAt(x,z)<3) continue; }
     if(d>45 && R()<0.45) continue;
     const s=0.75+R()*0.9;
     trees.push({x,z,y:heightAt(x,z),s,r:0.28*s+0.5,type:R()<.78?0:1});
@@ -974,7 +1124,7 @@ function buildSpectators(){
     const [nx,nz]=lateral(spot.i), t=tan[spot.i], side=spot.side;
     // tape fence along the road edge
     const fenceOff=HALF+2.6, posts=[];
-    for(let j=-10;j<=10;j+=4){ const q=pts[(spot.i+j+NS)%NS], [qx,qz]=lateral((spot.i+j+NS)%NS);
+    for(let j=-10;j<=10;j+=4){ const q=pts[wrapI(spot.i+j)], [qx,qz]=lateral(wrapI(spot.i+j));
       const x=q.x+qx*fenceOff*side, z=q.z+qz*fenceOff*side, y=heightAt(x,z);
       const post=new THREE.Mesh(G.post,M(0xd9d4c4)); post.position.set(x,y-0.05,z); world.add(post); posts.push([x,y,z]); blk(x,z,0.3,y+1.15); }
     for(let j=0;j<posts.length-1;j++){ const [ax,ay,az]=posts[j], [bx,by,bz]=posts[j+1]; const len=Math.hypot(bx-ax,bz-az);
@@ -1020,10 +1170,13 @@ function computeMap(){ let mnx=1e9,mxx=-1e9,mnz=1e9,mxz=-1e9; pts.forEach(p=>{mn
 const mp=(x,z)=>[150-(x-mcx)*msc,150-(z-mcz)*msc];
 function drawMap(){
   mctx.clearRect(0,0,300,300);
+  if(trial){ const f=trial.fj, a=mp(f.x+f.hz*400,f.z-f.hx*400), b=mp(f.x-f.hz*400,f.z+f.hx*400);
+    mctx.save(); mctx.beginPath(); mctx.arc(150,150,146,0,7); mctx.clip(); mctx.strokeStyle='rgba(70,140,170,.9)'; mctx.lineWidth=16; mctx.beginPath(); mctx.moveTo(a[0],a[1]); mctx.lineTo(b[0],b[1]); mctx.stroke(); mctx.restore();
+    const [fx,fy]=mp(pts[trial.finish].x,pts[trial.finish].z); mctx.fillStyle='#f2c230'; mctx.fillRect(fx-6,fy-6,12,12); }
   if(river){ const a=mp(river.px-river.dx*400,river.pz-river.dz*400), b=mp(river.px+river.dx*400,river.pz+river.dz*400);
     mctx.save(); mctx.beginPath(); mctx.arc(150,150,146,0,7); mctx.clip(); mctx.strokeStyle='rgba(90,170,190,.85)'; mctx.lineWidth=8; mctx.beginPath(); mctx.moveTo(a[0],a[1]); mctx.lineTo(b[0],b[1]); mctx.stroke(); mctx.restore(); }
   mctx.lineJoin='round'; mctx.lineWidth=14; mctx.strokeStyle='rgba(0,0,0,.35)'; mctx.beginPath();
-  pts.forEach((p,i)=>{const [x,y]=mp(p.x,p.z); i?mctx.lineTo(x,y):mctx.moveTo(x,y);}); mctx.closePath(); mctx.stroke();
+  pts.forEach((p,i)=>{const [x,y]=mp(p.x,p.z); i?mctx.lineTo(x,y):mctx.moveTo(x,y);}); if(!OPEN) mctx.closePath(); mctx.stroke();
   mctx.lineWidth=7; mctx.strokeStyle='#c49a63'; mctx.stroke();
   if(river){ mctx.strokeStyle='#7a5534'; mctx.lineWidth=7; mctx.beginPath(); for(let k=0,i=river.b0;k<=((river.b1-river.b0+NS)%NS);k++,i=(i+1)%NS){ const [x,y]=mp(pts[i].x,pts[i].z); k?mctx.lineTo(x,y):mctx.moveTo(x,y);} mctx.stroke(); }
   if(tunnel){ mctx.strokeStyle='#2c2822'; mctx.lineWidth=7; mctx.setLineDash([6,5]); mctx.beginPath(); for(let k=0;k<=tunnel.L;k++){ const i=(tunnel.b0+k)%NS, [x,y]=mp(pts[i].x,pts[i].z); k?mctx.lineTo(x,y):mctx.moveTo(x,y);} mctx.stroke(); mctx.setLineDash([]); }
@@ -1035,7 +1188,7 @@ function drawMap(){
 }
 
 // ---------- state ----------
-const st={zone:0,lastIdx:0,hw:4.5,takeoffY:0,gear:1,rpm:0,rpmShow:0.2,thrPos:0,brkPos:0,shiftT:0,stun:0,vx:0,vz:0,slip:0,slideT:0,bump:0,dist:0,x:0,y:0,z:0,h:0,speed:0,vy:0,ground:true,steer:0,pitch:0,lean:0,air:0,crash:0,spin:0,shake:0};
+const st={progress:0,respawnAt:-1,cine:-1,jump:0,zone:0,lastIdx:0,hw:4.5,takeoffY:0,gear:1,rpm:0,rpmShow:0.2,thrPos:0,brkPos:0,shiftT:0,stun:0,vx:0,vz:0,slip:0,slideT:0,bump:0,dist:0,x:0,y:0,z:0,h:0,speed:0,vy:0,ground:true,steer:0,pitch:0,lean:0,air:0,crash:0,spin:0,shake:0};
 const LIVES=3; let lives=LIVES, mode='title', countT=0, raceT=0, lapT0=0, lap=1, lastIdx=0, cps=new Set(), best=Infinity, lapTimes=[], bestAir=0, bestSlide=0, titleT=0;
 function bestKey(){ return 'dirt-fury-best-'+course.id; }
 function loadBest(){ best=Infinity; try{ let b=parseFloat(localStorage.getItem(bestKey())); if(!isFinite(b)&&course.id==='forest') b=parseFloat(localStorage.getItem('rindo-scramble-best')); if(isFinite(b)) best=b; }catch(e){} }
@@ -1044,18 +1197,19 @@ const $=id=>document.getElementById(id);
 function renderLives(){ $('lives').innerHTML=Array.from({length:LIVES},(_,i)=>`<i class="${i<lives?'':'lost'}"></i>`).join(''); }
 function refreshBest(){ $('bestHud').textContent=fmt(best); const bt=$('bestTitle'); if(bt) bt.textContent=isFinite(best)?course.name+'の自己ベスト '+fmt(best):''; }
 refreshBest(); renderLives();
-function placeAt(i){ i=((i%NS)+NS)%NS; st.lastIdx=i; const p=pts[i], t=tan[i]; st.x=p.x; st.z=p.z; st.h=Math.atan2(t.x,t.z); st.y=heightAt(p.x,p.z); st.vy=0; st.speed=0; st.vx=0; st.vz=0; st.gear=1; st.rpm=0; st.thrPos=0; st.brkPos=0; st.shiftT=0; st.slip=0; st.slideT=0; st.ground=true; st.air=0; st.crash=0; st.pitch=0; st.lean=0; }
+function startIdx(){ return OPEN?3:NS-6; }
+function placeAt(i){ i=wrapI(i); st.lastIdx=i; const p=pts[i], t=tan[i]; st.x=p.x; st.z=p.z; st.h=Math.atan2(t.x,t.z); st.y=heightAt(p.x,p.z); st.vy=0; st.speed=0; st.vx=0; st.vz=0; st.gear=1; st.rpm=0; st.thrPos=0; st.brkPos=0; st.shiftT=0; st.slip=0; st.slideT=0; st.ground=true; st.air=0; st.crash=0; st.pitch=0; st.lean=0; }
 buildCourse(savedCourse()); loadBest(); refreshBest();
-placeAt(NS-6);
+placeAt(startIdx());
 
 const keys={up:false,down:false,left:false,right:false,slide:false};
 const KM={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ShiftLeft:'slide',ShiftRight:'slide',Space:'slide'};
 addEventListener('keydown',e=>{
   if(KM[e.code]){ keys[KM[e.code]]=true; e.preventDefault(); }
   if((e.code==='Space'||e.code==='Enter') && !building && (mode==='title'||mode==='finish'||mode==='over')){ e.preventDefault(); startRace(); }
-  if(e.code==='KeyR' && mode==='race' && !st.crash){ nearest(st.x,st.z); placeAt(nI>=0?nI:st.lastIdx); }
+  if(e.code==='KeyR' && mode==='race' && !st.crash){ if(OPEN){ placeAt(st.progress); } else { nearest(st.x,st.z); placeAt(nI>=0?nI:st.lastIdx); } }
   if(e.code==='KeyM') toggleSound();
-  if(mode==='title' && ({Digit1:'forest',Digit2:'mine',Digit3:'canyon'})[e.code]) selectCourse(({Digit1:'forest',Digit2:'mine',Digit3:'canyon'})[e.code]);
+  if(mode==='title' && ({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'trial'})[e.code]) selectCourse(({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'trial'})[e.code]);
 });
 addEventListener('keyup',e=>{ if(KM[e.code]) keys[KM[e.code]]=false; });
 document.querySelectorAll('.tb').forEach(b=>{
@@ -1082,13 +1236,13 @@ function selectCourse(id){
   building=true; $('bestTitle').textContent='コースを作成中…';
   document.querySelectorAll('.course').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.c===id)));
   setTimeout(()=>{ buildCourse(id); try{ localStorage.setItem('dirt-fury-course',id); }catch(e){}
-    loadBest(); placeAt(NS-6); camInit=false; titleT=0; building=false; syncTitle(); },30);
+    loadBest(); placeAt(startIdx()); camInit=false; titleT=0; building=false; syncTitle(); },30);
 }
-function showTitle(){ mode='title'; $('card').innerHTML=titleHTML; wireTitle(); placeAt(NS-6); $('ov').hidden=false; }
+function showTitle(){ mode='title'; $('card').innerHTML=titleHTML; wireTitle(); placeAt(startIdx()); $('ov').hidden=false; }
 wireTitle();
 
 // ---------- engine sound ----------
-let ac=null, o1, o2, gainN, filt, scrG, crowdBuf=null, soundOn=true;
+let ac=null, o1, o2, gainN, filt, scrG, windG, crowdBuf=null, soundOn=true;
 function initSound(){
   if(ac) return; try{
     ac=new (window.AudioContext||window.webkitAudioContext)();
@@ -1098,6 +1252,7 @@ function initSound(){
     const nb=ac.createBuffer(1,ac.sampleRate,ac.sampleRate), nd=nb.getChannelData(0); for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1;
     const ns=ac.createBufferSource(); ns.buffer=nb; ns.loop=true; const bp=ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=700; bp.Q.value=0.8;
     scrG=ac.createGain(); scrG.gain.value=0; ns.connect(bp); bp.connect(scrG); scrG.connect(ac.destination); ns.start();
+    const ws=ac.createBufferSource(); ws.buffer=nb; ws.loop=true; ws.playbackRate.value=0.5; const lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=520; windG=ac.createGain(); windG.gain.value=0; ws.connect(lp); lp.connect(windG); windG.connect(ac.destination); ws.start();
     // crowd: noise with a slow wobble so it sounds like many voices
     crowdBuf=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate); { const cd=crowdBuf.getChannelData(0); let w=0; for(let i=0;i<cd.length;i++){ w+=0.0006*(Math.random()-.5); cd[i]=(Math.random()*2-1)*(0.6+0.4*Math.sin(i/ac.sampleRate*Math.PI*2*(5+3*Math.sin(i/9000))))*(1+w); } }
   }catch(e){ ac=null; }
@@ -1115,20 +1270,32 @@ function updateSound(rpm,gear,thr){
   const f=38+rpm*125, t=ac.currentTime;
   o1.frequency.setTargetAtTime(f,t,0.03); o2.frequency.setTargetAtTime(f,t,0.03);
   filt.frequency.setTargetAtTime(450+thr*1000+rpm*600,t,0.06);
-  gainN.gain.setTargetAtTime(soundOn&&(mode==='race'||mode==='count')?0.035+thr*0.03:0,t,0.1);
+  gainN.gain.setTargetAtTime(soundOn&&(mode==='race'||mode==='count')?(0.035+thr*0.03)*(1-0.85*camCine):0,t,0.1);
+  windG.gain.setTargetAtTime(soundOn&&mode==='race'?camCine*0.2:0,t,0.15);
   const sa=st.ground&&!st.crash?clamp((Math.abs(st.slip)-0.1)*2.2,0,1)*clamp(Math.hypot(st.vx,st.vz)/15,0,1):0;
   scrG.gain.setTargetAtTime(soundOn&&mode==='race'?sa*0.09:0,t,0.05);
 }
 
 function startRace(){
+  featMarks.forEach(f=>{ f.done=false; f.lap=0; });
   initSound(); if(ac&&ac.state==='suspended') ac.resume();
-  $('ov').hidden=true; placeAt(NS-6); mode='count'; countT=3.2; raceT=0; lap=1; lapTimes=[]; cps=new Set(); bestAir=0; bestSlide=0; lives=LIVES; renderLives();
+  $('ov').hidden=true; placeAt(startIdx()); st.progress=startIdx(); st.respawnAt=-1; st.cine=-1; st.jump=0; mode='count'; countT=3.2; raceT=0; lap=1; lapTimes=[]; cps=new Set(); bestAir=0; bestSlide=0; lives=LIVES; renderLives();
   nearest(st.x,st.z); lastIdx=nI; canvas.focus&&canvas.focus();
 }
 function finishRace(){
   mode='finish'; const nb=raceT<best;
+  let jb=0; if(OPEN){ try{ jb=parseFloat(localStorage.getItem('dirt-fury-jump-trial'))||0; if(st.jump>jb){ localStorage.setItem('dirt-fury-jump-trial',String(st.jump)); } }catch(e){} }
   if(nb){ best=raceT; try{ localStorage.setItem(bestKey(),String(best)); }catch(e){} }
   refreshBest();
+  if(OPEN){
+    $('card').innerHTML=`<div class="eyebrow">FINISH · ${course.name} · ONE RUN</div>
+    <h1>${nb?'ベスト更新！':'ゴール！'}<span>TIME ${fmt(raceT)}</span></h1>
+    <div class="res"><div>飛距離</div><div>滞空</div><div>残りライフ</div>
+      <strong class="${st.jump>jb?'new':''}">${st.jump?st.jump.toFixed(1)+'m':'—'}</strong><strong>${bestAir.toFixed(2)}s</strong><strong>${lives}/${LIVES}</strong></div>
+    <div class="best">自己ベスト ${fmt(best)}　·　最長飛距離 ${Math.max(jb,st.jump).toFixed(1)}m</div>
+    <div class="btnrow"><button class="btn" id="again">もう一度走る <span class="pc">（SPACE）</span></button><button class="btn ghost" id="toTitle">コースを選ぶ</button></div>`;
+    $('again').addEventListener('click',startRace); $('toTitle').addEventListener('click',showTitle); $('ov').hidden=false; return;
+  }
   $('card').innerHTML=`<div class="eyebrow">FINISH · ${course.name} · ${LAPS} LAPS</div>
     <h1>${nb?'ベスト更新！':'ゴール！'}<span>TOTAL ${fmt(raceT)}</span></h1>
     <div class="res">${lapTimes.map((t,i)=>`<div>LAP ${i+1}</div>`).join('')}
@@ -1141,7 +1308,7 @@ function finishRace(){
 function gameOver(){
   mode='over';
   $('card').innerHTML=`<div class="eyebrow">3 CRASHES · RACE OVER</div>
-    <h1 class="over">GAME OVER<span>${Math.min(lap,LAPS)}周目でリタイア · ${fmt(raceT)}</span></h1>
+    <h1 class="over">GAME OVER<span>${OPEN?Math.round(clamp((st.progress-3)/(trial.finish-3),0,1)*100)+'%地点でリタイア':Math.min(lap,LAPS)+'周目でリタイア'} · ${fmt(raceT)}</span></h1>
     <div class="best">完走したラップ ${lapTimes.length}/${LAPS}${lapTimes.length?'　·　ベストラップ '+fmt(Math.min(...lapTimes)):''}　·　最長エアタイム ${bestAir.toFixed(2)}秒</div>
     <p class="lead">木や大きな岩に高速で当たる、滑りすぎて立て直せない、崖や吊橋から落ちる、の3回でゲームオーバー。</p>
     <div class="btnrow"><button class="btn" id="again">もう一度走る <span class="pc">（SPACE）</span></button><button class="btn ghost" id="toTitle">コースを選ぶ</button></div>`;
@@ -1163,14 +1330,21 @@ addEventListener('resize',resize); resize();
 
 const DARKC=new THREE.Color(0x08090b); let eye=0;
 let last=performance.now();
+let timeScale=1, camCine=0;
 function frame(now){
   requestAnimationFrame(frame);
-  const dt=Math.min(0.033,(now-last)/1000); last=now;
+  const rdt=Math.min(0.033,(now-last)/1000); last=now;
+  // fjord jump: slow motion while the bike leaves the cliff, then back to normal speed
+  if(st.cine>=0) st.cine+=rdt;
+  const tsT = st.cine<0 ? 1 : st.cine<0.2 ? lerp(1,0.3,st.cine/0.2) : st.cine<2.1 ? 0.3 : Math.min(1,0.3+(st.cine-2.1)*1.1);
+  timeScale+=(tsT-timeScale)*Math.min(1,rdt*10);
+  camCine+=((st.cine>=0?1:0)-camCine)*Math.min(1,rdt*(st.cine>=0?2.2:1.4));
+  const dt=rdt*timeScale;
   if(mode==='title'){ titleT+=dt; }
   if(mode==='count'){ countT-=dt; const n=Math.ceil(countT-0.2); showMsg(n>0?String(n):'GO!',0.3); if(countT<=0.2){ mode='race'; lapT0=0; } }
   if(mode==='race') raceT+=dt;
   step(dt);
-  updateCamera(dt);
+  updateCamera(rdt);
   updateDust(dt); updateSpray(dt);
   updateCrowd(dt);
   if(waterTex) waterTex.offset.y-=dt*0.32;
@@ -1186,7 +1360,8 @@ function frame(now){
   $('gear').textContent=st.speed<-0.3?'R':(Math.abs(st.speed)<0.5&&st.thrPos<0.05)?'N':String(st.gear);
   $('tachBar').style.width=(clamp(st.rpmShow,0,1.02)*100)+'%';
   $('time').textContent=fmt(raceT);
-  $('lap').textContent=Math.min(lap,LAPS)+'/'+LAPS;
+  if(OPEN){ $('lapLbl').textContent='RUN'; $('lap').textContent=Math.round(clamp((st.progress-3)/(trial.finish-3),0,1)*100)+'%'; }
+  else { $('lapLbl').textContent='LAP'; $('lap').textContent=Math.min(lap,LAPS)+'/'+LAPS; }
   $('offroad').style.opacity=(mode==='race'&&st.dist>st.hw+1.5&&!st.crash&&st.ground)?1:0;
   drawMap();
   updateSound(st.rpmShow,st.gear,mode==='race'?st.thrPos:0);
@@ -1218,7 +1393,7 @@ function step(dt){
   const idx=nI>=0?nI:st.lastIdx, onRoad=nI>=0 && nD<roadHalf[idx]+0.6;   // far from the track: fall back to the last place we knew
   if(st.crash>0){
     st.crash-=dt; leanG.rotation.z+=dt*5; st.speed*=0.9;
-    if(st.crash<=0){ leanG.rotation.z=0; if(lives<=0 && mode==='race'){ gameOver(); return; } placeAt(idx); }
+    if(st.crash<=0){ leanG.rotation.z=0; if(lives<=0 && mode==='race'){ gameOver(); return; } placeAt(st.respawnAt>=0?st.respawnAt:idx); st.respawnAt=-1; }
     bike.position.set(st.x,st.y,st.z); return;
   }
   const thr=racing&&keys.up?1:0, brk=racing&&keys.down?1:0;
@@ -1272,7 +1447,7 @@ function step(dt){
     st.h+=(st.steer*turn+extra)*dt;
     fx=Math.sin(st.h); fz=Math.cos(st.h); lx=Math.cos(st.h); lz=-Math.sin(st.h);
     let vf=st.vx*fx+st.vz*fz, vl=st.vx*lx+st.vz*lz;
-    let grip=14*surfaceGrip(onRoad)*(inWater?0.75:1);
+    let grip=14*surfaceGrip(onRoad)*(inWater?0.75:1)*(gripMul?gripMul[idx]:1);
     if(power) grip*=0.55;
     if(rearSlide) grip*=0.2;
     if(Math.abs(vl)>1 && Math.sign(st.steer)===Math.sign(vl) && Math.abs(st.steer)>0.3) grip*=1.7; // countersteer
@@ -1325,17 +1500,28 @@ function step(dt){
       if(vn>0){ if(racing && vn>14){ crash(feat[i]===3?'坑道の壁に激突！':'岩壁に激突！'); return; }
         st.vx-=1.3*vn*ux; st.vz-=1.3*vn*uz; st.vx*=0.85; st.vz*=0.85; st.shake=Math.max(st.shake,0.25); }
       nx=st.x; nz=st.z; } }
+  const ox=st.x, oz=st.z;
   st.x=nx; st.z=nz;
-  const g=22, h=heightAt(st.x,st.z); st.dist=nD; st.hw=nI>=0?roadHalf[nI]:HALF;
+  const g=22; let h=heightAt(st.x,st.z); st.dist=nD; st.hw=nI>=0?roadHalf[nI]:HALF;
   if(st.ground){
     const nvy=clamp((h-st.y)/dt,-30,14);
-    if((nvy < st.vy - g*dt*1.2 && st.speed>6) || h<st.y-0.8){ st.ground=false; st.air=0; st.takeoffY=st.y; st.zone=nI<0?0:feat[nI]===1?1:cliffW[nI]>0?2:0; st.vy=Math.max(Math.min(st.vy,6),0); st.y+=st.vy*dt; }
+    if((nvy < st.vy - g*dt*1.2 && st.speed>6) || h<st.y-0.8){ st.ground=false; st.air=0; st.takeoffY=st.y; st.zone=nI<0?0:feat[nI]===1?1:cliffW[nI]>0?2:0;
+      if(trial && racing && nI>=trial.lip-14 && nI<=trial.g0+3 && st.speed>4){ st.zone=6; st.cine=0; st.jumpY=st.y; } st.vy=Math.max(Math.min(st.vy,6),0); st.y+=st.vy*dt; }
     else { st.vy=nvy; st.y=h; }
   }else{
+    if(h>st.y+1.2){ st.x=ox; st.z=oz; st.vx*=-0.15; st.vz*=-0.15; st.shake=0.5; h=heightAt(st.x,st.z); }   // hit a wall in the air: bounce off it, don't pop up onto it
     st.vy-=g*dt; st.y+=st.vy*dt; st.air+=dt;
+    if(trial && st.y<0.4){ for(let i=0;i<50;i++) emitSpray(st.x,0.2,st.z,(R()-.5)*4,(R()-.5)*4,8);
+      st.cine=-1; st.zone=0; if(racing){ st.respawnAt=trial.runup; crash('フィヨルドに落ちた！'); return; } placeAt(trial.runup); return; }
     if(tunnel && nI>=0 && feat[nI]===3 && nD<tunnel.TH){ const top=ht[nI]+tunnel.ceil-1.95; if(st.y>top){ st.y=top; if(st.vy>0) st.vy=0; } }   // no flying through the roof
     if(st.y<=h){
       const impact=-st.vy; st.y=h; st.ground=true; st.vy=0;
+      if(st.zone===6){                                             // landed after the fjord jump
+        st.cine=-1; st.zone=0;
+        const d=Math.hypot(st.x-trial.lipPos.x,st.z-trial.lipPos.z); st.jump=d;
+        showMsg('着地成功！ '+d.toFixed(1)+'m',2.6); showAir('AIR '+st.air.toFixed(2)+'s'); if(racing) bestAir=Math.max(bestAir,st.air);
+        st.shake=0.6; for(let i=0;i<24;i++) emitDust(st.x,st.y,st.z,-st.vx*0.2,-st.vz*0.2);
+        st.takeoffY=st.y; }
       const wet=river && riverInfo(st.x,st.z)[0]<8, offRoad=nI<0 || nD>roadHalf[nI]+0.6 || (feat[nI]===1 && nD>BRIDGE_HALF+0.35);
       const drop=st.takeoffY-st.y;
       // fell off the bridge or the cliff. A long jump that lands on the road is fine.
@@ -1380,8 +1566,20 @@ function step(dt){
   bike.position.set(st.x,st.y,st.z); bike.rotation.y=st.h; pitchG.rotation.x=st.pitch; leanG.rotation.z=st.lean;
   st.spin+=st.speed*dt/0.385; wF.rotation.x=st.spin; wR.rotation.x=st.spin;
   st.shake=Math.max(0,st.shake-dt);
+  // one-way course: progress, no skipping down the switchbacks, finish line
+  if(racing && OPEN){
+    nearest(st.x,st.z);
+    if(nI>=0 && nD<roadHalf[nI]+6){
+      // a shortcut is when you are far further along the course than you actually travelled (dropping down the switchbacks)
+      const along=(nI-st.progress)*0.62, straight=Math.hypot(st.x-pts[st.progress].x,st.z-pts[st.progress].z);
+      if(along>40 && along>2.2*straight && st.zone!==6 && st.cine<0){ st.respawnAt=st.progress; crash('コースアウト！'); return; }
+      if(nI>st.progress) st.progress=nI;
+    }
+    for(const f of featMarks){ if(!f.done && st.progress>=f.i && st.progress<f.i+30){ f.done=true; showAir(f.label); } }
+    if(st.progress>=trial.finish){ finishRace(); }
+  }
   // laps
-  if(racing){
+  if(racing && !OPEN){
     const d=idx-lastIdx;
     if(d>NS/2){ /* went backwards over start */ }
     else if(d<-NS/2){
@@ -1409,13 +1607,16 @@ function updateCamera(dt){
   const want=new THREE.Vector3(st.x-fx*back,st.y+2.6-0.75*camTun,st.z-fz*back);
   const gh=heightAt(want.x,want.z)+1.3; if(want.y<gh && !(camTun>0.05 && gh>st.y+2.6)) want.y=gh;
   const look=new THREE.Vector3(st.x+fx*3.5,st.y+1.1,st.z+fz*3.5);
+  if(trial && camCine>0.001){ const t=tan[trial.lip], [sx,sz]=trial.side, c=sstep(0,1,camCine);
+    want.lerp(new THREE.Vector3(st.x+sx*15-t.x*4, st.y+4.5, st.z+sz*15-t.z*4), c);
+    look.lerp(new THREE.Vector3(st.x+t.x*9, st.y-5, st.z+t.z*9), c); }
   if(!camInit){ camPos.copy(want); camLook.copy(look); camInit=true; }
   const k=1-Math.exp(-dt*5), kl=1-Math.exp(-dt*9);
   camPos.lerp(want,k); camLook.lerp(look,kl);
   camera.position.copy(camPos);
   if(st.shake>0){ camera.position.x+=(R()-.5)*st.shake*0.5; camera.position.y+=(R()-.5)*st.shake*0.5; }
   camera.lookAt(camLook);
-  const fov=62+Math.min(1,Math.max(0,st.speed)/31)*14;
+  const fov=62+Math.min(1,Math.max(0,st.speed)/31)*14+camCine*12;
   if(Math.abs(camera.fov-fov)>0.05){ camera.fov+= (fov-camera.fov)*Math.min(1,dt*3); camera.updateProjectionMatrix(); }
 }
 function updateDust(dt){
