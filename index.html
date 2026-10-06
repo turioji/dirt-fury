@@ -46,6 +46,10 @@ h1.over span{font-family:var(--f-jp);font-weight:700;font-size:.3em;letter-spaci
 .course b{grid-column:1/-1;font-size:14px;font-weight:900;white-space:nowrap}
 .course em{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.1em;padding:1px 7px;border-radius:4px;background:var(--leaf);color:var(--plate-ink)}
 .course em.mid{background:var(--plate);color:var(--plate-ink)}
+.course small{grid-column:1/-1}
+.course.trialc{grid-column:1/-1}
+.course.trialc small{grid-column:auto}
+.courses .grp{grid-column:1/-1;margin-top:4px;font-size:11px;font-weight:700;letter-spacing:.18em;color:#8fc4e0}
 .course em.trial{background:#5aa0c8;color:#0f1a20}
 .course em.hard{background:#e2552a;color:var(--paper)}
 .course small{font-size:11px;line-height:1.35;color:var(--dim)}
@@ -155,10 +159,12 @@ h1 span{display:block;font-family:var(--f-num);font-weight:800;font-size:.42em;l
     <div class="eyebrow" id="courseEyebrow">MOTOCROSS · FOREST TRAIL · 3 LAPS</div>
     <h1 class="logo">DIRT FURY<span>林道爆走モトクロス</span></h1>
     <div class="courses" id="courses" role="radiogroup" aria-label="コース">
-      <button class="course" data-c="forest" role="radio"><b>森の林道</b><em>初級</em><small>ジャンプ台とウォッシュボード</small></button>
-      <button class="course" data-c="mine" role="radio"><b>廃坑トンネル</b><em class="mid">中級</em><small>暗いトンネル・トロッコ・落盤</small></button>
-      <button class="course" data-c="canyon" role="radio"><b>渓谷アドベンチャー</b><em class="hard">上級</em><small>吊橋・大岩の門・崖沿いの細道</small></button>
-      <button class="course" data-c="trial" role="radio"><b>フィヨルド・ダウンヒル</b><em class="trial">トライアル</em><small>つづら折り・ガレ場・断崖ジャンプ</small></button>
+      <button class="course" data-c="forest" role="radio"><b>森の林道</b><small>ジャンプ台とウォッシュボード</small></button>
+      <button class="course" data-c="mine" role="radio"><b>廃坑トンネル</b><small>暗いトンネル・トロッコ・落盤</small></button>
+      <button class="course" data-c="canyon" role="radio"><b>渓谷アドベンチャー</b><small>吊橋・大岩の門・崖沿いの細道</small></button>
+      <button class="course" data-c="tanada" role="radio"><b>棚田と農道</b><small>あぜ道・段々ジャンプ・ぬかるみ</small></button>
+      <div class="grp">TRIAL · 一本道の特別コース</div>
+      <button class="course trialc" data-c="trial" role="radio"><b>フィヨルド・ダウンヒル</b><em class="trial">トライアル</em><small>つづら折り・ガレ場・断崖ジャンプ</small></button>
     </div>
     <p class="lead" id="courseLead">山あいの未舗装林道を3周するタイムアタック。ジャンプ台で飛んで、ウォッシュボードを抜けて、木にはぶつからないように。</p>
     <div class="keys pc">
@@ -193,22 +199,26 @@ function noise(x,z){
 
 // ---------- courses ----------
 const COURSES={
-  forest:{id:'forest',name:'森の林道',level:'初級',tag:'ジャンプ台とウォッシュボード',
+  forest:{id:'forest',name:'森の林道',tag:'ジャンプ台とウォッシュボード',
     eyebrow:'MOTOCROSS · FOREST TRAIL · 3 LAPS',
     lead:'山あいの未舗装林道を3周するタイムアタック。ジャンプ台で飛んで、ウォッシュボードを抜けて、木にはぶつからないように。',
     seed:20261004, NC:14, rad:128, radVar:84, ns:1300, width:9, size:560, seg:340, fog:0xbfd0b2, adventure:false, type:'forest'},
-  mine:{id:'mine',name:'廃坑トンネル',level:'中級',tag:'暗いトンネル・トロッコ・落盤',
+  mine:{id:'mine',name:'廃坑トンネル',tag:'暗いトンネル・トロッコ・落盤',
     eyebrow:'ADVENTURE · ABANDONED MINE · 3 LAPS',
     lead:'鉱山跡の山に掘られた廃坑を走り抜ける。ヘッドライトだけが頼りのトンネルに、トロッコと落盤。出口は目がくらむほどまぶしい。',
     seed:4417, NC:15, rad:160, radVar:56, ns:1700, width:8, size:640, seg:400, fog:0xb4b4a6, adventure:true, type:'mine'},
-  canyon:{id:'canyon',name:'渓谷アドベンチャー',level:'上級',tag:'吊橋・大岩の門・崖沿いの細道',
+  canyon:{id:'canyon',name:'渓谷アドベンチャー',tag:'吊橋・大岩の門・崖沿いの細道',
     eyebrow:'ADVENTURE · CANYON RUN · 3 LAPS',
     lead:'渓流に架かる吊橋、大岩の門、岩の迷路、倒木、断崖の細道。踏み外して落ちたら1ミスの上級コース。',
     seed:9157, NC:16, rad:180, radVar:58, ns:1800, width:8, size:680, seg:440, fog:0xb7c5c2, adventure:true, type:'canyon'},
-  trial:{id:'trial',name:'フィヨルド・ダウンヒル',level:'トライアル',tag:'つづら折り・ガレ場・断崖ジャンプ',
+  trial:{id:'trial',name:'フィヨルド・ダウンヒル',tag:'つづら折り・ガレ場・断崖ジャンプ',
     eyebrow:'TRIAL · FJORD DOWNHILL · ONE RUN',
     lead:'雪の残る山頂から一本道で駆け下りる。つづら折り、ガレ場、岩棚の先は、下の見えない断崖ジャンプ。全開で飛ばないとフィヨルドに落ちる。',
-    seed:6203, width:7, size:760, seg:420, fog:0xbccad2, adventure:true, type:'trial', open:true}
+    seed:6203, width:7, size:760, seg:420, fog:0xbccad2, adventure:true, type:'trial', open:true},
+  tanada:{id:'tanada',name:'棚田と農道',tag:'あぜ道・段々ジャンプ・ぬかるみ',
+    eyebrow:'SATOYAMA · RICE TERRACES · 3 LAPS',
+    lead:'山の斜面に段々と広がる田んぼを縫う農道を3周。細いあぜ道、田んぼの段差を飛び降りる段々ジャンプ、ぬかるみ。水を張った田んぼに落ちたら1ミス。',
+    seed:5130, NC:14, rad:158, radVar:46, ns:1500, width:8, size:580, seg:460, fog:0xc6d6dc, adventure:true, type:'tanada'}
 };
 const LAPS=3, K=18, CELL=30, TCELL=8, BRIDGE_HALF=1.7;
 let course=COURSES.forest, W=9, HALF=4.5, SIZE=560;
@@ -260,7 +270,7 @@ function mtnAt(x,z){
 function heightAt(x,z,mesh){
   nearest(x,z);
   const n=noise(x,z);
-  if(nI<0) return baseGrid ? fjordCarve(baseH(x,z)+n*0.35,x,z) : carve(n+6,x,z);
+  if(nI<0) return tana ? terrH(x,z) : baseGrid ? fjordCarve(baseH(x,z)+n*0.35,x,z) : carve(n+6,x,z);
   // interpolate the road height along the segment we are on (no steps between samples)
   let i0=nI, i1=wrapI(nI+1), A=pts[i0], B=pts[i1];
   const seg=(A,B)=>{ const L2=(B.x-A.x)**2+(B.z-A.z)**2; return L2>0 ? ((x-A.x)*(B.x-A.x)+(z-A.z)*(B.z-A.z))/L2 : 0; };
@@ -268,6 +278,7 @@ function heightAt(x,z,mesh){
   if(t<0){ i1=i0; i0=wrapI(nI-1); A=pts[i0]; B=pts[i1]; t=seg(A,B); }
   t=clamp(t,0,1);
   const rh=ht[i0]+(ht[i1]-ht[i0])*t, d=nD;
+  if(tana) return tanaAt(x,z,rh,d);
   const nat=baseGrid ? baseH(x,z)+n*0.35 : n+6*sstep(HALF+6,30,d);
   if(feat[nI]===4) return fjordCarve(nat,x,z);        // the gap before the landing hill: only the fjord below
   if(feat[nI]===3){                                   // mine tunnel: the road runs inside the mountain
@@ -304,6 +315,100 @@ function fjordCarve(h,x,z){ if(!trial) return h; const f=trial.fj, rx=x-f.x, rz=
   if(across<f.hw) return Math.min(h,-7);
   if(across<f.hw+2.5) return Math.min(h,lerp(-7,h,(across-f.hw)/2.5));
   return h; }
+
+// ---------- tanada: terraced rice paddies on a hillside ----------
+let tana=null, tW=NaN, tTy=0, tF=0, tK=0, tCU=0;
+const TSTEP=1.5;
+function hillH(x,z){ return 0.1*z+0.00018*x*x+3*Math.sin(x*0.018+1)*Math.cos(z*0.012)+0.3*noise(x,z); }
+function hash2(a,b){ let h=Math.imul(a|0,374761393)^Math.imul((b|0)+7,668265263); h=Math.imul(h^h>>>13,1274126177); return ((h^h>>>16)>>>0)/4294967296; }
+function tBase(x,z){ const q=hillH(x,z)/TSTEP, k=Math.floor(q), f=q-k; return k*TSTEP+TSTEP*sstep(0.84,1,f); }
+// natural ground: terraces (flooded paddies, dry fields, bunds, grassy risers), woods above and at the sides.
+// Sets tW (water level, NaN for none), tTy (0 planted paddy, 1 open water, 2 dry field, 3 woods)
+function terrH(x,z){
+  const T=tana, hs=hillH(x,z);
+  const farm=(1-sstep(T.top,T.top+5,hs))*(1-sstep(T.xEdge,T.xEdge+30,Math.abs(x)));
+  tW=NaN; tTy=3; tF=0;
+  const wild=hs-0.6+0.6*Math.sin(x*0.07+z*0.05)*Math.cos(z*0.09-x*0.03);
+  if(farm<=0) return wild;
+  const q=hs/TSTEP, k=Math.floor(q), f=q-k, L=k*TSTEP;
+  const uu=(x+9*Math.sin(z*0.03))/24+k*0.37, cu=Math.floor(uu), fu=uu-cu;
+  const r=hash2(k,cu), ty=(x-T.vx)**2+(z-T.vz)**2<T.vr*T.vr ? 2 : r<0.58?0 : r<0.84?1 : 2;
+  const inner=sstep(0.03,0.08,f)*sstep(0.82,0.77,f)*sstep(0,0.045,fu)*sstep(1,0.955,fu);
+  tF=f; tK=k; tCU=cu; tTy=farm>0.5?ty:3;
+  if(ty!==2 && inner>0.5 && farm>0.98) tW=L-0.12;
+  return lerp(wild, L+TSTEP*sstep(0.84,1,f)-(ty===2?0.12:0.36)*inner, farm);
+}
+// ground near the road: raised farm road, then terraces. Feature 5 = an aze (bund) path on a level plate of paddies
+function tanaAt(x,z,rh,d){
+  const i=nI, hw=roadHalf[i], P=tana.plate;
+  let T=terrH(x,z);
+  if(feat[i]===5 && P){
+    const [lx,lz]=lateral(i), side=(x-pts[i].x)*lx+(z-pts[i].z)*lz>0?1:0, along=(i-P.a0)*tana.SP, cu=Math.floor(along/19), fu=along/19-cu;
+    const inner=sstep(hw+0.3,hw+0.7,d)*sstep(P.R,P.R-0.9,d)*sstep(0,0.05,fu)*sstep(1,0.95,fu);
+    const k=sstep(P.R+4,P.R,d)*P.w[i];
+    T=lerp(T,P.L-0.36*inner,k);
+    if(k>0.99){ tTy=(cu+side)%2; tF=0.4; tK=999; tCU=cu*2+side; tW=inner>0.5?P.L-0.12:NaN; } else if(k>0.01) tW=NaN;
+  }
+  if(d<=hw){ tW=NaN; return rh; }
+  const m=tana.marg[i];
+  if(d<hw+m) tW=NaN;
+  if(tW===tW && (nearCrowd(x,z)||nearProp(x,z,1.5))) tW=NaN;
+  return lerp(rh,T,sstep(hw,hw+m,d));
+}
+function buildTanada(){
+  const taken=[0], SP=curve.getLength()/NS;
+  const free=(i,gap)=>taken.every(j=>cdist(i,j)>gap);
+  const pickStraight=(f0,f1,gap,win)=>{ let best=-1,bc=1e9;
+    for(let i=Math.floor(NS*f0);i<Math.floor(NS*f1);i++){ const ii=i%NS; if(!free(ii,gap)) continue;
+      let cv=0; for(let k=-win;k<=win;k+=5) cv=Math.max(cv,curv[(ii+k+NS)%NS]);
+      if(cv<bc){bc=cv;best=ii;} }
+    if(best>=0) taken.push(best); return best; };
+  adv={spots:[],props:[]};
+  const [l0x,l0z]=lateral(0);
+  tana={SP, top:15, xEdge:215, vx:pts[0].x-l0x*44, vz:pts[0].z-l0z*44, vr:30, marg:new Float32Array(NS).fill(4), plate:null, secs:[], mud:[]};
+  gripMul=new Float32Array(NS).fill(1);
+  // the farm road follows the hill, smoothed, a little above the paddies
+  const raw=pts.map(p=>hillH(p.x,p.z));
+  for(let i=0;i<NS;i++){ let s=0; for(let k=-35;k<=35;k++) s+=raw[(i+k+NS)%NS]; ht[i]=s/71+0.25; }
+  const winCurv=(s,L)=>{ let c=0; for(let k=0;k<=L;k+=4) c=Math.max(c,curv[(s+k)%NS]); return c; };
+  const winOK=(s,L,gap)=>{ for(let k=0;k<=L;k+=6){ const i=(s+k)%NS; if(!free(i,gap)) return false; const p=pts[i]; if(raw[i]>tana.top-3 || Math.abs(p.x)>tana.xEdge-25) return false; } return true; };
+  // 1. terrace steps: an aze path straight down through the paddies, dropping off each terrace
+  { const LS=Math.round(78/SP); let best=null;
+    for(let s=0;s<NS;s+=3){ if(!winOK(s,LS,140)) continue;
+      let mono=true; for(let k=0;k<LS;k+=10){ if(raw[(s+k+10)%NS]>raw[(s+k)%NS]-0.15){ mono=false; break; } } if(!mono) continue;
+      const drop=raw[s]-raw[(s+LS)%NS], sc=drop-winCurv(s,LS)*60;
+      if(!best || sc>best.sc) best={s,sc,drop}; }
+    if(best){ const s=best.s; let prev=1e9;
+      for(let k=0;k<=LS;k++){ const i=(s+k)%NS, w=sstep(0,16,k)*sstep(LS,LS-16,k);
+        prev=Math.min(prev,tBase(pts[i].x,pts[i].z)+0.25);
+        ht[i]=lerp(ht[i],prev,w); roadHalf[i]=lerp(HALF,1.9,w); tana.marg[i]=lerp(4,0.5,w); if(w>0.3) feat[i]=6; }
+      for(let k=0;k<=LS;k++) taken.push((s+k)%NS);
+      tana.steps={s,L:LS}; tana.secs.push({s,L:LS,c:'#8fbf4f'});
+      featMarks.push({i:(s-12+NS)%NS,label:'段々ジャンプ'}); adv.spots.push([s+Math.round(LS*0.55),1,'steps']); } }
+  // 2. aze path along a terrace: a narrow bund between flooded paddies
+  { const LA=Math.round(72/SP); let best=null;
+    for(let s=0;s<NS;s+=3){ if(!winOK(s,LA,110)) continue;
+      let mn=1e9,mx=-1e9; for(let k=0;k<=LA;k+=4){ const v=raw[(s+k)%NS]; mn=Math.min(mn,v); mx=Math.max(mx,v); }
+      const sc=-(mx-mn)-winCurv(s,LA)*40;
+      if(!best || sc>best.sc) best={s,sc}; }
+    if(best){ const s=best.s, mid=(s+(LA>>1))%NS, L=Math.round(raw[mid]/TSTEP)*TSTEP, w=new Float32Array(NS);
+      for(let k=0;k<=LA;k++){ const i=(s+k)%NS, ww=sstep(0,20,k)*sstep(LA,LA-20,k); w[i]=ww; feat[i]=5;
+        ht[i]=lerp(ht[i],L+0.25,ww); roadHalf[i]=lerp(HALF,1.7,ww); tana.marg[i]=lerp(4,0.5,ww); taken.push(i); }
+      tana.plate={a0:s,L,R:16,w,LA}; tana.secs.push({s,L:LA,c:'#8fbf4f'});
+      featMarks.push({i:(s+4)%NS,label:'棚田のあぜ道'}); adv.spots.push([mid,-1,'aze']); } }
+  // 3. a muddy stretch of farm road
+  { const im=pickStraight(0.05,0.95,90,10);
+    if(im>=0){ const LM=Math.round(46/SP);
+      for(let k=-6;k<=LM+6;k++){ const i=(im+k+NS)%NS; gripMul[i]=lerp(1,0.5,sstep(-6,4,k)*sstep(LM+6,LM-4,k)); }
+      tana.mud={s:im,L:LM}; tana.secs.push({s:im,L:LM,c:'#5a3c22'}); featMarks.push({i:(im-14+NS)%NS,label:'ぬかるみ'}); } }
+  // 4. a kei truck parked half on the road
+  tana.truck=pickStraight(0.05,0.95,60,8);
+  // 5. two earth-mound kickers
+  kickers=[]; for(let n=0;n<2;n++){ const k=pickStraight(0.04,0.95,80,55); if(k>=0) kickers.push(k); }
+  kickers.sort((a,b)=>a-b);
+  // 6. the shrine at the top of the hill, in the woods
+  { let bi=-1,bv=-1e9; for(let i=0;i<NS;i+=5){ if(!free(i,40)) continue; if(raw[i]>bv){bv=raw[i];bi=i;} } tana.shrine=bi; }
+}
 
 function buildTrialTrack(c){
   R=rng(c.seed); W=c.width; HALF=W/2; SIZE=c.size; OPEN=true;
@@ -429,7 +534,7 @@ function buildTrialProps(){
 
 // ---------- track generation ----------
 function buildTrack(c){
-  trial=null; baseGrid=null; gripMul=null; OPEN=false;
+  trial=null; baseGrid=null; gripMul=null; OPEN=false; tana=null;
   if(c.type==='trial'){ buildTrialTrack(c); return; }
   R=rng(c.seed); W=c.width; HALF=W/2; SIZE=c.size;
   const ctrl=[];
@@ -453,7 +558,7 @@ function buildTrack(c){
     kickers=picks.slice(0,4); whoops=picks[4];
   }else{
     whoops=undefined;
-    if(c.type==='mine') buildMine(); else buildAdventure();
+    if(c.type==='mine') buildMine(); else if(c.type==='tanada') buildTanada(); else buildAdventure();
   }
   for(const k0 of kickers){ for(let j=0;j<K;j++){ const u=j/(K-1); const v = u<.85 ? Math.pow(u/.85,1.6) : (1-u)/.15; ht[(k0+j)%NS]+=2.5*v; } }
   if(whoops!==undefined){ for(let j=0;j<66;j++){ ht[(whoops+j)%NS]+=0.38*(1-Math.cos(2*Math.PI*j/6))/2; } }
@@ -733,6 +838,7 @@ function buildCourse(id){
   if(course.type==='canyon') buildAdventureProps();
   if(course.type==='mine') buildMineProps();
   if(course.type==='trial') buildTrialProps();
+  if(course.type==='tanada') buildTanadaProps();
   buildSpectators();
   computeMap();
   // clear transient effects from the previous course
@@ -744,9 +850,11 @@ function buildTerrain(){
   const SEG=course.seg;
   const geo=new THREE.PlaneGeometry(SIZE,SIZE,SEG,SEG); geo.rotateX(-Math.PI/2);
   const pos=geo.attributes.position, col=new Float32Array(pos.count*3), hole=tunnel?new Uint8Array(pos.count):null;
+  if(tana){ tana.wv=new Float32Array(pos.count); tana.ty=new Uint8Array(pos.count); }
   const dirt=new THREE.Color(0x6e4f31), grass=new THREE.Color(course.adventure?0x435c2a:0x46642a), grass2=new THREE.Color(course.adventure?0x56702e:0x5d7a30), c=new THREE.Color();
   for(let i=0;i<pos.count;i++){
     const x=pos.getX(i), z=pos.getZ(i), y=heightAt(x,z,true); pos.setY(i,y);
+    if(tana){ tanaColor(c,x,z,i); col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b; continue; }
     if(hole && nI>=0 && feat[nI]===3 && nD<=tunnel.TH+0.6) hole[i]=1;
     const g=0.5+0.5*Math.sin(x*0.13+z*0.07)*Math.cos(z*0.11-x*0.05);
     c.copy(grass).lerp(grass2,g);
@@ -756,7 +864,8 @@ function buildTerrain(){
   }
   geo.computeVertexNormals();
   if(trial){ const snow=new THREE.Color(0xeef2f4); for(let i=0;i<pos.count;i++){ const y=pos.getY(i), k=sstep(128,150,y)*(0.75+0.25*Math.sin(pos.getX(i)*0.2)); if(k>0){ col[i*3]=lerp(col[i*3],snow.r,k); col[i*3+1]=lerp(col[i*3+1],snow.g,k); col[i*3+2]=lerp(col[i*3+2],snow.b,k); } } }
-  if(course.adventure){ // river banks and cliff faces: bare rock with moss
+  if(tana){ tana.gpos=pos.array; tana.seg=SEG; }
+  if(course.adventure && !tana){ // river banks and cliff faces: bare rock with moss
     const nrm=geo.attributes.normal, rock=new THREE.Color(0x7b7466), moss=new THREE.Color(0x58693a), k=new THREE.Color();
     for(let i=0;i<pos.count;i++){ const steep=sstep(0.86,0.6,nrm.getY(i)); if(steep<=0) continue;
       const x=pos.getX(i), z=pos.getZ(i), mm=0.5+0.5*Math.sin(x*0.31+z*0.17)*Math.sin(z*0.23-x*0.11);
@@ -767,6 +876,21 @@ function buildTerrain(){
   if(hole){ const src=geo.index.array, keep=[]; for(let t=0;t<src.length;t+=3){ if(!hole[src[t]]&&!hole[src[t+1]]&&!hole[src[t+2]]) keep.push(src[t],src[t+1],src[t+2]); } geo.setIndex(keep); }   // the tunnel shell is the roof here
   const m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({vertexColors:true}));
   m.receiveShadow=true; world.add(m);
+}
+
+// rice-terrace colours; also caches each vertex's water level for the paddy water meshes
+const TC={mud:new THREE.Color(0x56502f), bund:new THREE.Color(0x76a23e), riser:new THREE.Color(0x5e8c33), riser2:new THREE.Color(0x4f7a2c), stone:new THREE.Color(0x8e8a7e), stone2:new THREE.Color(0x6d6a60),
+  soil:new THREE.Color(0x7a5634), veg:new THREE.Color(0x6aa33c), wood:new THREE.Color(0x45592a), wood2:new THREE.Color(0x58682f), dirt:new THREE.Color(0x7d5a37)};
+function tanaColor(c,x,z,i){
+  tana.wv[i]=tW; tana.ty[i]=tTy;
+  const v=0.93+0.07*Math.sin(x*1.7+z*2.3)*Math.sin(z*1.1-x*0.7);
+  if(tTy===3){ c.copy(TC.wood).lerp(TC.wood2,0.5+0.5*Math.sin(x*0.13+z*0.07)*Math.cos(z*0.11-x*0.05)); }
+  else if(tF>0.84){ const sw=tK<999 && hash2(tK*7+3,tCU)<0.35; c.copy(sw?TC.stone:TC.riser).lerp(sw?TC.stone2:TC.riser2,0.5+0.5*Math.sin(x*2.1+z*1.3)); }
+  else if(tW===tW){ c.copy(TC.mud); }
+  else if(tTy===2){ const row=Math.sin(x*2.4+z*0.9+tCU)>0.1; c.copy(row?TC.veg:TC.soil); if(Math.hypot(x-tana.vx,z-tana.vz)<tana.vr) c.copy(TC.bund).lerp(TC.veg,0.3); }
+  else c.copy(TC.bund);
+  if(nI>=0){ const hw=roadHalf[nI]; c.lerp(TC.bund,sstep(hw+tana.marg[nI]+0.2,hw+0.3,nD)*0.85); c.lerp(TC.dirt,sstep(hw+0.9,hw+0.1,nD)); }
+  c.multiplyScalar(v);
 }
 
 function buildRoad(){
@@ -802,6 +926,7 @@ function buildTrees(){
     if(d<HALF+3.2) continue;
     if(nearCrowd(x,z)) continue;
     if(course.adventure){ if(river && riverInfo(x,z)[0]<12) continue; if(nearProp(x,z,3)) continue; if(nI>=0 && (feat[nI]===1||feat[nI]===4)) continue; if(trial && heightAt(x,z)<3) continue; }
+    if(tana){ heightAt(x,z); if(tTy!==3 || d<roadHalf[nI<0?0:nI]+5) continue; }
     if(d>45 && R()<0.45) continue;
     const s=0.75+R()*0.9;
     trees.push({x,z,y:heightAt(x,z),s,r:0.28*s+0.5,type:R()<.78?0:1});
@@ -942,6 +1067,131 @@ function buildAdventureProps(){
     sign.add(post,face); world.add(sign); const back=pts[(i-20+NS)%NS]; sign.lookAt(back.x,y,back.z);
     addBlock(x,z,{r:0.35,top:y+2.8});
   }
+}
+
+// ---------- rice-terrace props ----------
+function buildTanadaProps(){
+  const M=new THREE.Matrix4(), Q=new THREE.Quaternion(), S=new THREE.Vector3(), V=new THREE.Vector3(), UP=new THREE.Vector3(0,1,0);
+  const add=(geo,mat,x,y,z,ry,sh)=>{ const m=new THREE.Mesh(geo,mat); m.position.set(x,y,z); if(ry) m.rotation.y=ry; if(sh!==false) m.castShadow=true; m.receiveShadow=true; world.add(m); return m; };
+  const L=c=>new THREE.MeshLambertMaterial({color:c});
+  // --- paddy water: open water mirrors the sky, planted paddies show rows of young rice ---
+  { const sky=document.createElement('canvas'); sky.width=sky.height=256; let g=sky.getContext('2d');
+    const gr=g.createLinearGradient(0,0,256,256); gr.addColorStop(0,'#7f9cab'); gr.addColorStop(1,'#93b0bd'); g.fillStyle=gr; g.fillRect(0,0,256,256);
+    for(let k=0;k<26;k++){ const x=R()*256, y=R()*256, r=16+R()*34, cg=g.createRadialGradient(x,y,0,x,y,r); cg.addColorStop(0,'rgba(235,242,246,.35)'); cg.addColorStop(1,'rgba(245,250,252,0)'); g.fillStyle=cg; g.fillRect(x-r,y-r,r*2,r*2); }
+    const skyT=new THREE.CanvasTexture(sky); skyT.wrapS=skyT.wrapT=THREE.RepeatWrapping;
+    const rice=document.createElement('canvas'); rice.width=rice.height=128; g=rice.getContext('2d');
+    g.fillStyle='#7d9493'; g.fillRect(0,0,128,128);
+    for(let r=0;r<8;r++) for(let q=0;q<8;q++){ const x=q*16+8+(R()-.5)*2, y=r*16+8+(R()-.5)*2;
+      g.fillStyle='#4f8a2a'; g.beginPath(); g.arc(x,y,3.6,0,7); g.fill(); g.fillStyle='#7cb342'; g.beginPath(); g.arc(x-0.8,y-0.8,2,0,7); g.fill(); }
+    const riceT=new THREE.CanvasTexture(rice); riceT.wrapS=riceT.wrapT=THREE.RepeatWrapping; riceT.anisotropy=4;
+    const P=tana.gpos, n=tana.seg+1, wy=new Float32Array(n*n), idx=[[],[]];
+    for(let i=0;i<n*n;i++) wy[i]=tana.wv[i]===tana.wv[i] ? tana.wv[i] : P[i*3+1]-0.3;
+    for(let r=0;r<n-1;r++) for(let q=0;q<n-1;q++){ const a=r*n+q, b=a+1, c=a+n, d=c+1; let ty=-1;
+      for(const v of [a,b,c,d]) if(tana.wv[v]===tana.wv[v]){ ty=tana.ty[v]===0?0:1; break; }
+      if(ty>=0) idx[ty].push(a,c,b, b,c,d); }
+    const pos=new Float32Array(n*n*3), uv=new Float32Array(n*n*2);
+    for(let i=0;i<n*n;i++){ pos[i*3]=P[i*3]; pos[i*3+1]=wy[i]; pos[i*3+2]=P[i*3+2]; uv[i*2]=P[i*3]/3.2; uv[i*2+1]=P[i*3+2]/3.2; }
+    const uv2=new Float32Array(n*n*2); for(let i=0;i<n*n;i++){ uv2[i*2]=P[i*3]/70; uv2[i*2+1]=P[i*3+2]/70; }
+    const mk=(ix,u,mat)=>{ const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(pos,3)); geo.setAttribute('uv',new THREE.BufferAttribute(u,2)); geo.setIndex(ix); geo.computeVertexNormals();
+      const m=new THREE.Mesh(geo,mat); m.receiveShadow=true; world.add(m); };
+    mk(idx[0],uv,new THREE.MeshPhongMaterial({map:riceT,color:0xb4bcbc,shininess:50,specular:0x2a3434}));
+    mk(idx[1],uv2,new THREE.MeshPhongMaterial({map:skyT,color:0xa2aeb4,shininess:70,specular:0x232c30}));
+  }
+  // --- farm road mud puddles ---
+  if(tana.mud.s!==undefined){ const pc=document.createElement('canvas'); pc.width=pc.height=64; const pg=pc.getContext('2d'), rg=pg.createRadialGradient(32,32,4,32,32,31);
+    rg.addColorStop(0,'rgba(84,64,42,.95)'); rg.addColorStop(0.55,'rgba(96,74,48,.85)'); rg.addColorStop(0.8,'rgba(70,50,30,.6)'); rg.addColorStop(1,'rgba(70,50,30,0)'); pg.fillStyle=rg; pg.fillRect(0,0,64,64);
+    const mm=new THREE.MeshPhongMaterial({map:new THREE.CanvasTexture(pc),transparent:true,depthWrite:false,shininess:90,specular:0x7a7468,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
+    for(let k=0;k<14;k++){ const i=(tana.mud.s+Math.round(k/13*tana.mud.L))%NS, hw=roadHalf[i], [x,z]=onTrack(i,(R()-.5)*(hw-1.2)*2), m=add(new THREE.CircleGeometry(1,20),mm,x,ht[i]+0.075,z,0,false);
+      m.rotation.set(-Math.PI/2,0,R()*6); m.scale.set(1.1+R()*1.3,0.7+R()*0.7,1); m.renderOrder=1; } }
+  // --- the farm hamlet next to the start: farmhouses with tiled hip roofs, a barn with a tin roof ---
+  { const wall=L(0xe9e3d3), wood=L(0x4a3424), roof=new THREE.MeshPhongMaterial({color:0x3d434c,shininess:30,specular:0x333333}), tin=L(0x9c4a32), stoneM=L(0x8a867c), glass=L(0x2b3238);
+    const hip=(w,d,h)=>{ const g=new THREE.ConeGeometry(Math.SQRT1_2,1,4); g.rotateY(Math.PI/4); g.scale(w,h,d); g.translate(0,h/2,0); return g; };
+    const groundAt=(x,z,w,d,ry)=>{ let y=-1e9; const c=Math.cos(ry), s=Math.sin(ry); for(const [a,b] of [[-1,-1],[1,-1],[-1,1],[1,1],[0,0]]){ const px=x+(a*w/2)*c+(b*d/2)*s, pz=z-(a*w/2)*s+(b*d/2)*c; y=Math.max(y,heightAt(px,pz)); } return y; };
+    const spots=[[0,0,0],[-16,10,0.5],[14,-13,-0.3],[18,14,1.2],[-14,-14,0.2]];
+    const [lx,lz]=lateral(0), ry0=Math.atan2(tan[0].x,tan[0].z);
+    spots.forEach(([a,b,r],n)=>{ const x=tana.vx+a, z=tana.vz+b; nearest(x,z); if(nI>=0 && nD<roadHalf[nI]+9) return;
+      const barn=n===3, w=barn?7:10, d=barn?6:7.5, ry=ry0+r, y=groundAt(x,z,w+1,d+1,ry);
+      const grp=new THREE.Group(); grp.position.set(x,y,z); grp.rotation.y=ry; world.add(grp);
+      const part=(geo,mat,px,py,pz)=>{ const m=new THREE.Mesh(geo,mat); m.position.set(px,py,pz); m.castShadow=true; m.receiveShadow=true; grp.add(m); return m; };
+      part(new THREE.BoxGeometry(w+0.8,3,d+0.8),stoneM,0,-1.4,0);
+      if(barn){ part(new THREE.BoxGeometry(w,3.4,d),wood,0,1.8,0);
+        const pr=new THREE.CylinderGeometry(d*0.62,d*0.62,w+0.8,3); pr.rotateZ(Math.PI/2); pr.scale(1,0.45,1); part(pr,tin,0,3.5+d*0.14,0);
+        part(new THREE.BoxGeometry(2.6,2.4,0.1),L(0x2a2420),0,1.3,d/2+0.02); }
+      else{ part(new THREE.BoxGeometry(w,3.1,d),wall,0,1.65,0);
+        for(const sx of [-1,1]) for(const sz of [-1,1]) part(new THREE.BoxGeometry(0.3,3.15,0.3),wood,sx*w/2,1.65,sz*d/2);
+        part(new THREE.BoxGeometry(w+0.05,0.3,d+0.05),wood,0,0.25,0);
+        for(const q of [-0.3,0.15]) part(new THREE.BoxGeometry(w*0.22,1.3,0.06),glass,q*w,1.8,d/2+0.02);
+        part(new THREE.BoxGeometry(w+0.4,0.25,d+0.4),wood,0,3.2,0);
+        part(hip(w+2.4,d+2.4,3.1),roof,0,3.3,0); part(new THREE.BoxGeometry(w*0.45,0.3,0.4),roof,0,6.35,0); }
+      addBlock(x,z,{r:Math.max(w,d)/2+0.6,top:y+8,big:true,msg:barn?'納屋に激突！':'家に激突！'}); adv.props.push([x,z,Math.max(w,d)/2+3]); });
+    // a signboard at the entrance of the hamlet
+    { const i=12, [x,z]=onTrack(i,-(HALF+2.4)), y=heightAt(x,z), c=document.createElement('canvas'); c.width=256; c.height=96; const g=c.getContext('2d');
+      g.fillStyle='#7a5a38'; g.fillRect(0,0,256,96); g.strokeStyle='#4a3424'; g.lineWidth=8; g.strokeRect(4,4,248,88);
+      g.fillStyle='#f6efdc'; g.font='900 46px "Zen Kaku Gothic New", sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('棚田の里',128,50);
+      const grp=new THREE.Group(); grp.position.set(x,y,z); grp.rotation.y=ry0+Math.PI/2; world.add(grp);
+      for(const s of [-1.1,1.1]){ const p=new THREE.Mesh(new THREE.BoxGeometry(0.16,2.2,0.16),wood); p.position.set(s,1.1,0); grp.add(p); }
+      const b=new THREE.Mesh(new THREE.BoxGeometry(2.6,0.95,0.1),[wood,wood,wood,wood,new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(c)}),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(c)})]); b.position.y=1.9; b.castShadow=true; grp.add(b);
+      addBlock(x,z,{r:0.5,top:y+2.5}); }
+  }
+  // --- kei truck parked half on the road ---
+  if(tana.truck>=0){ const i=tana.truck, hw=roadHalf[i], sd=R()<.5?-1:1, [x,z]=onTrack(i,sd*(hw-0.4)), y=heightAt(x,z), ry=Math.atan2(tan[i].x,tan[i].z);
+    const grp=new THREE.Group(); grp.position.set(x,y,z); grp.rotation.y=ry; grp.rotation.z=-sd*0.04; world.add(grp);
+    const white=new THREE.MeshPhongMaterial({color:0xf1f1ec,shininess:40,specular:0x444444}), dk=L(0x1c1d1f), gl=new THREE.MeshPhongMaterial({color:0x2c3a44,shininess:90,specular:0x8899aa}), grey=L(0x7d8084);
+    const part=(geo,mat,px,py,pz)=>{ const m=new THREE.Mesh(geo,mat); m.position.set(px,py,pz); m.castShadow=true; grp.add(m); return m; };
+    part(new THREE.BoxGeometry(1.42,0.35,3.3),grey,0,0.62,0);
+    part(new THREE.BoxGeometry(1.46,1.15,1.15),white,0,1.32,1.12);                 // cab
+    part(new THREE.BoxGeometry(1.36,0.55,0.05),gl,0,1.55,1.71);                     // windscreen
+    for(const s of [-1,1]) part(new THREE.BoxGeometry(0.05,0.5,0.7),gl,s*0.74,1.55,1.1);
+    part(new THREE.BoxGeometry(1.46,0.08,2.1),white,0,0.84,-0.6);                   // bed floor
+    for(const s of [-1,1]) part(new THREE.BoxGeometry(0.05,0.38,2.1),white,s*0.71,1.07,-0.6);
+    part(new THREE.BoxGeometry(1.46,0.38,0.05),white,0,1.07,-1.65);
+    for(let k=0;k<3;k++) part(new THREE.BoxGeometry(0.42,0.32,0.5),L(0x8a6a3a),(k-1)*0.45,1.05,-0.5+(k%2)*0.4);   // crates of seedlings
+    for(const [px,pz] of [[-0.62,1.05],[0.62,1.05],[-0.62,-1.05],[0.62,-1.05]]){ const w=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.28,0.2,14),dk); w.rotation.z=Math.PI/2; w.position.set(px,0.28,pz); grp.add(w); }
+    for(const q of [-1,0,1]){ const [bx,bz]=onTrack(i,sd*(hw-0.4),q*1.1); addBlock(bx,bz,{r:0.95,top:y+2,big:true,msg:'軽トラに激突！'}); }
+    adv.props.push([x,z,3]); }
+  // --- concrete utility poles with sagging wires along the road ---
+  { const poleG=new THREE.CylinderGeometry(0.13,0.17,8.5,8); poleG.translate(0,4.25,0); const armG=new THREE.BoxGeometry(1.6,0.12,0.12); const pm=L(0xa6a399), wm=new THREE.LineBasicMaterial({color:0x2a2a2a});
+    const tops=[]; let last=null;
+    for(let i=0;i<NS;i+=52){ if(feat[i]||cdist(i,0)<16){ last=null; continue; } const [lx,lz]=lateral(i), side=1, off=roadHalf[i]+2.1, x=pts[i].x+lx*off*side, z=pts[i].z+lz*off*side;
+      if(nearCrowd(x,z)||nearProp(x,z,1.5)){ last=null; continue; }
+      const y=heightAt(x,z)-0.2; add(poleG,pm,x,y,z); const ar=add(armG,pm,x,y+7.6,z,Math.atan2(tan[i].x,tan[i].z)+Math.PI/2);
+      trees.push({x,z,y,s:0,r:0.42,type:9}); const k=(Math.floor(x/TCELL)+200)*1000+(Math.floor(z/TCELL)+200); if(!tgrid.has(k)) tgrid.set(k,[]); tgrid.get(k).push(trees[trees.length-1]);
+      const cur={x,y:y+7.65,z,ax:Math.cos(ar.rotation.y),az:-Math.sin(ar.rotation.y)};
+      if(last && Math.hypot(cur.x-last.x,cur.z-last.z)<45) for(const o of [-0.65,0,0.65]){ const pp=[]; for(let q=0;q<=10;q++){ const u=q/10; pp.push(new THREE.Vector3(lerp(last.x+last.ax*o,cur.x+cur.ax*o,u),lerp(last.y,cur.y,u)-0.9*Math.sin(Math.PI*u),lerp(last.z+last.az*o,cur.z+cur.az*o,u))); }
+        world.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pp),wm)); }
+      last=cur; } }
+  // --- scarecrows standing in the paddies ---
+  { const pole=L(0x6b5034), shirtC=[0x2f5d9a,0xb03a2e,0x3f7d4a,0xd9a531], hat=L(0xd8c27a);
+    let n=0; for(let t=0;t<900 && n<12;t++){ const x=(R()-.5)*(SIZE-80), z=(R()-.5)*(SIZE-80); heightAt(x,z); if(!(tW===tW) || nD<roadHalf[Math.max(0,nI)]+7 || nD>70) continue;
+      const g=new THREE.Group(); g.position.set(x,tW,z); g.rotation.y=R()*6.28; world.add(g);
+      const p=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,2.1,6),pole); p.position.y=1.05; g.add(p);
+      const a=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,1.5,6),pole); a.rotation.z=Math.PI/2; a.position.y=1.5; g.add(a);
+      const sh=new THREE.Mesh(new THREE.BoxGeometry(0.75,0.65,0.22),L(shirtC[n%4])); sh.position.y=1.35; sh.castShadow=true; g.add(sh);
+      const hd=new THREE.Mesh(new THREE.SphereGeometry(0.2,10,8),L(0xe8dcc0)); hd.position.y=1.92; g.add(hd);
+      const ht2=new THREE.Mesh(new THREE.ConeGeometry(0.42,0.26,14),hat); ht2.position.y=2.12; ht2.castShadow=true; g.add(ht2); n++; } }
+  // --- cherry trees in bloom around the hamlet and on the banks ---
+  { const trunkG=new THREE.CylinderGeometry(0.16,0.26,2.4,6); trunkG.translate(0,1.2,0); const crownG=new THREE.IcosahedronGeometry(2.3,1); crownG.scale(1,0.78,1); crownG.translate(0,3.6,0);
+    const list=[]; for(let t=0;t<2500 && list.length<22;t++){ const near=t<1200, x=near?tana.vx+(R()-.5)*90:(R()-.5)*(SIZE-60), z=near?tana.vz+(R()-.5)*90:(R()-.5)*(SIZE-60);
+      const y=heightAt(x,z); if(tW===tW || nD<roadHalf[Math.max(0,nI)]+5 || tTy===3 || nearProp(x,z,3) || nearCrowd(x,z)) continue; if(!near && R()<0.6) continue;
+      if(list.some(o=>(o.x-x)**2+(o.z-z)**2<36)) continue; list.push({x,y,z,s:0.8+R()*0.45}); }
+    const tr=new THREE.InstancedMesh(trunkG,L(0x4a3428),list.length), cr=new THREE.InstancedMesh(crownG,new THREE.MeshPhongMaterial({color:0xffffff,flatShading:true,shininess:0,specular:0}),list.length), C=new THREE.Color();
+    list.forEach((o,i)=>{ Q.setFromAxisAngle(UP,R()*6.28); S.setScalar(o.s); V.set(o.x,o.y-0.2,o.z); M.compose(V,Q,S); tr.setMatrixAt(i,M); cr.setMatrixAt(i,M); C.setHSL(0.94+R()*0.04,0.55+R()*0.2,0.82+R()*0.07); cr.setColorAt(i,C);
+      const t={x:o.x,z:o.z,y:o.y,s:o.s,r:0.5,type:8}; trees.push(t); const k=(Math.floor(o.x/TCELL)+200)*1000+(Math.floor(o.z/TCELL)+200); if(!tgrid.has(k)) tgrid.set(k,[]); tgrid.get(k).push(t); });
+    tr.castShadow=cr.castShadow=true; world.add(tr,cr); }
+  // --- a small shrine with a red torii at the top of the hill ---
+  if(tana.shrine>=0){ const i=tana.shrine, [lx,lz]=lateral(i), sd=-1, off=roadHalf[i]+5.5, x=pts[i].x+lx*off*sd, z=pts[i].z+lz*off*sd, y=heightAt(x,z), ry=Math.atan2(lx*sd,lz*sd);
+    const red=L(0xc6372b), blk=L(0x2a2522), stn=L(0x9a968c);
+    const grp=new THREE.Group(); grp.position.set(x,y,z); grp.rotation.y=ry; world.add(grp);
+    const part=(geo,mat,px,py,pz)=>{ const m=new THREE.Mesh(geo,mat); m.position.set(px,py,pz); m.castShadow=true; grp.add(m); return m; };
+    for(const s of [-1.5,1.5]){ part(new THREE.CylinderGeometry(0.19,0.22,4,12),red,s,2,0); part(new THREE.CylinderGeometry(0.27,0.27,0.35,12),blk,s,0.17,0); }
+    part(new THREE.BoxGeometry(4.2,0.26,0.26),red,0,3.2,0); part(new THREE.BoxGeometry(4.7,0.3,0.42),red,0,3.85,0); part(new THREE.BoxGeometry(5.1,0.22,0.5),blk,0,4.11,0);
+    part(new THREE.BoxGeometry(0.3,0.7,0.12),blk,0,3.52,0.1);
+    // hokora (small shrine) and two stone lanterns behind the torii
+    part(new THREE.BoxGeometry(1.6,0.5,1.4),stn,0,0.25,4.2); part(new THREE.BoxGeometry(1.1,1,0.95),L(0x7a5a3a),0,1,4.2);
+    const rf=new THREE.CylinderGeometry(0.95,0.95,1.5,3); rf.rotateZ(Math.PI/2); rf.rotateX(Math.PI/2); rf.scale(1,0.5,1); part(rf,blk,0,1.75,4.2);
+    for(const s of [-1.6,1.6]){ part(new THREE.CylinderGeometry(0.12,0.16,0.9,8),stn,s,0.45,2.6); part(new THREE.BoxGeometry(0.5,0.4,0.5),stn,s,1.1,2.6); part(new THREE.ConeGeometry(0.42,0.35,4),stn,s,1.48,2.6); }
+    for(const s of [-1.5,1.5]){ const c=Math.cos(ry), sn=Math.sin(ry); addBlock(x+s*c,z-s*sn,{r:0.45,top:y+4,big:true,msg:'鳥居に激突！'}); }
+    adv.props.push([x,z,6]); }
 }
 
 function buildBridge(){
@@ -1180,6 +1430,7 @@ function drawMap(){
   mctx.lineWidth=7; mctx.strokeStyle='#c49a63'; mctx.stroke();
   if(river){ mctx.strokeStyle='#7a5534'; mctx.lineWidth=7; mctx.beginPath(); for(let k=0,i=river.b0;k<=((river.b1-river.b0+NS)%NS);k++,i=(i+1)%NS){ const [x,y]=mp(pts[i].x,pts[i].z); k?mctx.lineTo(x,y):mctx.moveTo(x,y);} mctx.stroke(); }
   if(tunnel){ mctx.strokeStyle='#2c2822'; mctx.lineWidth=7; mctx.setLineDash([6,5]); mctx.beginPath(); for(let k=0;k<=tunnel.L;k++){ const i=(tunnel.b0+k)%NS, [x,y]=mp(pts[i].x,pts[i].z); k?mctx.lineTo(x,y):mctx.moveTo(x,y);} mctx.stroke(); mctx.setLineDash([]); }
+  if(tana) for(const q of tana.secs){ mctx.strokeStyle=q.c; mctx.lineWidth=7; mctx.beginPath(); for(let k=0;k<=q.L;k++){ const i=(q.s+k)%NS, [x,y]=mp(pts[i].x,pts[i].z); k?mctx.lineTo(x,y):mctx.moveTo(x,y);} mctx.stroke(); }
   for(const k of kickers){ const p=pts[(k+K-1)%NS]; const [x,y]=mp(p.x,p.z); mctx.fillStyle='#e2552a'; mctx.beginPath(); mctx.arc(x,y,5,0,7); mctx.fill(); }
   const [sx,sy]=mp(pts[0].x,pts[0].z); mctx.fillStyle='#f3efe2'; mctx.fillRect(sx-6,sy-6,12,12);
   const [bx,by]=mp(st.x,st.z);
@@ -1209,7 +1460,7 @@ addEventListener('keydown',e=>{
   if((e.code==='Space'||e.code==='Enter') && !building && (mode==='title'||mode==='finish'||mode==='over')){ e.preventDefault(); startRace(); }
   if(e.code==='KeyR' && mode==='race' && !st.crash){ if(OPEN){ placeAt(st.progress); } else { nearest(st.x,st.z); placeAt(nI>=0?nI:st.lastIdx); } }
   if(e.code==='KeyM') toggleSound();
-  if(mode==='title' && ({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'trial'})[e.code]) selectCourse(({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'trial'})[e.code]);
+  if(mode==='title' && ({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'tanada',Digit5:'trial'})[e.code]) selectCourse(({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'tanada',Digit5:'trial'})[e.code]);
 });
 addEventListener('keyup',e=>{ if(KM[e.code]) keys[KM[e.code]]=false; });
 document.querySelectorAll('.tb').forEach(b=>{
@@ -1310,7 +1561,7 @@ function gameOver(){
   $('card').innerHTML=`<div class="eyebrow">3 CRASHES · RACE OVER</div>
     <h1 class="over">GAME OVER<span>${OPEN?Math.round(clamp((st.progress-3)/(trial.finish-3),0,1)*100)+'%地点でリタイア':Math.min(lap,LAPS)+'周目でリタイア'} · ${fmt(raceT)}</span></h1>
     <div class="best">完走したラップ ${lapTimes.length}/${LAPS}${lapTimes.length?'　·　ベストラップ '+fmt(Math.min(...lapTimes)):''}　·　最長エアタイム ${bestAir.toFixed(2)}秒</div>
-    <p class="lead">木や大きな岩に高速で当たる、滑りすぎて立て直せない、崖や吊橋から落ちる、の3回でゲームオーバー。</p>
+    <p class="lead">木や大きな岩に高速で当たる、滑りすぎて立て直せない、崖や吊橋・田んぼに落ちる、の3回でゲームオーバー。</p>
     <div class="btnrow"><button class="btn" id="again">もう一度走る <span class="pc">（SPACE）</span></button><button class="btn ghost" id="toTitle">コースを選ぶ</button></div>`;
   $('again').addEventListener('click',startRace); $('toTitle').addEventListener('click',showTitle);
   $('ov').hidden=false;
@@ -1402,7 +1653,8 @@ function step(dt){
   // shallow river water: slow and slippery, with spray
   let inWater=false;
   if(river){ const [rd,ry]=riverInfo(st.x,st.z); if(rd<6.8 && st.y<ry+0.05) inWater=true; }
-  const maxV=inWater?11:onRoad?31:13;
+  const mud=tana?1-gripMul[idx]:0;
+  const maxV=inWater?11:onRoad?31-mud*22:13;
   // slope along heading
   let fx=Math.sin(st.h), fz=Math.cos(st.h), lx=Math.cos(st.h), lz=-Math.sin(st.h);
   const hA=heightAt(st.x+fx*1.1,st.z+fz*1.1), hB=heightAt(st.x-fx*1.1,st.z-fz*1.1);
@@ -1428,7 +1680,7 @@ function step(dt){
     if(st.shiftT<=0 && st.rpm<1) a+=st.thrPos*torque(st.rpm)*GEAR_F[st.gear]*(onRoad?1:0.8);
     if(st.rpm>=1 && st.thrPos>0.1) a-=1.2;                       // rev limiter
     if(st.thrPos<0.15 && fwd>0.5) a-=0.4+Math.min(1,st.rpm)*1.4/st.gear*2;   // engine braking, stronger in low gears
-    if(st.speed>maxV) a-=onRoad?4:12;
+    if(st.speed>maxV) a-=onRoad?(mud>0.2?10:4):12;
     rearSlide = racing && st.speed>8 && (keys.slide || (brk && Math.abs(st.steer)>0.4));
     if(brk){ a-= st.speed>0.3 ? 3+11*st.brkPos : 3; }
     if(keys.slide&&racing&&!brk){ a-= st.speed>0.3?5:0; }
@@ -1533,6 +1785,10 @@ function step(dt){
       for(let i=0;i<14;i++) emitDust(st.x,st.y,st.z,-st.vx*0.2,-st.vz*0.2);
     }
   }
+  // rice paddies: ride into the water and you are out
+  if(tana && racing && st.ground){ heightAt(st.x,st.z); if(tW===tW && st.y<tW+0.3){ for(let i=0;i<46;i++) emitSpray(st.x,tW+0.1,st.z,(R()-.5)*5+st.vx*0.15,(R()-.5)*5+st.vz*0.15,3+R()*4); crash('田んぼに落ちた！'); return; } }
+  // mud: brown spray off the rear wheel
+  if(mud>0.2 && onRoad && st.ground && vAbs>5){ const n=mud*vAbs*0.25; for(let i=0;i<n;i++) if(R()<n-i) emitDust(st.x-fx*0.8,st.y+0.2,st.z-fz*0.8,-st.vx*0.35+(R()-.5)*3,-st.vz*0.35+(R()-.5)*3); }
   // spray in the river
   if(inWater && vAbs>2){ const n=Math.min(6,vAbs*0.4); for(let i=0;i<n;i++) if(R()<n-i){ emitSpray(st.x+fx*0.8,st.y,st.z+fz*0.8,lx*(R()-.5)*8+st.vx*0.3,lz*(R()-.5)*8+st.vz*0.3,2+vAbs*0.15); emitSpray(st.x-fx*0.7,st.y,st.z-fz*0.7,-st.vx*0.2,-st.vz*0.2,1.5+vAbs*0.12); } }
   // dust
