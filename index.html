@@ -129,7 +129,8 @@ body.menu #touch{display:none}
   #spd{font-size:60px}
   #map{width:110px;height:110px}
   #offroad{bottom:auto;top:calc(96px + env(safe-area-inset-top,0px))}
-  #btnRe{right:18px;top:calc(138px + env(safe-area-inset-top,0px));width:54px;height:54px;font-size:26px}
+  #btnRe{right:14px;top:calc(134px + env(safe-area-inset-top,0px));width:auto;height:50px;padding:0 16px;border-radius:25px;font-family:var(--f-jp);font-weight:900;font-size:18px;border:2px solid var(--plate);color:var(--plate);background:rgba(18,22,12,.7)}
+  #btnRe:active{background:var(--plate);color:var(--plate-ink)}
   .pc{display:none}
 }
 @media (max-width:560px){ #ov{background:rgba(14,18,9,.8)} }
@@ -193,7 +194,7 @@ body.menu #touch{display:none}
   <div class="tb" id="btnR" data-k="right">▶</div>
   <div class="tb" id="btnB" data-k="down">BRAKE</div>
   <div class="tb" id="btnG" data-k="up">GAS</div>
-  <div class="tb" id="btnRe">↺</div>
+  <div class="tb" id="btnRe">↺ 復帰</div>
 </div>
 
 <div id="ov">
@@ -221,7 +222,7 @@ body.menu #touch{display:none}
       <kbd>M</kbd><span>エンジン音 ON/OFF</span>
     </div>
     <p class="lead tip">転倒できるのは3回まで。コツ：カーブ中にアクセルを開けると後輪が流れる。滑りすぎたら逆ハンドルで立て直そう。</p>
-    <p class="lead sp">スマホの操作：「スタート」→ 3・2・1のあと、<b>GAS</b> を押しっぱなしで加速、<b>◀ ▶</b> でハンドル、<b>BRAKE</b> で減速（ハンドルと一緒に押すと後輪が滑る、止まっている時に押し続けるとバック）。動けなくなったら右上の <b>↺</b> でコースに戻る。横持ちがおすすめ。</p>
+    <p class="lead sp">スマホの操作：「スタート」→ 3・2・1のあと、<b>GAS</b> を押しっぱなしで加速、<b>◀ ▶</b> でハンドル、<b>BRAKE</b> で減速（ハンドルと一緒に押すと後輪が滑る、止まっている時に押し続けるとバック）。コースアウトしたり動けなくなったら、右上の <b>↺ 復帰</b> でコースに戻れる。横持ちがおすすめ。</p>
     <button class="btn" id="startBtn">スタート <span class="pc">（SPACE）</span></button>
     <div class="best" id="bestTitle"></div>
   </div>
@@ -2214,7 +2215,7 @@ function stepInner(dt){
         crash(wet?'川に落ちた！':st.zone===1?'吊橋から落ちた！':'崖から転落！'); return; }
       if(impact>13){ st.vx*=0.8; st.vz*=0.8; st.shake=0.5; } else st.shake=Math.max(st.shake,0.2);
       if(st.air>0.45){ showAir('AIR '+st.air.toFixed(2)+'s'); if(racing) bestAir=Math.max(bestAir,st.air); }
-      for(let i=0;i<14;i++) emitDust(st.x,st.y,st.z,-st.vx*0.2,-st.vz*0.2);
+      const nd=st.air>0.35?14:4; for(let i=0;i<nd;i++) emitDust(st.x,st.y,st.z,-st.vx*0.2,-st.vz*0.2);
     }
   }
   // the railway is off limits (except flying over it)
@@ -2310,12 +2311,16 @@ function updateCamera(dt){
   if(Math.abs(camera.fov-fov)>0.05){ camera.fov+= (fov-camera.fov)*Math.min(1,dt*3); camera.updateProjectionMatrix(); }
 }
 function updateDust(dt){
+  const cx=camera.position.x, cy=camera.position.y, cz=camera.position.z, sx=st.x-cx, sy=st.y+0.9-cy, sz=st.z-cz, sl2=Math.max(1,sx*sx+sy*sy+sz*sz);
   for(let i=0;i<DN;i++){
     if(dLife[i]<=0) continue;
     dLife[i]-=dt;
     if(dLife[i]<=0){ dPos[i*3+1]=-999; continue; }
     dPos[i*3]+=dVel[i*3]*dt; dPos[i*3+1]+=dVel[i*3+1]*dt; dPos[i*3+2]+=dVel[i*3+2]*dt;
     dVel[i*3]*=1-1.8*dt; dVel[i*3+2]*=1-1.8*dt; dVel[i*3+1]-=1.5*dt;
+    // keep the line of sight from the camera to the rider clear (downhill the camera looks straight through the trail of dust)
+    const px=dPos[i*3]-cx, py=dPos[i*3+1]-cy, pz=dPos[i*3+2]-cz, t=(px*sx+py*sy+pz*sz)/sl2;
+    if(t>0 && t<0.97){ const qx=px-sx*t, qy=py-sy*t, qz=pz-sz*t; if(qx*qx+qy*qy+qz*qz<(0.9+1.6*t)*(0.9+1.6*t)){ dLife[i]=0; dPos[i*3+1]=-999; } }
   }
   dGeo.attributes.position.needsUpdate=true;
 }
