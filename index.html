@@ -1,5 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DIRT FURY</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -95,6 +96,8 @@ h1 span{display:block;font-family:var(--f-num);font-weight:800;font-size:.42em;l
 .btn{align-self:flex-start;pointer-events:auto;font-family:var(--f-jp);font-weight:900;font-size:18px;color:var(--plate-ink);background:var(--plate);
   border:0;border-radius:10px 10px 16px 16px;padding:14px 28px;box-shadow:0 4px 0 #8f6e10;cursor:pointer}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #8f6e10}
+#startBtn{position:sticky;bottom:10px;z-index:2}
+body.menu #touch{display:none}
 .btn:focus-visible{outline:3px solid var(--paper);outline-offset:3px}
 .res{display:grid;grid-template-columns:repeat(3,auto);gap:4px 22px;font-family:var(--f-num);font-variant-numeric:tabular-nums}
 .res div{font-size:13px;letter-spacing:.16em;color:var(--dim)}
@@ -104,15 +107,17 @@ h1 span{display:block;font-family:var(--f-num);font-weight:800;font-size:.42em;l
 
 /* Touch controls */
 #touch{display:none}
+.sp{display:none}
 @media (pointer:coarse){
+  .sp{display:block}
   #touch{display:block}
   .tb{position:fixed;z-index:3;width:76px;height:76px;border-radius:50%;background:rgba(18,22,12,.55);border:2px solid rgba(243,239,226,.35);
     color:var(--paper);font-family:var(--f-num);font-weight:800;font-size:26px;display:flex;align-items:center;justify-content:center;touch-action:none}
   .tb.on{background:rgba(242,194,48,.85);color:var(--plate-ink)}
-  #btnL{left:18px;bottom:calc(26px + env(safe-area-inset-bottom,0px))}
-  #btnR{left:106px;bottom:calc(26px + env(safe-area-inset-bottom,0px))}
-  #btnG{right:18px;bottom:calc(26px + env(safe-area-inset-bottom,0px));width:92px;height:92px;font-size:18px}
-  #btnB{right:122px;bottom:calc(30px + env(safe-area-inset-bottom,0px));font-size:15px}
+  #btnL{right:106px;bottom:calc(26px + env(safe-area-inset-bottom,0px))}
+  #btnR{right:18px;bottom:calc(26px + env(safe-area-inset-bottom,0px))}
+  #btnG{left:18px;bottom:calc(26px + env(safe-area-inset-bottom,0px));width:92px;height:92px;font-size:18px}
+  #btnB{left:122px;bottom:calc(30px + env(safe-area-inset-bottom,0px));font-size:15px}
   #br{right:auto;left:50%;transform:translateX(-50%);bottom:auto;top:calc(12px + env(safe-area-inset-top,0px));text-align:center}
   #spd{font-size:60px}
   #map{width:110px;height:110px}
@@ -178,6 +183,7 @@ h1 span{display:block;font-family:var(--f-num);font-weight:800;font-size:.42em;l
       <kbd>M</kbd><span>エンジン音 ON/OFF</span>
     </div>
     <p class="lead">転倒できるのは3回まで。コツ：カーブ中にアクセルを開けると後輪が流れる。滑りすぎたら逆ハンドルで立て直そう。</p>
+    <p class="lead sp">スマホの操作：「スタート」→ 3・2・1のあと、左下の <b>GAS</b> を押しっぱなしで加速、右下の <b>◀ ▶</b> でハンドル、<b>BRAKE</b> で減速（ハンドルと一緒に押すと後輪が滑る）。横持ちがおすすめ。</p>
     <button class="btn" id="startBtn">スタート <span class="pc">（SPACE）</span></button>
     <div class="best" id="bestTitle"></div>
   </div>
@@ -1809,11 +1815,17 @@ addEventListener('keydown',e=>{
   if(mode==='title' && ({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'tanada',Digit5:'koyo',Digit6:'circuit',Digit7:'trial'})[e.code]) selectCourse(({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'tanada',Digit5:'koyo',Digit6:'circuit',Digit7:'trial'})[e.code]);
 });
 addEventListener('keyup',e=>{ if(KM[e.code]) keys[KM[e.code]]=false; });
+// touch buttons: real touch events (a long press must not turn into a context menu or cancel the press), pointer events for mouse/pen
 document.querySelectorAll('.tb').forEach(b=>{
-  const k=b.dataset.k;
-  const on=e=>{ e.preventDefault(); keys[k]=true; b.classList.add('on'); try{b.setPointerCapture(e.pointerId);}catch(_){} };
-  const off=e=>{ keys[k]=false; b.classList.remove('on'); };
-  b.addEventListener('pointerdown',on); b.addEventListener('pointerup',off); b.addEventListener('pointercancel',off); b.addEventListener('lostpointercapture',off);
+  const k=b.dataset.k, held=new Set();
+  const set=v=>{ keys[k]=v; b.classList.toggle('on',v); };
+  b.addEventListener('touchstart',e=>{ e.preventDefault(); for(const t of e.changedTouches) held.add(t.identifier); set(true); },{passive:false});
+  const tend=e=>{ e.preventDefault(); for(const t of e.changedTouches) held.delete(t.identifier); if(!held.size) set(false); };
+  b.addEventListener('touchend',tend,{passive:false}); b.addEventListener('touchcancel',tend,{passive:false});
+  b.addEventListener('contextmenu',e=>e.preventDefault());
+  b.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch') return; e.preventDefault(); set(true); try{b.setPointerCapture(e.pointerId);}catch(_){} });
+  const poff=e=>{ if(e.pointerType==='touch') return; set(false); };
+  b.addEventListener('pointerup',poff); b.addEventListener('pointercancel',poff); b.addEventListener('lostpointercapture',poff);
 });
 addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; });
 const titleHTML=$('card').innerHTML;
@@ -1881,7 +1893,13 @@ function updateSound(rpm,gear,thr){
   scrG.gain.setTargetAtTime(soundOn&&mode==='race'?sa*0.09:0,t,0.05);
 }
 
+function goFull(){
+  if(!MOBILE) return; const d=document.documentElement;
+  try{ if(!document.fullscreenElement && d.requestFullscreen){ d.requestFullscreen({navigationUI:'hide'}).then(()=>{ try{ screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} }).catch(()=>{}); }
+       else if(!document.webkitFullscreenElement && d.webkitRequestFullscreen) d.webkitRequestFullscreen(); }catch(e){}
+}
 function startRace(){
+  goFull();
   featMarks.forEach(f=>{ f.done=false; f.lap=0; });
   initSound(); if(ac&&ac.state==='suspended') ac.resume();
   $('ov').hidden=true; placeAt(startIdx()); st.progress=startIdx(); st.respawnAt=-1; st.cine=-1; st.jump=0; mode='count'; countT=3.2; raceT=0; lap=1; lapTimes=[]; cps=new Set(); bestAir=0; bestSlide=0; lives=LIVES; renderLives();
@@ -1957,6 +1975,7 @@ function frame(now){
   if(wheelG) wheelG.userData.spin.rotation.z+=dt*0.06;
   if(bridgeG){ const on=st.ground && feat[nI>=0?nI:0]===1, v=Math.min(1,Math.hypot(st.vx,st.vz)/20);
     bridgeG.rotation.z=0.012*Math.sin(titleT*1.3+raceT*1.3)+(on?0.03*Math.sin(raceT*7)*v:0); }
+  document.body.classList.toggle('menu',!$('ov').hidden);
   if(msgT>0){ msgT-=dt; if(msgT<=0) $('msg').textContent=''; }
   if(airT>0){ airT-=dt; if(airT<=0) $('air').style.opacity=0; }
   // HUD
