@@ -3174,7 +3174,6 @@ function stepInner(dt){
       if(along>40 && along>2.2*straight && st.zone!==6 && st.cine<0){ st.respawnAt=st.progress; crash('コースアウト！'); return; }
       if(nI>st.progress) st.progress=nI;
     }
-    for(const f of featMarks){ if(!f.done && st.progress>=f.i && st.progress<f.i+30){ f.done=true; showAir(f.label); } }
     if(st.progress>=trial.finish){ finishRace(); }
   }
   // laps
@@ -3186,7 +3185,6 @@ function stepInner(dt){
         if(lap>LAPS){ finishRace(); } else showMsg(lap===LAPS?'FINAL LAP':'LAP '+lap,1.4); }
     }
     for(const [c,f] of [[1,.25],[2,.5],[3,.75]]){ const ci=Math.floor(NS*f); if(Math.abs(idx-ci)<25) cps.add(c); }
-    for(const f of featMarks){ if(f.lap!==lap && cdist(idx,f.i)<4){ f.lap=lap; showAir(f.label); } }
     lastIdx=idx;
   }
 }
