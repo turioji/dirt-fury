@@ -2812,15 +2812,22 @@ function goFull(){
        else if(!document.webkitFullscreenElement && d.webkitRequestFullscreen) d.webkitRequestFullscreen(); }catch(e){}
 }
 // rotating the phone can drop full screen; the next tap during the race brings it back (a tap is needed: browsers only allow full screen on a user action)
+let fsT=-1e9;
 if(MOBILE){
+  const onFs=()=>{ if(document.fullscreenElement||document.webkitFullscreenElement) fsT=performance.now(); };
+  document.addEventListener('fullscreenchange',onFs); document.addEventListener('webkitfullscreenchange',onFs);
+  // the first tap on the title screen already goes full screen, so the notice is gone before the race
+  document.addEventListener('touchend',()=>{ if((mode==='title'||mode==='finish'||mode==='over') && !document.fullscreenElement && !document.webkitFullscreenElement) goFull(); },{passive:true});
   document.addEventListener('touchend',()=>{ if((mode==='race'||mode==='count') && !document.fullscreenElement && !document.webkitFullscreenElement) goFull(); },{passive:true});
   document.addEventListener('fullscreenchange',()=>{ if(!document.fullscreenElement && mode==='race') showMsg('画面をタップで全画面に戻ります',2.2); });
 }
 function startRace(){
-  goFull();
+  const wasFull=!!(document.fullscreenElement||document.webkitFullscreenElement); goFull();
   featMarks.forEach(f=>{ f.done=false; f.lap=0; });
   initSound(); if(ac&&ac.state==='suspended') ac.resume();
   $('ov').hidden=true; placeStart(); resetRivals(); st.progress=startIdx(); st.respawnAt=-1; st.cine=-1; st.jump=0; mode='count'; countT=3.2; raceT=0; lap=1; lapTimes=[]; cps=new Set(); bestAir=0; bestSlide=0; lives=LIVES; renderLives();
+  // phones: the browser's "exit full screen" notice covers the buttons for a few seconds, so wait it out before 3-2-1
+  if(MOBILE){ const since=(performance.now()-fsT)/1000; countT+= !wasFull ? 3 : Math.max(0,4-since); }
   nearest(st.x,st.z); lastIdx=nI; canvas.focus&&canvas.focus();
 }
 function finishRace(){
@@ -2895,7 +2902,7 @@ function frame(now){
   camCine+=((st.cine>=0?1:0)-camCine)*Math.min(1,rdt*(st.cine>=0?2.2:1.4));
   const dt=rdt*timeScale;
   if(mode==='title'){ titleT+=dt; }
-  if(mode==='count'){ countT-=dt; const n=Math.ceil(countT-0.2); showMsg(n>0?String(n):'GO!',0.3); if(countT<=0.2){ mode='race'; lapT0=0; } }
+  if(mode==='count'){ countT-=dt; const n=Math.ceil(countT-0.2); showMsg(n>3?'READY':n>0?String(n):'GO!',0.3); if(countT<=0.2){ mode='race'; lapT0=0; } }
   if(mode==='race') raceT+=dt;
   step(dt);
   updateCamera(rdt);
