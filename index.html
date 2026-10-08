@@ -88,6 +88,8 @@ h1.over span{font-family:var(--f-jp);font-weight:700;font-size:.3em;letter-spaci
 @media (prefers-reduced-motion:reduce){#gear.shift{animation:none}}
 @media (pointer:coarse){#tach{width:140px;margin:4px auto 6px}}
 #gear{display:inline-block;margin-left:10px;background:var(--plate);color:var(--plate-ink);border-radius:4px;padding:2px 7px;font-size:18px}
+#mirror{border:3px solid var(--plate);border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+#mirror span{position:absolute;left:8px;top:4px;font-size:12px;font-weight:900;letter-spacing:.1em;color:var(--plate);text-shadow:0 1px 3px #000}
 #msg{left:0;right:0;top:34%;text-align:center;font-family:var(--f-num);font-weight:800;font-size:clamp(40px,8vw,96px);line-height:1.05;padding-inline:16px;
   color:var(--paper);text-shadow:0 6px 24px rgba(0,0,0,.55);letter-spacing:.02em}
 #air{left:0;right:0;top:22%;text-align:center;font-family:var(--f-num);font-weight:800;font-size:44px;color:var(--plate);
@@ -206,6 +208,7 @@ body.menu #touch{display:none}
 <div id="dim"></div><div id="glare"></div>
 <div class="hud" id="msg"></div>
 <div class="hud" id="air"></div>
+<div class="hud" id="mirror" hidden><span>後方</span></div>
 <div class="hud" id="offroad">オフロード — 林道に戻ろう</div>
 
 <div id="touch">
@@ -227,7 +230,8 @@ body.menu #touch{display:none}
       <button class="course" data-c="tanada" role="radio"><b>棚田と農道</b><small>あぜ道・段々ジャンプ・ぬかるみ</small></button>
       <button class="course" data-c="koyo" role="radio"><b>紅葉の林間コース</b><small>赤い鉄橋・鉄道ジャンプ・落ち葉</small></button>
       <button class="course" data-c="circuit" role="radio"><b>8の字サーキット</b><small>立体交差・S字・ヘアピン・シケイン</small></button>
-      <button class="course wide" data-c="volcano" role="radio"><b>火山のガレ場</b><small>溶岩ジャンプ・岩の橋・噴石</small></button>
+      <button class="course" data-c="volcano" role="radio"><b>火山のガレ場</b><small>溶岩ジャンプ・岩の橋・噴石</small></button>
+      <button class="course" data-c="jungle" role="radio"><b>恐竜ジャングル</b><small>ワニの川・ワニの沼・ティラノの追跡</small></button>
       <div class="grp race">RACE · ライバルと対戦</div>
       <button class="course trialc" data-c="race" role="radio"><b>モトクロス・グランプリ</b><em class="race">レース</em><small>ライバル3台・土手カーブ・ダブルジャンプ</small></button>
       <div class="grp">TRIAL · 一本道の特別コース</div>
@@ -303,7 +307,11 @@ const COURSES={
   race:{id:'race',name:'モトクロス・グランプリ',tag:'ライバル3台・土手カーブ・ダブルジャンプ',
     eyebrow:'RACE · MOTOCROSS GP · 4 LAPS',
     lead:'ライバル3台と4周の勝負。ゲートが倒れたら一斉にスタート。土手で固めたヘアピン、テーブルトップ、ダブルジャンプ、リズムセクション。ぶつかり合いながら1位を狙え。',
-    seed:7070, width:11, size:420, seg:380, fog:0xc9d3c4, adventure:true, type:'race', laps:4}
+    seed:7070, width:11, size:420, seg:380, fog:0xc9d3c4, adventure:true, type:'race', laps:4},
+  jungle:{id:'jungle',name:'恐竜ジャングル',tag:'ワニの川・ワニの沼・ティラノの追跡',
+    eyebrow:'JUNGLE · DINO VALLEY · 3 LAPS',
+    lead:'恐竜が生きている密林を3周。ワニのうようよいる川は全開で飛び越え、丸太橋で渡る。沼ではワニが赤い輪めがけて飛び出し、遺跡の先ではティラノサウルスが追ってくる。捕まったら1ミス。',
+    seed:3131, NC:15, rad:170, radVar:58, ns:1650, width:8, size:640, seg:420, fog:0x8fa48a, fogFar:230, adventure:true, type:'jungle'}
 };
 const K=18, CELL=30, TCELL=8, BRIDGE_HALF=1.7; let LAPS=3;
 let course=COURSES.forest, W=9, HALF=4.5, SIZE=560;
@@ -563,6 +571,44 @@ function buildCircuitTrack(c){
 // sand in the gravel traps
 function inGravel(i,x,z,d){ if(!gravel||!gravel[i]) return false; const hw=roadHalf[i]; if(d<hw+1.2||d>hw+11) return false; const [lx,lz]=lateral(i); return Math.sign((x-pts[i].x)*lx+(z-pts[i].z)*lz)===gravel[i]; }
 
+// ---------- jungle: a croc river to jump, a log bridge, a croc swamp, a T-rex chase, temple ruins ----------
+let jungle=null, rexG=null, crocs=[], dinos=[];
+function buildJungle(){
+  const taken=[0];
+  const free=(i,gap)=>taken.every(j=>cdist(i,j)>gap);
+  const pickStraight=(f0,f1,gap,win)=>{ let best=-1,bc=1e9;
+    for(let i=Math.floor(NS*f0);i<Math.floor(NS*f1);i++){ const ii=i%NS; if(!free(ii,gap)) continue;
+      let cv=0; for(let k=-win;k<=win;k+=5) cv=Math.max(cv,curv[(ii+k+NS)%NS]);
+      if(cv<bc){bc=cv;best=ii;} }
+    if(best>=0) taken.push(best); return best; };
+  adv={spots:[],props:[]}; gripMul=new Float32Array(NS).fill(1);
+  for(let i=0;i<NS;i++){ const u=i/NS*Math.PI*2; ht[i]+=1.3*Math.sin(u*3+2.2)+0.6*Math.sin(u*7+0.4); }   // jungle hills
+  jungle={};
+  // 1. a river full of crocodiles, crossed twice: jump it, then a narrow log bridge
+  placeFlow(taken,'ワニの川ジャンプ','丸太橋');
+  if(lava){ lava.water=true; for(let k=-230;k<=-100;k+=10) taken.push((lava.iA+k+NS)%NS); }
+  // 2. T-rex territory: a long, open stretch. It bursts out of the trees and chases you
+  { const c=pickStraight(0.05,0.95,170,70);
+    if(c>=0){ const z0=(c-110+NS)%NS, L=230, sd=noise(pts[z0].x+9,pts[z0].z)>0?1:-1, [lx,lz]=lateral((z0+60)%NS), ox=pts[(z0+60)%NS].x+lx*(HALF+12)*sd, oz=pts[(z0+60)%NS].z+lz*(HALF+12)*sd;
+      jungle.rex={z0,L,sd,ox,oz}; for(let k=-120;k<=L+20;k+=10) taken.push((z0+k+NS)%NS);
+      adv.props.push([ox,oz,9]);
+      featMarks.push({i:(z0-60+NS)%NS,label:'恐竜注意'}); adv.spots.push([z0+L+40,1,'rex']); } }
+  // 3. the croc swamp: the road wades through murky water, slow and slippery
+  { const s=pickStraight(0.05,0.95,110,30);
+    if(s>=0){ const L=110, s0=(s-55+NS)%NS;
+      for(let k=-10;k<=L+10;k++){ const i=(s0+k+NS)%NS, w=sstep(-10,6,k)*sstep(L+10,L-6,k); gripMul[i]=lerp(1,0.62,w); ht[i]-=0.5*w; }
+      for(let k=-10;k<=L+10;k+=10) taken.push((s0+k+NS)%NS);
+      jungle.swamp={s:s0,L}; featMarks.push({i:(s0-30+NS)%NS,label:'ワニの沼'}); adv.spots.push([s0+L+30,-1,'swamp']); } }
+  // 4. the ruins: a stone gate over the road
+  { const g=pickStraight(0.05,0.95,80,20); if(g>=0){ jungle.gate=g; featMarks.push({i:(g-30+NS)%NS,label:'遺跡の門'}); } }
+  // 5. two fallen-tree kickers
+  kickers=[]; for(let n=0;n<2;n++){ const k=pickStraight(0.04,0.95,90,30); if(k>=0) kickers.push(k); }
+  kickers.sort((a,b)=>a-b);
+  // 6. a far clearing where long-necks graze
+  { let best=null; for(let gx=-SIZE/2+80;gx<=SIZE/2-80;gx+=12) for(let gz=-SIZE/2+80;gz<=SIZE/2-80;gz+=12){ nearest(gx,gz); const d=nI<0?999:nD; if(lava && lavaInfo(gx,gz)[1]<40) continue; const sc=d>=48&&d<=80?-Math.abs(d-56):-1e9; if(!best||sc>best[3]) best=[gx,gz,d,sc]; }
+    if(best && best[3]>-1e8){ jungle.herd={x:best[0],z:best[1],r:16}; adv.props.push([best[0],best[1],28]); } }
+}
+
 // ---------- race: a motocross track with banked berms, jumps and three rivals ----------
 let race=null, bank=null;
 // [straight, length m] or [arc, degrees (+ left), radius m]; laid out offline so the lap closes and never crosses itself
@@ -639,16 +685,8 @@ function lavaAdj(h,x,z,road){
   if(road && nI>=0 && feat[nI]===10) return h;
   return Math.min(h, lavaY(s)-0.6+Math.max(0,d-lava.hw)*2.4);
 }
-function buildVolcano(){
-  const taken=[0];
-  const free=(i,gap)=>taken.every(j=>cdist(i,j)>gap);
-  const pickStraight=(f0,f1,gap,win)=>{ let best=-1,bc=1e9;
-    for(let i=Math.floor(NS*f0);i<Math.floor(NS*f1);i++){ const ii=i%NS; if(!free(ii,gap)) continue;
-      let cv=0; for(let k=-win;k<=win;k+=5) cv=Math.max(cv,curv[(ii+k+NS)%NS]);
-      if(cv<bc){bc=cv;best=ii;} }
-    if(best>=0) taken.push(best); return best; };
-  adv={spots:[],props:[]}; gripMul=new Float32Array(NS).fill(1);
-  for(let i=0;i<NS;i++){ const u=i/NS*Math.PI*2; ht[i]+=2.2*Math.sin(u*3+0.7)+1.0*Math.sin(u*5+2.1); }   // big lava swells
+// a straight flow (lava, or a croc river) crossing the lap twice: a jump at one crossing, a narrow path at the other
+function placeFlow(taken,LJ,LB){
   const straight=(i,w)=>{ let c=0; for(let k=-w;k<=w;k+=5) c=Math.max(c,curv[(i+k+NS)%NS]); return c; };
   // 1. a straight lava flow crossing the lap twice: jump it at one crossing, ride a rock causeway at the other
   let best=null;
@@ -689,9 +727,22 @@ function buildVolcano(){
     for(let k=k0;k<=k1;k++) feat[(iA+k+NS)%NS]=9;
     lava.g0=(iA+k0+NS)%NS; lava.g1=(iA+k1)%NS;
     for(let k=-110;k<=100;k+=5) taken.push((iA+k+NS)%NS); for(let k=-110;k<=110;k+=5) taken.push((iB+k+NS)%NS);
-    featMarks.push({i:(lava.g0-50+NS)%NS,label:'溶岩ジャンプ'},{i:(iB-40+NS)%NS,label:'岩の橋'});
+    featMarks.push({i:(lava.g0-50+NS)%NS,label:LJ},{i:(iB-40+NS)%NS,label:LB});
     adv.spots.push([lava.g1+30,1,'lava'],[lava.g0-22,-1,'lava'],[iB+40,1,'causeway']);
   }
+}
+function buildVolcano(){
+  const taken=[0];
+  const free=(i,gap)=>taken.every(j=>cdist(i,j)>gap);
+  const pickStraight=(f0,f1,gap,win)=>{ let best=-1,bc=1e9;
+    for(let i=Math.floor(NS*f0);i<Math.floor(NS*f1);i++){ const ii=i%NS; if(!free(ii,gap)) continue;
+      let cv=0; for(let k=-win;k<=win;k+=5) cv=Math.max(cv,curv[(ii+k+NS)%NS]);
+      if(cv<bc){bc=cv;best=ii;} }
+    if(best>=0) taken.push(best); return best; };
+  adv={spots:[],props:[]}; gripMul=new Float32Array(NS).fill(1);
+  for(let i=0;i<NS;i++){ const u=i/NS*Math.PI*2; ht[i]+=2.2*Math.sin(u*3+0.7)+1.0*Math.sin(u*5+2.1); }   // big lava swells
+  const straight=(i,w)=>{ let c=0; for(let k=-w;k<=w;k+=5) c=Math.max(c,curv[(i+k+NS)%NS]); return c; };
+  placeFlow(taken,'溶岩ジャンプ','岩の橋');
   // 2. two scree slopes: loose stones all over the road, less grip
   adv.scree=[];
   for(let n=0;n<2;n++){ const is=pickStraight(0.04,0.96,110,10); if(is<0) continue; const LS=80;
@@ -926,7 +977,7 @@ function buildTrialProps(){
 
 // ---------- track generation ----------
 function buildTrack(c){
-  trial=null; baseGrid=null; gripMul=null; OPEN=false; tana=null; rail=null; train=null; leafFx=null; circ=null; gravel=null; xo=null; lava=null; race=null; bank=null;
+  trial=null; baseGrid=null; gripMul=null; OPEN=false; tana=null; rail=null; train=null; leafFx=null; circ=null; gravel=null; xo=null; lava=null; race=null; bank=null; jungle=null;
   if(c.type==='trial'){ buildTrialTrack(c); return; }
   if(c.type==='circuit'){ buildCircuitTrack(c); return; }
   if(c.type==='race'){ buildRaceTrack(c); return; }
@@ -952,7 +1003,7 @@ function buildTrack(c){
     kickers=picks.slice(0,4); whoops=picks[4];
   }else{
     whoops=undefined;
-    if(c.type==='mine') buildMine(); else if(c.type==='tanada') buildTanada(); else if(c.type==='koyo') buildKoyo(); else if(c.type==='volcano') buildVolcano(); else buildAdventure();
+    if(c.type==='mine') buildMine(); else if(c.type==='tanada') buildTanada(); else if(c.type==='koyo') buildKoyo(); else if(c.type==='volcano') buildVolcano(); else if(c.type==='jungle') buildJungle(); else buildAdventure();
   }
   for(const k0 of kickers){ for(let j=0;j<K;j++){ const u=j/(K-1); const v = u<.85 ? Math.pow(u/.85,1.6) : (1-u)/.15; ht[(k0+j)%NS]+=2.5*v; } }
   if(whoops!==undefined){ for(let j=0;j<66;j++){ ht[(whoops+j)%NS]+=0.38*(1-Math.cos(2*Math.PI*j/6))/2; } }
@@ -1496,13 +1547,260 @@ function raceResults(){
     return `<div class="row${q.me?' me':''}"><b>${k+1}</b><i style="background:${q.col}"></i><span>#${q.num} ${q.name}</span><em>${est?'≈ ':''}${fmt(t)}</em></div>`; }).join('');
 }
 
+// ---------- jungle creatures (built from primitives; +z is forward) ----------
+function jPart(geo,mat,parent,x,y,z,rx,ry,rz,shadow){ const m=new THREE.Mesh(geo,mat); m.position.set(x||0,y||0,z||0); m.rotation.set(rx||0,ry||0,rz||0); if(shadow) m.castShadow=true; parent.add(m); return m; }
+// a tapered limb from a to b (local coordinates of parent)
+function jLimb(parent,a,b,r1,r2,mat,shadow){ const d=new THREE.Vector3().subVectors(b,a), L=d.length(), m=new THREE.Mesh(new THREE.CylinderGeometry(r2,r1,L,8),mat);
+  m.position.copy(a).add(b).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize()); if(shadow) m.castShadow=true; parent.add(m); return m; }
+const JM={};
+function jMats(){ if(JM.croc) return JM; const P=(c,s)=>new THREE.MeshPhongMaterial({color:c,shininess:s||12,specular:0x222222});
+  Object.assign(JM,{croc:P(0x3b4826,30), crocB:P(0x8c8a58), crocD:P(0x262f18), eye:new THREE.MeshBasicMaterial({color:0xf2d030}), teeth:P(0xf0ead8,40),
+    rex:P(0x5d5a2e), rexB:P(0x9c8c5a), rexD:P(0x3a3620), mouth:P(0x8a2a22), claw:P(0x2a2620,40),
+    brach:P(0x6b735a), brachB:P(0x9a9a7a), ptero:P(0x8a5a3a), pteroW:new THREE.MeshLambertMaterial({color:0x6a4030,side:THREE.DoubleSide})}); return JM; }
+function makeCroc(){
+  const M=jMats(), g=new THREE.Group(), V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  const body=jPart(new THREE.SphereGeometry(1,12,8),M.croc,g,0,0.26,0); body.scale.set(0.58,0.28,1.15);
+  jPart(new THREE.SphereGeometry(1,10,6),M.crocB,g,0,0.18,0.05).scale.set(0.5,0.18,1.0);
+  for(let k=0;k<6;k++) for(const sx of [-0.17,0.17]) jPart(new THREE.BoxGeometry(0.12,0.1,0.22),M.crocD,g,sx,0.52-Math.abs(k-2.5)*0.025,-0.85+k*0.34);
+  const head=new THREE.Group(); head.position.set(0,0.3,1.0); g.add(head);
+  jPart(new THREE.BoxGeometry(0.52,0.24,0.5),M.croc,head,0,0.02,0.2);
+  jPart(new THREE.BoxGeometry(0.36,0.14,0.85),M.croc,head,0,0,0.85);
+  jPart(new THREE.BoxGeometry(0.3,0.05,0.8),M.teeth,head,0,-0.08,0.85);
+  for(const sx of [-1,1]){ jPart(new THREE.SphereGeometry(0.075,8,6),M.eye,head,sx*0.16,0.17,0.18); jPart(new THREE.BoxGeometry(0.14,0.05,0.12),M.crocD,head,sx*0.16,0.24,0.18); }
+  const jaw=new THREE.Group(); jaw.position.set(0,-0.08,0.05); head.add(jaw);
+  jPart(new THREE.BoxGeometry(0.34,0.08,1.1),M.crocB,jaw,0,-0.04,0.62); jPart(new THREE.BoxGeometry(0.28,0.05,0.9),M.teeth,jaw,0,0.02,0.65);
+  const tail=[]; let par=g, z0=-1.05;
+  for(const [L,r1,r2] of [[0.9,0.3,0.2],[0.9,0.2,0.11],[0.8,0.11,0.03]]){ const t=new THREE.Group(); t.position.set(0,par===g?0.24:0,z0); par.add(t);
+    const m=new THREE.Mesh(new THREE.CylinderGeometry(r2,r1,L,8),M.croc); m.rotation.x=-Math.PI/2; m.position.z=-L/2; m.scale.set(1,1,0.55); t.add(m); tail.push(t); par=t; z0=-L; }
+  for(const [x,z] of [[0.55,0.6],[-0.55,0.6],[0.55,-0.6],[-0.55,-0.6]]) jPart(new THREE.BoxGeometry(0.14,0.12,0.42),M.croc,g,x,0.1,z,0,Math.sign(x)*Math.sign(z)*0.6,0);
+  return {g,head,jaw,tail,ph:Math.random()*6};
+}
+function makeRex(shadow){
+  const M=jMats(), g=new THREE.Group(), V=(x,y,z)=>new THREE.Vector3(x,y,z), sh=shadow;
+  const body=new THREE.Group(); body.position.y=3.1; g.add(body);
+  jPart(new THREE.SphereGeometry(1,16,12),M.rex,body,0,0.3,0.6,0.12,0,0,sh).scale.set(1.25,1.35,2.4);
+  jPart(new THREE.SphereGeometry(1,12,8),M.rexB,body,0,-0.2,0.8,0.12).scale.set(1.0,1.0,1.9);
+  for(let k=0;k<7;k++) jPart(new THREE.BoxGeometry(0.16,0.22,0.5),M.rexD,body,0,1.62-Math.abs(k-3)*0.06,-1.2+k*0.55);   // ridge
+  jLimb(body,V(0,0.9,2.4),V(0,1.55,3.6),0.75,0.62,M.rex,sh);
+  const head=new THREE.Group(); head.position.set(0,1.75,3.75); body.add(head);
+  jPart(new THREE.BoxGeometry(1.05,1.0,1.4),M.rex,head,0,0,0.45,0,0,0,sh);
+  jPart(new THREE.BoxGeometry(0.86,0.62,1.3),M.rex,head,0,-0.12,1.55,0,0,0,sh);
+  jPart(new THREE.BoxGeometry(0.78,0.16,1.15),M.teeth,head,0,-0.48,1.55);
+  for(const sx of [-1,1]){ jPart(new THREE.SphereGeometry(0.1,8,6),M.eye,head,sx*0.5,0.22,0.75); jPart(new THREE.BoxGeometry(0.2,0.12,0.4),M.rexD,head,sx*0.45,0.38,0.75); }
+  const jaw=new THREE.Group(); jaw.position.set(0,-0.38,0.15); head.add(jaw);
+  jPart(new THREE.BoxGeometry(0.82,0.34,2.1),M.rex,jaw,0,-0.18,1.05,0,0,0,sh);
+  jPart(new THREE.BoxGeometry(0.62,0.08,1.7),M.mouth,jaw,0,0.0,1.0);
+  jPart(new THREE.BoxGeometry(0.7,0.13,1.6),M.teeth,jaw,0,0.06,1.15);
+  for(const sx of [-1,1]){ const a=new THREE.Group(); a.position.set(sx*0.75,-0.2,2.1); body.add(a); jLimb(a,V(0,0,0),V(0,-0.55,0.3),0.14,0.1,M.rex); jLimb(a,V(0,-0.55,0.3),V(0,-0.6,0.65),0.1,0.06,M.claw); }
+  const tail=[]; let par=body, pos=V(0,0.4,-1.6);
+  for(const [L,r1,r2] of [[1.9,0.95,0.7],[1.8,0.7,0.45],[1.6,0.45,0.22],[1.4,0.22,0.05]]){ const t=new THREE.Group(); t.position.copy(pos); par.add(t);
+    const m=new THREE.Mesh(new THREE.CylinderGeometry(r2,r1,L,10),M.rex); m.rotation.x=-Math.PI/2+0.08; m.position.set(0,0.08,-L/2); if(sh) m.castShadow=true; t.add(m); tail.push(t); par=t; pos=V(0,0.14,-L); }
+  const legs=[];
+  for(const sx of [-1,1]){ const hip=new THREE.Group(); hip.position.set(sx*0.9,3.0,0.3); g.add(hip);
+    jLimb(hip,V(0,0.2,0),V(0,-1.4,0.5),0.62,0.36,M.rex,sh);
+    const knee=new THREE.Group(); knee.position.set(0,-1.4,0.5); hip.add(knee);
+    jLimb(knee,V(0,0,0),V(0,-1.45,-0.45),0.32,0.18,M.rex,sh);
+    const foot=new THREE.Group(); foot.position.set(0,-1.45,-0.45); knee.add(foot);
+    jPart(new THREE.BoxGeometry(0.55,0.2,0.9),M.rexD,foot,0,-0.05,0.3,0,0,0,sh);
+    for(const tx of [-0.2,0,0.2]) jPart(new THREE.ConeGeometry(0.07,0.3,5),M.claw,foot,tx,-0.08,0.85,Math.PI/2);
+    legs.push({hip,knee,foot}); }
+  return {g,body,head,jaw,tail,legs,ph:0};
+}
+function makeBrachio(){
+  const M=jMats(), g=new THREE.Group(), V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  jPart(new THREE.SphereGeometry(1,16,12),M.brach,g,0,7.2,0).scale.set(2.5,2.3,4.4);
+  jPart(new THREE.SphereGeometry(1,12,8),M.brachB,g,0,6.4,0.3).scale.set(2.1,1.6,3.6);
+  const neck=new THREE.Group(); neck.position.set(0,8.4,3.4); g.add(neck);
+  jLimb(neck,V(0,0,0),V(0,9.5,4.5),1.0,0.42,M.brach); const hd=jPart(new THREE.BoxGeometry(0.8,0.7,1.5),M.brach,neck,0,9.8,5.1); hd.rotation.x=0.3;
+  const tail=new THREE.Group(); tail.position.set(0,7.4,-4.0); g.add(tail); jLimb(tail,V(0,0,0),V(0,-2.6,-9.5),1.1,0.08,M.brach);
+  const legs=[]; for(const [x,z,L] of [[1.5,2.6,7.6],[-1.5,2.6,7.6],[1.5,-2.6,6.6],[-1.5,-2.6,6.6]]){ const lg=new THREE.Group(); lg.position.set(x,L,z); g.add(lg); jLimb(lg,V(0,0,0),V(0,-L,0),0.75,0.62,M.brach); jPart(new THREE.CylinderGeometry(0.75,0.85,0.4,10),M.brachB,lg,0,-L+0.2,0); legs.push(lg); }
+  return {g,neck,tail,legs,ph:Math.random()*6};
+}
+function makePtero(){
+  const M=jMats(), g=new THREE.Group();
+  jPart(new THREE.SphereGeometry(1,8,6),M.ptero,g,0,0,0).scale.set(0.35,0.3,1.1);
+  const hd=jPart(new THREE.ConeGeometry(0.22,1.4,6),M.ptero,g,0,0.15,1.3,Math.PI/2); jPart(new THREE.ConeGeometry(0.12,0.9,4),M.ptero,g,0,0.35,0.6,-0.9);
+  const wings=[]; for(const sx of [-1,1]){ const w=new THREE.Group(); w.position.set(sx*0.3,0.05,0.1); g.add(w);
+    const sh=new THREE.Shape(); sh.moveTo(0,0.5); sh.lineTo(sx*4.2,0.1); sh.lineTo(0,-0.7); sh.lineTo(0,0.5);
+    const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),M.pteroW); m.rotation.x=-Math.PI/2; w.add(m); wings.push(w); }
+  return {g,wings,ph:Math.random()*6};
+}
+
+// ---------- jungle world: river water, crocs, log bridge, swamp, ruins, fallen trees, undergrowth, dinosaurs ----------
+let jWaterTex=null, lungeT=1;
+function buildJungleProps(){
+  const L=c=>new THREE.MeshLambertMaterial({color:c});
+  const M=new THREE.Matrix4(), Q=new THREE.Quaternion(), S=new THREE.Vector3(), V=new THREE.Vector3(), UP=new THREE.Vector3(0,1,0);
+  crocs=[]; dinos=[]; rexG=null; jungle.lunges=[]; lungeT=1;
+  // murky green water texture
+  { const c=document.createElement('canvas'); c.width=128; c.height=256; const g=c.getContext('2d'); g.fillStyle='#3e5a3a'; g.fillRect(0,0,128,256);
+    for(let k=0;k<140;k++){ g.strokeStyle=`rgba(${150+R()*60|0},${180+R()*50|0},${150+R()*40|0},${0.12+R()*0.18})`; g.lineWidth=1+R()*2; g.beginPath(); const x=R()*128, y=R()*256, w=8+R()*26; g.moveTo(x,y); g.quadraticCurveTo(x+w/2,y-3,x+w,y); g.stroke(); }
+    jWaterTex=new THREE.CanvasTexture(c); jWaterTex.wrapS=jWaterTex.wrapT=THREE.RepeatWrapping; }
+  const waterM=new THREE.MeshPhongMaterial({map:jWaterTex,color:0xb8c8a8,shininess:70,specular:0x445544,transparent:true,opacity:0.92,side:THREE.DoubleSide});
+  // --- the croc river ---
+  if(lava){
+    const P=[],U=[],I=[], half=lava.hw+1.2;
+    for(let k=0;k<lava.ys.length;k++){ const s=lava.s0+k*lava.ds, x=lava.px+lava.dx*s, z=lava.pz+lava.dz*s, y=lava.ys[k]-0.3, nx=lava.dz, nz=-lava.dx;
+      P.push(x+nx*half,y,z+nz*half, x-nx*half,y,z-nz*half); U.push(0,s/14, 1,s/14); if(k<lava.ys.length-1){ const b=k*2; I.push(b,b+2,b+1, b+1,b+2,b+3); } }
+    const lg=new THREE.BufferGeometry(); lg.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); lg.setAttribute('uv',new THREE.Float32BufferAttribute(U,2)); lg.setIndex(I); lg.computeVertexNormals();
+    world.add(new THREE.Mesh(lg,waterM));
+    // crocodiles cruising near both crossings
+    const sA=(pts[lava.iA].x-lava.px)*lava.dx+(pts[lava.iA].z-lava.pz)*lava.dz;
+    for(let n=0;n<6;n++){ const c=makeCroc(); const home=(n<4?sA:lava.sB)+(R()-.5)*40; c.home=home; c.s=home; c.lat=(R()-.5)*2*(lava.hw-1.4); c.dir=R()<.5?-1:1; c.leap=0; c.river=true; world.add(c.g); crocs.push(c); }
+    // flags and a warning sign before the jump
+    { const i=lava.g0-1, t=tan[(i+NS)%NS];
+      for(const sd of [-1,1]){ const f=new THREE.Mesh(new THREE.ConeGeometry(0.3,1.4,4),L(0xf2c230)); f.position.set(pts[i].x-t.z*(roadHalf[i]+0.5)*sd,ht[i]+0.7,pts[i].z+t.x*(roadHalf[i]+0.5)*sd); world.add(f); }
+      const si=(lava.g0-70+NS)%NS, [x,z]=onTrack(si,HALF+1.6), yy=heightAt(x,z), cv=document.createElement('canvas'); cv.width=cv.height=128; const sg=cv.getContext('2d');
+      sg.translate(64,64); sg.rotate(Math.PI/4); sg.fillStyle='#f2c230'; sg.fillRect(-44,-44,88,88); sg.strokeStyle='#16170f'; sg.lineWidth=6; sg.strokeRect(-40,-40,80,80); sg.rotate(-Math.PI/4);
+      sg.fillStyle='#16170f'; sg.font='900 22px "Zen Kaku Gothic New", sans-serif'; sg.textAlign='center'; sg.textBaseline='middle'; sg.fillText('ワニ注意',0,-8); sg.font='900 17px "Zen Kaku Gothic New", sans-serif'; sg.fillText('全開で',0,16);
+      const sign=new THREE.Group(); sign.position.set(x,yy,z); world.add(sign);
+      const post=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,2.2,6).translate(0,1.1,0),L(0x6a5030));
+      const face=new THREE.Mesh(new THREE.PlaneGeometry(1.1,1.1),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(cv),transparent:true,alphaTest:0.5,side:THREE.DoubleSide})); face.position.y=2.2;
+      sign.add(post,face); const back=pts[(si-20+NS)%NS]; sign.lookAt(back.x,yy,back.z); addBlock(x,z,{r:0.35,top:yy+2.8}); }
+    // the log bridge: planks across, a log along each edge
+    { const logM=new THREE.MeshLambertMaterial({color:0x6a4a2c}), ends=new THREE.MeshLambertMaterial({color:0xa8865a}); const list=[];
+      for(let k=-30;k<=30;k++){ const i=(lava.iB+k+NS)%NS; if(feat[i]!==10) continue; list.push(i); }
+      const pl=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.13,0.13,1,7),logM,list.length);
+      list.forEach((i,k)=>{ const t=tan[i], hw=roadHalf[i]+0.3; Q.setFromUnitVectors(UP,new THREE.Vector3(-t.z,0,t.x)); S.set(1,hw*2,1); V.set(pts[i].x,ht[i]+0.04,pts[i].z); M.compose(V,Q,S); pl.setMatrixAt(k,M); });
+      pl.receiveShadow=true; world.add(pl);
+      for(const sd of [-1,1]){ const a=list[0], b=list[list.length-1]; if(a===undefined) break; const [ax,az]=onTrack(a,sd*(roadHalf[a]+0.35)), [bx,bz]=onTrack(b,sd*(roadHalf[b]+0.35));
+        const lg=jLimb(world,new THREE.Vector3(ax,ht[a]+0.2,az),new THREE.Vector3(bx,ht[b]+0.2,bz),0.24,0.22,logM,true); } } }
+  // --- the croc swamp: murky water over the road, reeds, lily pads, crocs on the banks ---
+  if(jungle.swamp){ const sw=jungle.swamp, P=[],U=[],I=[];
+    let n=0; for(let k=-14;k<=sw.L+14;k++){ const i=(sw.s+k+NS)%NS, p=pts[i], [lx,lz]=lateral(i), y=ht[i]+0.15, w=roadHalf[i]+13;
+      P.push(p.x+lx*w,y,p.z+lz*w, p.x-lx*w,y,p.z-lz*w); U.push(0,k*0.62/14, 2,k*0.62/14); if(n>0){ const b=(n-1)*2; I.push(b,b+2,b+1, b+1,b+2,b+3); } n++; }
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2)); g.setIndex(I); g.computeVertexNormals();
+    const wm=new THREE.Mesh(g,waterM.clone()); wm.material.color.setHex(0x9aa880); wm.material.opacity=0.9; world.add(wm);
+    const reeds=[], pads=[];
+    for(let k=0;k<260;k++){ const i=(sw.s+Math.floor(R()*sw.L)+NS)%NS, sd=R()<.5?-1:1, off=roadHalf[i]+1.5+R()*11, [x,z]=onTrack(i,sd*off), y=ht[i]+0.15; if(heightAt(x,z)>y+0.3) continue; (R()<0.55?reeds:pads).push([x,y,z]); }
+    const rg=new THREE.ConeGeometry(0.06,1.6,4).translate(0,0.8,0), rm=new THREE.InstancedMesh(rg,L(0x7a8a3a),reeds.length*3); let q=0;
+    for(const [x,y,z] of reeds) for(let j=0;j<3;j++){ Q.setFromEuler(new THREE.Euler((R()-.5)*0.4,0,(R()-.5)*0.4)); S.set(1,0.7+R()*0.6,1); V.set(x+(R()-.5)*0.5,y-0.2,z+(R()-.5)*0.5); M.compose(V,Q,S); rm.setMatrixAt(q++,M); }
+    world.add(rm);
+    const pg=new THREE.CircleGeometry(0.45,10).rotateX(-Math.PI/2), pm=new THREE.InstancedMesh(pg,L(0x4a7a2a),pads.length);
+    pads.forEach(([x,y,z],k)=>{ Q.setFromAxisAngle(UP,R()*6); S.setScalar(0.6+R()*0.9); V.set(x,y+0.02,z); M.compose(V,Q,S); pm.setMatrixAt(k,M); }); world.add(pm);
+    for(let n=0;n<3;n++){ const c=makeCroc(); c.g.visible=false; c.busy=false; world.add(c.g); jungle.lunges.push({c,state:'free'}); }
+    for(let n=0;n<2;n++){ const i=(sw.s+Math.floor(sw.L*(0.3+0.4*n))+NS)%NS, sd=n?1:-1, [x,z]=onTrack(i,sd*(roadHalf[i]+8)), c=makeCroc(); c.g.position.set(x,ht[i]+0.05,z); c.g.rotation.y=Math.atan2(tan[i].x,tan[i].z)+sd*1.2; c.jaw.rotation.x=0.45; world.add(c.g); crocs.push(Object.assign(c,{bask:true})); }
+    // a swamp warning sign
+    { const si=(sw.s-50+NS)%NS, [x,z]=onTrack(si,-(HALF+1.6)), yy=heightAt(x,z), cv=document.createElement('canvas'); cv.width=cv.height=128; const sg=cv.getContext('2d');
+      sg.translate(64,64); sg.rotate(Math.PI/4); sg.fillStyle='#f2c230'; sg.fillRect(-44,-44,88,88); sg.strokeStyle='#16170f'; sg.lineWidth=6; sg.strokeRect(-40,-40,80,80); sg.rotate(-Math.PI/4);
+      sg.fillStyle='#16170f'; sg.font='900 22px "Zen Kaku Gothic New", sans-serif'; sg.textAlign='center'; sg.textBaseline='middle'; sg.fillText('ワニの沼',0,-8); sg.font='900 15px "Zen Kaku Gothic New", sans-serif'; sg.fillText('赤い輪をよけろ',0,16);
+      const sign=new THREE.Group(); sign.position.set(x,yy,z); world.add(sign);
+      const post=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,2.2,6).translate(0,1.1,0),L(0x6a5030));
+      const face=new THREE.Mesh(new THREE.PlaneGeometry(1.1,1.1),new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(cv),transparent:true,alphaTest:0.5,side:THREE.DoubleSide})); face.position.y=2.2;
+      sign.add(post,face); const back=pts[(si-20+NS)%NS]; sign.lookAt(back.x,yy,back.z); addBlock(x,z,{r:0.35,top:yy+2.8}); } }
+  // --- temple ruins: a mossy stone gate over the road, fallen blocks ---
+  if(jungle.gate!==undefined){ const gi=jungle.gate, p=pts[gi], t=tan[gi], y=ht[gi], grp=new THREE.Group(); grp.position.set(p.x,y,p.z); grp.rotation.y=Math.atan2(t.x,t.z); world.add(grp);
+    const st1=new THREE.MeshPhongMaterial({color:0x8a8a76,flatShading:true,shininess:0,specular:0}), st2=new THREE.MeshPhongMaterial({color:0x6e7a58,flatShading:true,shininess:0,specular:0}), hw=roadHalf[gi]+1.6;
+    for(const sd of [-1,1]){ for(let k=0;k<5;k++){ const b=jPart(new THREE.BoxGeometry(1.6,1.3,1.6),k%2?st2:st1,grp,sd*(hw+0.5)+(R()-.5)*0.12,0.65+k*1.3,0,0,(R()-.5)*0.08,0,true); }
+      const [x,z]=onTrack(gi,sd*(hw+0.5)); addBlock(x,z,{r:1.2,top:y+7,big:true,msg:'遺跡に激突！'}); }
+    const cv=document.createElement('canvas'); cv.width=512; cv.height=96; const g=cv.getContext('2d'); g.fillStyle='#7c7c68'; g.fillRect(0,0,512,96);
+    for(let k=0;k<400;k++){ g.fillStyle=R()<.5?'rgba(40,50,30,.25)':'rgba(160,160,140,.2)'; g.fillRect(R()*512,R()*96,2+R()*4,2+R()*4); }
+    g.strokeStyle='rgba(40,40,30,.7)'; g.lineWidth=4; for(let k=0;k<5;k++){ const cx=64+k*96; g.strokeRect(cx-30,18,60,60); g.beginPath(); g.arc(cx-10,40,6,0,7); g.arc(cx+10,40,6,0,7); g.moveTo(cx-14,62); g.lineTo(cx+14,62); g.stroke(); }
+    const lint=jPart(new THREE.BoxGeometry(2*hw+3.2,1.5,2.0),[st1,st1,st2,st1,new THREE.MeshPhongMaterial({map:new THREE.CanvasTexture(cv),flatShading:true,shininess:0,specular:0}),new THREE.MeshPhongMaterial({map:new THREE.CanvasTexture(cv),flatShading:true,shininess:0,specular:0})],grp,0,7.3,0,0,0,0.03,true);
+    // moss hanging from the lintel
+    for(let k=0;k<14;k++) jPart(new THREE.BoxGeometry(0.12,1+R()*1.8,0.12),L(0x4f7a2a),grp,(R()-.5)*(2*hw+2),6.2-R()*0.6,(R()<.5?-1:1)*1.02);
+    // fallen blocks and a broken column beside the road, both sides of the gate
+    for(let n=0;n<10;n++){ const i=(gi+Math.round((R()-.5)*90)+NS)%NS, sd=R()<.5?-1:1, [x,z]=onTrack(i,sd*(roadHalf[i]+3+R()*7)); nearest(x,z); if(nD<roadHalf[nI]+2.5) continue; const yy=heightAt(x,z), s=0.8+R()*0.9;
+      const b=new THREE.Mesh(new THREE.BoxGeometry(1.4*s,1.0*s,1.4*s),R()<.5?st1:st2); b.position.set(x,yy+0.35*s,z); b.rotation.set((R()-.5)*0.5,R()*3,(R()-.5)*0.5); b.castShadow=true; world.add(b); addBlock(x,z,{r:0.9*s,top:yy+0.9*s}); }
+    for(const sd of [-1,1]){ const i=(gi+sd*40+NS)%NS, [x,z]=onTrack(i,sd*(roadHalf[i]+4.5)), yy=heightAt(x,z), h=3+R()*2.5;
+      const col=new THREE.Mesh(new THREE.CylinderGeometry(0.7,0.8,h,10),st1); col.position.set(x,yy+h/2-0.2,z); col.rotation.z=(R()-.5)*0.15; col.castShadow=true; world.add(col); addBlock(x,z,{r:1.0,top:yy+h,big:true,msg:'遺跡に激突！'}); } }
+  // --- fallen tree trunks under the kickers ---
+  { const logM=new THREE.MeshLambertMaterial({color:0x5a3e26});
+    for(const k0 of kickers){ const i=(k0+K-2)%NS, t=tan[i]; const [ax,az]=onTrack(i,-(roadHalf[i]+2.5)), [bx,bz]=onTrack(i,roadHalf[i]+2.5);
+      jLimb(world,new THREE.Vector3(ax,ht[i]-0.75,az),new THREE.Vector3(bx,ht[i]-0.55,bz),0.75,0.7,logM,true); } }
+  // --- undergrowth: low ferns and bushes along the road ---
+  { const N=MOBILE?500:1100, fg=new THREE.IcosahedronGeometry(1,0), fm=new THREE.InstancedMesh(fg,new THREE.MeshPhongMaterial({color:0xffffff,flatShading:true,shininess:0,specular:0}),N), C=new THREE.Color(); let k=0;
+    for(let n=0;n<N*3 && k<N;n++){ const i=Math.floor(R()*NS), sd=R()<.5?-1:1, off=roadHalf[i]+2.2+R()*R()*16, [x,z]=onTrack(i,sd*off); nearest(x,z); if(nD<roadHalf[nI]+2) continue;
+      if(feat[nI] || (lava && lavaInfo(x,z)[1]<lava.hw+3) || nearCrowd(x,z) || nearProp(x,z,1)) continue; if(jungle.swamp && ((nI-jungle.swamp.s+NS)%NS)<jungle.swamp.L+14) continue;
+      const y=heightAt(x,z), s=0.5+R()*0.9; Q.setFromAxisAngle(UP,R()*6); S.set(s*1.3,s*0.6,s*1.3); V.set(x,y+0.15*s,z); M.compose(V,Q,S); fm.setMatrixAt(k,M); C.setHSL(0.24+R()*0.1,0.5+R()*0.25,0.18+R()*0.12); fm.setColorAt(k,C); k++; }
+    fm.count=k; fm.receiveShadow=true; world.add(fm); }
+  // --- the T-rex, waiting in its clearing ---
+  if(jungle.rex){ const r=jungle.rex, rx=makeRex(!MOBILE); rexG=rx; Object.assign(rx,{state:'idle',armed:true,s:0,lat:0,v:0,t:0,step:0});
+    const h=heightAt(r.ox,r.oz), road=pts[(r.z0+60)%NS]; rx.g.position.set(r.ox,h,r.oz); rx.g.rotation.y=Math.atan2(road.x-r.ox,road.z-r.oz); rx.home=rx.g.rotation.y; world.add(rx.g); }
+  // --- long-necks grazing in a far clearing, pterosaurs circling over the jungle ---
+  if(jungle.herd){ for(let n=0;n<2;n++){ const b=makeBrachio(); b.a=n*2.6; b.r=jungle.herd.r*(0.55+0.35*n); b.g.scale.setScalar(n?0.8:1); world.add(b.g); dinos.push(Object.assign(b,{kind:'brach'})); }
+    for(let n=0;n<4;n++){ const p=makePtero(); p.a=n*1.6; p.r=50+n*18; p.h=34+n*7; world.add(p.g); dinos.push(Object.assign(p,{kind:'ptero'})); } }
+}
+function roar(v){
+  if(!ac||!soundOn) return; const t=ac.currentTime, g=ac.createGain(), lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(900,t); lp.frequency.exponentialRampToValueAtTime(240,t+1.6);
+  g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.22*v,t+0.18); g.gain.setValueAtTime(0.2*v,t+0.9); g.gain.exponentialRampToValueAtTime(0.0005,t+1.8);
+  for(const [f0,f1,ty] of [[150,70,'sawtooth'],[95,48,'square'],[310,140,'sawtooth']]){ const o=ac.createOscillator(); o.type=ty; o.frequency.setValueAtTime(f0,t); o.frequency.linearRampToValueAtTime(f0*1.15,t+0.35); o.frequency.exponentialRampToValueAtTime(f1,t+1.8);
+    const lfo=ac.createOscillator(), lg=ac.createGain(); lfo.frequency.value=23; lg.gain.value=f0*0.08; lfo.connect(lg); lg.connect(o.frequency); lfo.start(t); lfo.stop(t+1.9); o.connect(lp); o.start(t); o.stop(t+1.9); }
+  if(crowdBuf){ const n=ac.createBufferSource(); n.buffer=crowdBuf; n.playbackRate.value=0.4; const ng=ac.createGain(); ng.gain.value=0.6; n.connect(ng); ng.connect(lp); n.start(t); n.stop(t+1.9); }
+  lp.connect(g); g.connect(ac.destination);
+}
+function crocAt(c,i,lat,y,yaw){ const [lx,lz]=lateral(i); c.g.position.set(pts[i].x+lx*lat,y,pts[i].z+lz*lat); c.g.rotation.y=yaw; }
+function rexLeg(rx,ph,amp){ rx.legs.forEach((l,k)=>{ const p=ph+k*Math.PI; l.hip.rotation.x=Math.sin(p)*0.6*amp; l.knee.rotation.x=(-0.25-0.55*Math.max(0,Math.cos(p)))*amp; l.foot.rotation.x=(0.3*Math.max(0,-Math.sin(p)))*amp; }); }
+function updateJungle(dt){
+  if(jWaterTex){ jWaterTex.offset.y-=dt*0.03; jWaterTex.offset.x+=dt*0.004; }
+  const T=raceT+titleT;
+  // river crocs: cruise up and down, snap up at a bike flying overhead
+  if(lava) for(const c of crocs){ if(c.bask){ c.jaw.rotation.x=0.35+0.12*Math.sin(T*0.7+c.ph); continue; }
+    c.s+=c.dir*dt*0.9; if(Math.abs(c.s-c.home)>22) c.dir*=-1;
+    const x=lava.px+lava.dx*c.s-lava.dz*c.lat, z=lava.pz+lava.dz*c.s+lava.dx*c.lat, y=lavaY(c.s)-0.42;
+    const d=Math.hypot(st.x-x,st.z-z);
+    if(c.leap<=0 && !st.ground && d<9 && st.y>y+1 && mode==='race') c.leap=1;
+    let up=0, jaw=0.08+0.06*Math.sin(T*1.3+c.ph);
+    if(c.leap>0){ c.leap-=dt*1.4; const u=1-Math.max(0,c.leap); up=Math.sin(Math.PI*Math.min(1,u))*1.6; jaw=u<0.6?0.9:0.9*(1-(u-0.6)/0.4); if(u>0.15&&u<0.2) for(let k=0;k<6;k++) emitSpray(x,y+0.4,z,(R()-.5)*3,(R()-.5)*3,3); }
+    c.g.position.set(x,y+up,z); c.g.rotation.y=Math.atan2(lava.dx*c.dir,lava.dz*c.dir)+(c.leap>0?0:0); c.g.rotation.x=c.leap>0?-0.5*Math.sin(Math.PI*Math.min(1,1-c.leap)):0;
+    c.jaw.rotation.x=jaw; c.tail.forEach((t,k)=>t.rotation.y=Math.sin(T*2.4+c.ph-k*0.8)*0.25); }
+  // swamp: spray, and crocs lunging at a red ring on the road
+  if(jungle.swamp){ const sw=jungle.swamp, k=(st.lastIdx-sw.s+NS)%NS, inSw=k<sw.L+8 && st.dist<st.hw+12;
+    if(inSw && st.ground && mode==='race'){ const v=Math.hypot(st.vx,st.vz), n=Math.min(4,v*0.25)*DK(dt); for(let q=0;q<n;q++) if(R()<n-q) emitSpray(st.x-Math.sin(st.h)*0.6,st.y,st.z-Math.cos(st.h)*0.6,-st.vx*0.15+(R()-.5)*3,-st.vz*0.15+(R()-.5)*3,1.5+v*0.1); }
+    if(mode==='race' && !st.crash && k<sw.L-25){ lungeT-=dt;
+      const fr=jungle.lunges.find(l=>l.state==='free');
+      if(lungeT<=0 && fr){ lungeT=1.0+R()*0.8; const pv=Math.max(6,Math.hypot(st.vx,st.vz)), ahead=Math.round((pv*1.37+(R()-.5)*5)/0.62), i=wrapI(st.lastIdx+Math.min(ahead,(sw.s+sw.L-4-st.lastIdx+NS)%NS)), sd=R()<.5?-1:1, hw=roadHalf[i];
+        const [qlx,qlz]=lateral(st.lastIdx), pl=(st.x-pts[st.lastIdx].x)*qlx+(st.z-pts[st.lastIdx].z)*qlz, bl=clamp(pl+(R()-.5)*2.4,-(hw-1),hw-1), [lx,lz]=lateral(i), bx=pts[i].x+lx*bl, bz=pts[i].z+lz*bl, by=ht[i]+0.17;
+        const ring=new THREE.Mesh(new THREE.RingGeometry(1.5,2.0,28),new THREE.MeshBasicMaterial({color:0xff3a1a,transparent:true,opacity:0.8,side:THREE.DoubleSide,depthWrite:false}));
+        ring.rotation.x=-Math.PI/2; ring.position.set(bx,by+0.04,bz); world.add(ring);
+        Object.assign(fr,{state:'warn',t:0,i,sd,bl,bx,bz,by,ring}); fr.c.g.visible=true; } }
+    for(const l of jungle.lunges){ if(l.state==='free') continue; const c=l.c, hw=roadHalf[l.i], yaw=Math.atan2(-lateral(l.i)[0]*l.sd,-lateral(l.i)[1]*l.sd);
+      l.t+=dt;
+      if(l.state==='warn'){ const u=Math.min(1,l.t/1.15); crocAt(c,l.i,l.sd*(hw+6-3.2*u),l.by-0.32,yaw); c.jaw.rotation.x=0.05; const p=1+0.25*Math.sin(l.t*18); l.ring.scale.set(p,p,1); if(u>=1){ l.state='strike'; l.t=0; } }
+      else if(l.state==='strike'){ const u=Math.min(1,l.t/0.22), lat=lerp(l.sd*(hw+2.8),l.bl+l.sd*1.6,u); crocAt(c,l.i,lat,l.by-0.25+0.35*Math.sin(Math.PI*u),yaw); c.jaw.rotation.x=u<0.7?0.85:0.85*(1-(u-0.7)/0.3);
+        if(u>=1){ l.state='back'; l.t=0; world.remove(l.ring); l.ring.geometry.dispose(); l.ring.material.dispose(); l.ring=null;
+          for(let q=0;q<14;q++) emitSpray(l.bx,l.by,l.bz,(R()-.5)*5,(R()-.5)*5,3+R()*3);
+          if(mode==='race' && !st.crash && Math.hypot(st.x-l.bx,st.z-l.bz)<2.0 && st.y-l.by<1.6) crash('ワニに噛まれた！'); } }
+      else { const u=Math.min(1,l.t/0.9); crocAt(c,l.i,lerp(l.bl+l.sd*1.6,l.sd*(hw+6),u),l.by-0.25-0.8*u,yaw); c.jaw.rotation.x=0.05; if(u>=1){ l.state='free'; c.g.visible=false; } }
+      c.tail.forEach((t,k)=>t.rotation.y=Math.sin(l.t*14-k)*0.35); }
+    if(mode!=='race') for(const l of jungle.lunges){ if(l.ring){ world.remove(l.ring); l.ring.geometry.dispose(); l.ring.material.dispose(); l.ring=null; } l.state='free'; l.c.g.visible=false; } }
+  // the T-rex
+  if(rexG){ const rx=rexG, R0=jungle.rex, k=(st.lastIdx-R0.z0+NS)%NS;
+    if(!rx.armed && k>R0.L+60 && k<NS-150) rx.armed=true;
+    if(rx.state==='idle'){ rx.ph+=dt*0.8; rx.body.position.y=3.1+0.05*Math.sin(rx.ph); rx.jaw.rotation.x=0.1+0.08*Math.sin(rx.ph*0.7); rx.head.rotation.y=0.25*Math.sin(rx.ph*0.4); rexLeg(rx,0,0);
+      rx.tail.forEach((t,q)=>t.rotation.y=Math.sin(rx.ph*0.6-q*0.7)*0.08);
+      if(mode==='race' && !st.crash && rx.armed && k>=40 && k<62){ rx.state='chase'; rx.armed=false; rx.s=R0.z0+60; rx.lat=R0.sd*(HALF+12); rx.v=3; rx.t=0; roar(1); st.shake=Math.max(st.shake,0.6); showMsg('ティラノだ！逃げろ！',2.0); } }
+    else{ rx.t+=dt;
+      if(rx.state==='chase'){ let g0=(st.lastIdx-rx.s); g0=((g0%NS)+NS)%NS; if(g0>NS/2) g0-=NS; g0*=0.62; const pv=Math.hypot(st.vx,st.vz), tv=clamp(pv+(g0>20?4:0.3),13,26); rx.v=rx.v<tv?Math.min(tv,rx.v+7*dt):Math.max(tv,rx.v-4*dt);
+        const [plx,plz]=lateral(st.lastIdx), pLat=(st.x-pts[st.lastIdx].x)*plx+(st.z-pts[st.lastIdx].z)*plz; rx.lv=clamp(pLat-rx.lat,-7*dt,7*dt)/dt; rx.lat+=rx.lv*dt;
+        let gap=(st.lastIdx-rx.s); gap=((gap%NS)+NS)%NS; if(gap>NS/2) gap-=NS; gap*=0.62;
+        const past=((Math.floor(rx.s)-R0.z0+NS)%NS)>R0.L;
+        if(mode!=='race' || st.crash>0 || past || gap>60){ rx.state='stop'; rx.t=0; if(past||gap>60) roar(0.8); } }
+      else if(rx.state==='stop'){ rx.v=Math.max(0,rx.v-14*dt); if(rx.t>5 && Math.hypot(st.x-R0.ox,st.z-R0.oz)>70 || rx.t>12 || mode==='title'){ rx.state='idle'; const h=heightAt(R0.ox,R0.oz); rx.g.position.set(R0.ox,h,R0.oz); rx.g.rotation.y=rx.home; } }
+      if(rx.state!=='idle'){
+        const sl=0.62; rx.s+=rx.v*dt/sl; const i0=wrapI(Math.floor(rx.s)), t=tan[i0], [lx,lz]=lateral(i0), x=pts[i0].x+lx*rx.lat, z=pts[i0].z+lz*rx.lat, y=heightAt(x,z);
+        rx.g.position.set(x,y,z); rx.g.rotation.y=Math.atan2(t.x,t.z)-(rx.state==='chase'?Math.atan2(rx.lv||0,Math.max(4,rx.v))*0.9:0); if(rx.state!=='chase') rx.lv=0;
+        const sp=Math.min(1,rx.v/20); const pv=rx.ph; rx.ph+=dt*(1.2+rx.v*0.42); rexLeg(rx,rx.ph,Math.min(1,0.25+sp)); rx.body.position.y=3.1+0.22*Math.abs(Math.sin(rx.ph))*sp; rx.body.rotation.x=0.06*sp;
+        rx.jaw.rotation.x=rx.state==='chase'?0.45+0.25*Math.sin(rx.t*6):0.6; rx.head.rotation.y=0; rx.tail.forEach((tt,q)=>tt.rotation.y=Math.sin(rx.ph-q*0.8)*0.12*sp);
+        // footsteps shake the ground
+        if(Math.floor(pv/Math.PI)!==Math.floor(rx.ph/Math.PI) && rx.v>2){ const d=Math.hypot(st.x-x,st.z-z); if(d<45) st.shake=Math.max(st.shake,0.32*(1-d/45)); for(let q=0;q<4;q++) emitDust(x,y,z,(R()-.5)*3,(R()-.5)*3); }
+        // caught: the jaws reach about 5 m ahead of the hips
+        if(rx.state==='chase' && mode==='race' && !st.crash){ const hx=x+t.x*5, hz=z+t.z*5; if(Math.hypot(st.x-hx,st.z-hz)<2.6 || Math.hypot(st.x-x,st.z-z)<2.4){ crash('ティラノに捕まった！'); roar(1); rx.state='stop'; rx.t=0; } } } } }
+  // long-necks and pterosaurs
+  if(jungle.herd) for(const d of dinos){
+    if(d.kind==='brach'){ d.a+=dt*0.045; const x=jungle.herd.x+Math.cos(d.a)*d.r, z=jungle.herd.z+Math.sin(d.a)*d.r; d.g.position.set(x,heightAt(x,z)-0.2,z); d.g.rotation.y=-d.a;
+      d.ph+=dt*1.6; d.legs.forEach((l,k)=>l.rotation.x=Math.sin(d.ph+(k===0||k===3?0:Math.PI))*0.18); d.neck.rotation.x=0.05*Math.sin(d.ph*0.3); d.neck.rotation.z=0.08*Math.sin(d.ph*0.21); d.tail.rotation.y=0.15*Math.sin(d.ph*0.5); }
+    else{ d.a+=dt*(9/d.r); const x=jungle.herd.x+Math.cos(d.a)*d.r, z=jungle.herd.z+Math.sin(d.a)*d.r; d.g.position.set(x,d.h+2*Math.sin(d.a*3),z); d.g.rotation.set(0,-d.a,0.35);
+      d.ph+=dt*4; d.wings.forEach((w,k)=>w.rotation.z=(k?-1:1)*Math.sin(d.ph)*0.5); } }
+}
+
 function buildCourse(id){
   course=COURSES[id]||COURSES.forest; LAPS=course.laps||3;
   disposeWorld(); world=new THREE.Group(); scene.add(world);
-  trees=[]; tgrid=new Map(); rgrid=new Map(); crowd=[]; bridgeG=null; waterTex=null; wheelG=null; plume=null; vents=[]; lavaTex=null; bombs=[];
+  trees=[]; tgrid=new Map(); rgrid=new Map(); crowd=[]; crocs=[]; dinos=[]; rexG=null; jWaterTex=null; bridgeG=null; waterTex=null; wheelG=null; plume=null; vents=[]; lavaTex=null; bombs=[];
   buildTrack(course); if(rail) railSpan();
   scene.fog.color.setHex(course.fog); scene.background.setHex(course.fog);
-  { const v=course.type==='volcano'; sun.color.setHex(v?0xffdcc0:0xfff0d0); hemi.color.setHex(v?0xcac0ba:0xdfeaff); hemi.groundColor.setHex(v?0x2e2420:0x4b5a2c); dust.material.color.setHex(v?0x4e4846:0xb08e64); }
+  { const v=course.type==='volcano', j=course.type==='jungle'; sun.color.setHex(v?0xffdcc0:j?0xfff2c8:0xfff0d0); hemi.color.setHex(v?0xcac0ba:j?0xd8f0c8:0xdfeaff); hemi.groundColor.setHex(v?0x2e2420:j?0x30481e:0x4b5a2c); dust.material.color.setHex(v?0x4e4846:j?0x8a5e40:0xb08e64); }
   buildTerrain(); buildRoad(); buildTrees(); buildGate();
   if(course.type==='canyon') buildAdventureProps();
   if(course.type==='mine') buildMineProps();
@@ -1512,6 +1810,7 @@ function buildCourse(id){
   if(course.type==='circuit') buildCircuitProps();
   if(course.type==='volcano') buildVolcanoProps();
   if(course.type==='race') buildRaceProps();
+  if(course.type==='jungle') buildJungleProps();
   buildSpectators();
   computeMap(); resetRivals(); $('posPlate').hidden=!race;
   // clear transient effects from the previous course
@@ -1524,7 +1823,7 @@ function buildTerrain(){
   const geo=new THREE.PlaneGeometry(SIZE,SIZE,SEG,SEG); geo.rotateX(-Math.PI/2);
   const pos=geo.attributes.position, col=new Float32Array(pos.count*3), hole=tunnel?new Uint8Array(pos.count):null;
   if(tana){ tana.wv=new Float32Array(pos.count); tana.ty=new Uint8Array(pos.count); }
-  const dirt=new THREE.Color(course.type==='volcano'?0x4a3a30:0x6e4f31), grass=new THREE.Color(course.type==='volcano'?0x262220:course.type==='koyo'?0x7a6a30:course.adventure?0x435c2a:0x46642a), grass2=new THREE.Color(course.type==='volcano'?0x3c322c:course.type==='koyo'?0x96512a:course.adventure?0x56702e:0x5d7a30), c=new THREE.Color();
+  const dirt=new THREE.Color(course.type==='volcano'?0x4a3a30:course.type==='jungle'?0x6a3f26:0x6e4f31), grass=new THREE.Color(course.type==='jungle'?0x24421a:course.type==='volcano'?0x262220:course.type==='koyo'?0x7a6a30:course.adventure?0x435c2a:0x46642a), grass2=new THREE.Color(course.type==='jungle'?0x386024:course.type==='volcano'?0x3c322c:course.type==='koyo'?0x96512a:course.adventure?0x56702e:0x5d7a30), c=new THREE.Color();
   for(let i=0;i<pos.count;i++){
     const x=pos.getX(i), z=pos.getZ(i), y=heightAt(x,z,true); pos.setY(i,y);
     if(tana){ tanaColor(c,x,z,i); col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b; continue; }
@@ -1540,7 +1839,7 @@ function buildTerrain(){
   if(trial){ const snow=new THREE.Color(0xeef2f4); for(let i=0;i<pos.count;i++){ const y=pos.getY(i), k=sstep(128,150,y)*(0.75+0.25*Math.sin(pos.getX(i)*0.2)); if(k>0){ col[i*3]=lerp(col[i*3],snow.r,k); col[i*3+1]=lerp(col[i*3+1],snow.g,k); col[i*3+2]=lerp(col[i*3+2],snow.b,k); } } }
   if(tana){ tana.gpos=pos.array; tana.seg=SEG; }
   if(course.adventure && !tana){ // river banks and cliff faces: bare rock with moss
-    const nrm=geo.attributes.normal, rock=new THREE.Color(course.type==='volcano'?0x2c2624:0x7b7466), moss=new THREE.Color(course.type==='volcano'?0x7a3a1c:0x58693a), k=new THREE.Color();
+    const nrm=geo.attributes.normal, rock=new THREE.Color(course.type==='volcano'?0x2c2624:course.type==='jungle'?0x5a4630:0x7b7466), moss=new THREE.Color(course.type==='volcano'?0x7a3a1c:0x58693a), k=new THREE.Color();
     for(let i=0;i<pos.count;i++){ const steep=sstep(0.86,0.6,nrm.getY(i)); if(steep<=0) continue;
       const x=pos.getX(i), z=pos.getZ(i), mm=0.5+0.5*Math.sin(x*0.31+z*0.17)*Math.sin(z*0.23-x*0.11);
       k.copy(rock).lerp(moss,mm*0.6);
@@ -1574,6 +1873,7 @@ function buildRoad(){
   for(const cx of [40,88]){ g.strokeStyle='rgba(55,36,20,.55)'; g.lineWidth=9; g.beginPath();
     for(let y=0;y<=256;y+=8){ const x=cx+Math.sin(y/256*Math.PI*2)*4; y?g.lineTo(x,y):g.moveTo(x,y);} g.stroke(); }
   g.fillStyle='rgba(40,30,18,.25)'; g.fillRect(0,0,8,256); g.fillRect(120,0,8,256);
+  if(course.type==='jungle'){ g.fillStyle='rgba(120,48,20,.28)'; g.fillRect(0,0,128,256); const lc=['#3d6a24','#56802e','#2c4a1a','#6a5a2a']; for(let i=0;i<160;i++){ g.fillStyle=lc[Math.floor(R()*4)]; g.save(); g.translate(R()*128,R()*256); g.rotate(R()*6); g.fillRect(-3,-1.2,6,2.4); g.restore(); } }
   if(course.type==='volcano'){ g.fillStyle='rgba(28,24,23,.58)'; g.fillRect(0,0,128,256); for(let i=0;i<500;i++){ g.fillStyle=R()<.5?'rgba(15,12,11,.5)':'rgba(120,70,50,.35)'; g.fillRect(R()*128,R()*256,1+R()*2.5,1+R()*2.5); } }
   if(course.type==='koyo'){ const lc=['#b8321e','#d0601c','#e09a22','#a8401c','#c8a030']; for(let i=0;i<260;i++){ g.fillStyle=lc[Math.floor(R()*5)]; g.save(); g.translate(R()*128,R()*256); g.rotate(R()*6); g.fillRect(-2,-1.2,4,2.4); g.restore(); } }
   const tex=new THREE.CanvasTexture(cv); tex.wrapS=tex.wrapT=THREE.RepeatWrapping; tex.anisotropy=4;
@@ -1606,9 +1906,10 @@ function buildTrees(){
     if(circ && (d<34 || R()<0.55)) continue;
     if(race && (d<28 || R()<0.6)) continue;
     if(course.type==='volcano' && (R()<0.9 || (lava && lavaInfo(x,z)[1]<14))) continue;
+    if(jungle && ((lava && lavaInfo(x,z)[1]<lava.hw+7) || (jungle.swamp && nI>=0 && ((nI-jungle.swamp.s+NS)%NS)<jungle.swamp.L+16 && d<roadHalf[nI]+15))) continue;
     if(d>45 && R()<0.45) continue;
     const s=0.75+R()*0.9;
-    trees.push({x,z,y:heightAt(x,z),s,r:0.28*s+0.5,type:R()<(course.type==='koyo'?0.42:.78)?0:1});
+    trees.push({x,z,y:heightAt(x,z),s,r:0.28*s+0.5,type:course.type==='jungle'?(R()<0.38?2:1):R()<(course.type==='koyo'?0.42:.78)?0:1});
   }
   const trunkG=new THREE.CylinderGeometry(0.18,0.28,2.2,6); trunkG.translate(0,1.1,0);
   const coneG=new THREE.ConeGeometry(1.6,4.6,7); coneG.translate(0,4.3,0);
@@ -1620,15 +1921,24 @@ function buildTrees(){
   const c2=new THREE.InstancedMesh(cone2G,new THREE.MeshLambertMaterial({color:0xffffff}),pine.length);
   const b1=new THREE.InstancedMesh(roundG,new THREE.MeshPhongMaterial({color:0xffffff,flatShading:true,shininess:0,specular:0x000000}),broad.length);
   const M=new THREE.Matrix4(), Q=new THREE.Quaternion(), S=new THREE.Vector3(), V=new THREE.Vector3(), C=new THREE.Color();
-  trees.forEach((t,i)=>{ Q.setFromAxisAngle(new THREE.Vector3(0,1,0),R()*6.28); S.set(t.s,t.s,t.s); V.set(t.x,t.y-0.2,t.z); M.compose(V,Q,S); trunk.setMatrixAt(i,M); t.m=M.clone();
+  trees.forEach((t,i)=>{ Q.setFromAxisAngle(new THREE.Vector3(0,1,0),R()*6.28); S.set(t.s,t.s,t.s); V.set(t.x,t.y-0.2,t.z); M.compose(V,Q,S); trunk.setMatrixAt(i,M); t.m=M.clone(); if(t.type===2) trunk.setMatrixAt(i,new THREE.Matrix4().makeScale(0,0,0));
     const k=(Math.floor(t.x/TCELL)+200)*1000+(Math.floor(t.z/TCELL)+200); if(!tgrid.has(k)) tgrid.set(k,[]); tgrid.get(k).push(t); });
   pine.forEach((t,i)=>{ c1.setMatrixAt(i,t.m); c2.setMatrixAt(i,t.m); if(course.type==='koyo' && R()<0.22) C.setHSL(0.09+R()*0.03,0.6+R()*0.15,0.42+R()*0.06); else if(course.type==='volcano') C.setHSL(0.07,0.1,0.1+R()*0.05); else C.setHSL(0.27+R()*0.06,0.42+R()*0.15,0.2+R()*0.08); c1.setColorAt(i,C); C.offsetHSL(0,0,0.04); c2.setColorAt(i,C); });
-  broad.forEach((t,i)=>{ b1.setMatrixAt(i,t.m); if(course.type==='koyo'){ const r=R(); C.setHSL(r<0.4?R()*0.025:r<0.72?0.05+R()*0.035:0.115+R()*0.03,0.72+R()*0.2,0.4+R()*0.1); } else if(course.type==='volcano') C.setHSL(0.06,0.12,0.12+R()*0.05); else C.setHSL(0.17+R()*0.1,0.45+R()*0.2,0.3+R()*0.08); b1.setColorAt(i,C); });
+  broad.forEach((t,i)=>{ b1.setMatrixAt(i,t.m); if(course.type==='koyo'){ const r=R(); C.setHSL(r<0.4?R()*0.025:r<0.72?0.05+R()*0.035:0.115+R()*0.03,0.72+R()*0.2,0.4+R()*0.1); } else if(course.type==='volcano') C.setHSL(0.06,0.12,0.12+R()*0.05); else if(course.type==='jungle') C.setHSL(0.23+R()*0.1,0.5+R()*0.25,0.16+R()*0.1); else C.setHSL(0.17+R()*0.1,0.45+R()*0.2,0.3+R()*0.08); b1.setColorAt(i,C); });
+  { const palm=trees.filter(t=>t.type===2);   // jungle palms: a tall thin trunk and a crown of drooping fronds
+    if(palm.length){ const pt=new THREE.CylinderGeometry(0.16,0.26,7.6,6).translate(0,3.6,0), P=[];
+      for(let f=0;f<9;f++){ const a=f/9*Math.PI*2+0.2*Math.sin(f*3), ca=Math.cos(a), sa=Math.sin(a), pt3=(r,w)=>{ const y=7.4+0.7*r-0.32*r*r; return [ca*r-sa*w,y,sa*r+ca*w]; };
+        for(let q=0;q<5;q++){ const r0=q*0.75, r1=r0+0.75, w0=0.5*Math.sin(Math.PI*(q/5))+0.05, w1=0.5*Math.sin(Math.PI*((q+1)/5))+0.05;
+          const A=pt3(r0,-w0), B=pt3(r0,w0), C2=pt3(r1,-w1), D=pt3(r1,w1); P.push(...A,...C2,...B, ...B,...C2,...D); } }
+      const fg=new THREE.BufferGeometry(); fg.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); fg.computeVertexNormals();
+      const pm1=new THREE.InstancedMesh(pt,new THREE.MeshLambertMaterial({color:0x7a6646}),palm.length), pm2=new THREE.InstancedMesh(fg,new THREE.MeshLambertMaterial({color:0xffffff,side:THREE.DoubleSide}),palm.length);
+      palm.forEach((t,i)=>{ pm1.setMatrixAt(i,t.m); pm2.setMatrixAt(i,t.m); C.setHSL(0.24+R()*0.07,0.5+R()*0.25,0.22+R()*0.08); pm2.setColorAt(i,C); });
+      for(const m of [pm1,pm2]){ m.castShadow=true; world.add(m); } } }
   for(const m of [trunk,c1,c2,b1]){ m.castShadow=true; m.receiveShadow=false; world.add(m); }
   if(race) return;
   // rocks along the shoulder (with collision)
   const rockG=new THREE.DodecahedronGeometry(0.6,0);
-  const rocks=new THREE.InstancedMesh(rockG,new THREE.MeshPhongMaterial({color:course.type==='volcano'?0x3c3634:0x8a8576,flatShading:true,shininess:0,specular:0x000000}),220);
+  const rocks=new THREE.InstancedMesh(rockG,new THREE.MeshPhongMaterial({color:course.type==='volcano'?0x3c3634:course.type==='jungle'?0x66705a:0x8a8576,flatShading:true,shininess:0,specular:0x000000}),220);
   for(let i=0;i<220;i++){ let j=Math.floor(R()*NS), side=R()<.5?-1:1; const off=HALF+1+R()*2.5;
     if(course.type==='canyon'){ if(feat[j]) j=(j+60)%NS; if(cliffW[j]>0) side=-cliffSide; }
     else if(course.adventure){ let g=0; while(feat[j] && g++<60) j=(j+37)%NS; }
@@ -2370,7 +2680,7 @@ function drawMap(){
   if(river){ mctx.strokeStyle='#7a5534'; mctx.lineWidth=7; mctx.beginPath(); for(let k=0,i=river.b0;k<=((river.b1-river.b0+NS)%NS);k++,i=(i+1)%NS){ const [x,y]=mp(pts[i].x,pts[i].z); k?mctx.lineTo(x,y):mctx.moveTo(x,y);} mctx.stroke(); }
   if(tunnel){ mctx.strokeStyle='#2c2822'; mctx.lineWidth=7; mctx.setLineDash([6,5]); mctx.beginPath(); for(let k=0;k<=tunnel.L;k++){ const i=(tunnel.b0+k)%NS, [x,y]=mp(pts[i].x,pts[i].z); k?mctx.lineTo(x,y):mctx.moveTo(x,y);} mctx.stroke(); mctx.setLineDash([]); }
   if(lava){ const a=mp(lava.px-lava.dx*500,lava.pz-lava.dz*500), b=mp(lava.px+lava.dx*500,lava.pz+lava.dz*500);
-    mctx.save(); mctx.beginPath(); mctx.arc(150,150,146,0,7); mctx.clip(); mctx.strokeStyle='rgba(255,110,30,.9)'; mctx.lineWidth=10; mctx.beginPath(); mctx.moveTo(a[0],a[1]); mctx.lineTo(b[0],b[1]); mctx.stroke(); mctx.restore(); }
+    mctx.save(); mctx.beginPath(); mctx.arc(150,150,146,0,7); mctx.clip(); mctx.strokeStyle=lava.water?'rgba(80,150,140,.9)':'rgba(255,110,30,.9)'; mctx.lineWidth=10; mctx.beginPath(); mctx.moveTo(a[0],a[1]); mctx.lineTo(b[0],b[1]); mctx.stroke(); mctx.restore(); }
   if(rail){ const a=mp(rail.px-rail.dx*500,rail.pz-rail.dz*500), b=mp(rail.px+rail.dx*500,rail.pz+rail.dz*500);
     mctx.save(); mctx.beginPath(); mctx.arc(150,150,146,0,7); mctx.clip(); mctx.strokeStyle='rgba(40,36,32,.85)'; mctx.lineWidth=5; mctx.beginPath(); mctx.moveTo(a[0],a[1]); mctx.lineTo(b[0],b[1]); mctx.stroke();
     mctx.strokeStyle='rgba(230,225,210,.9)'; mctx.lineWidth=2; mctx.setLineDash([5,5]); mctx.stroke(); mctx.setLineDash([]);
@@ -2408,7 +2718,7 @@ addEventListener('keydown',e=>{
   if((e.code==='Space'||e.code==='Enter') && !building && (mode==='title'||mode==='finish'||mode==='over')){ e.preventDefault(); startRace(); }
   if(e.code==='KeyR') backOnCourse();
   if(e.code==='KeyM') toggleSound();
-  if(mode==='title' && ({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'tanada',Digit5:'koyo',Digit6:'circuit',Digit7:'volcano',Digit8:'race',Digit9:'trial'})[e.code]) selectCourse(({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'tanada',Digit5:'koyo',Digit6:'circuit',Digit7:'volcano',Digit8:'race',Digit9:'trial'})[e.code]);
+  if(mode==='title' && ({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'tanada',Digit5:'koyo',Digit6:'circuit',Digit7:'volcano',Digit8:'jungle',Digit9:'race',Digit0:'trial'})[e.code]) selectCourse(({Digit1:'forest',Digit2:'mine',Digit3:'canyon',Digit4:'tanada',Digit5:'koyo',Digit6:'circuit',Digit7:'volcano',Digit8:'jungle',Digit9:'race',Digit0:'trial'})[e.code]);
 });
 addEventListener('keyup',e=>{ if(KM[e.code]) keys[KM[e.code]]=false; });
 function backOnCourse(){ if(mode!=='race' || st.crash) return; if(OPEN){ placeAt(st.progress); return; } if(xo) hintY=st.y; nearest(st.x,st.z); hintY=null; placeAt(nI>=0?nI:st.lastIdx); }
@@ -2557,7 +2867,7 @@ function lavaFall(){
   const [s0]=lavaInfo(st.x,st.z), y=lavaY(s0);
   for(let i=0;i<40;i++) emitSpray(st.x,y+0.2,st.z,(R()-.5)*4,(R()-.5)*4,5+R()*4);
   st.respawnAt = Math.abs(s0)<45 ? wrapI(lava.g0-150) : wrapI(lava.iB-70);
-  crash('溶岩に落ちた！');
+  crash(lava.water?'ワニの川に落ちた！':'溶岩に落ちた！');
 }
 function crash(m){
   st.crash=1.6; st.speed=0; st.vx=0; st.vz=0; st.slideT=0; dabL.visible=dabR.visible=false; BK.legL.visible=BK.legR.visible=true;
@@ -2592,7 +2902,7 @@ function frame(now){
   updateDust(dt); updateSpray(dt);
   updateCrowd(dt);
   if(waterTex) waterTex.offset.y-=dt*0.32;
-  updateTrain(dt); updateLeaves(dt,raceT+titleT); updateVolcano(dt); if(race) updateRace(dt);
+  updateTrain(dt); updateLeaves(dt,raceT+titleT); updateVolcano(dt); if(race) updateRace(dt); if(jungle && world) updateJungle(dt);
   if(wheelG) wheelG.userData.spin.rotation.z+=dt*0.06;
   if(bridgeG){ const on=st.ground && feat[nI>=0?nI:0]===1, v=Math.min(1,Math.hypot(st.vx,st.vz)/20);
     bridgeG.rotation.z=0.012*Math.sin(titleT*1.3+raceT*1.3)+(on?0.03*Math.sin(raceT*7)*v:0); }
@@ -2625,7 +2935,19 @@ function frame(now){
   $('glare').style.opacity=clamp((eye-dark)*1.7,0,0.92); $('dim').style.opacity=clamp((dark-eye)*0.85,0,0.65);
   if(lampMat) lampMat.color.setHSL(0.09,1,0.62+0.05*Math.sin(raceT*23)*Math.sin(raceT*7.3));
   sun.position.set(st.x+40,st.y+70,st.z+25); sun.target.position.set(st.x,st.y,st.z);
-  renderer.render(scene,camera);
+  renderer.render(scene,camera); renderMirror();
+}
+const mirrorCam=new THREE.PerspectiveCamera(38,2.6,0.5,320);
+function renderMirror(){
+  const want=rexG && mode==='race' && (rexG.state==='chase' || (rexG.state==='stop' && rexG.t<2.5)), el=$('mirror');
+  if(!want){ if(!el.hidden) el.hidden=true; return; }
+  const port=innerHeight>innerWidth, w=Math.round(Math.min(380,innerWidth*(port?0.62:0.42))), h=Math.round(w*0.38), x=Math.round((innerWidth-w)/2), top=port?Math.round(innerHeight*0.5):innerHeight-h-22;
+  if(el.hidden) el.hidden=false; el.style.cssText=`left:${x}px;top:${top}px;width:${w}px;height:${h}px`;
+  const fx=Math.sin(st.h), fz=Math.cos(st.h);
+  mirrorCam.aspect=w/h; mirrorCam.updateProjectionMatrix(); mirrorCam.position.set(st.x+fx*0.8,st.y+3.0,st.z+fz*0.8); mirrorCam.lookAt(st.x-fx*20,st.y+2.2,st.z-fz*20);
+  const y=innerHeight-top-h; renderer.setScissorTest(true); renderer.setViewport(x,y,w,h); renderer.setScissor(x,y,w,h);
+  renderer.render(scene,mirrorCam);
+  renderer.setScissorTest(false); renderer.setViewport(0,0,innerWidth,innerHeight);
 }
 
 // 5-speed gearbox: top speed (m/s) and drive force (m/s^2) per gear
@@ -2651,7 +2973,7 @@ function stepInner(dt){
   // shallow river water: slow and slippery, with spray
   let inWater=false;
   if(river){ const [rd,ry]=riverInfo(st.x,st.z); if(rd<6.8 && st.y<ry+0.05) inWater=true; }
-  const mud=tana?1-gripMul[idx]:0;
+  const mud=(tana||jungle)?1-gripMul[idx]:0;
   const sand=circ && !onRoad && nI>=0 && inGravel(nI,st.x,st.z,nD);
   const maxV=sand?8:inWater?11:onRoad?31-mud*22:13;
   // slope along heading
@@ -2772,7 +3094,7 @@ function stepInner(dt){
       if(st.zone===9){                                             // the lava jump
         st.zone=0; const [s9]=lavaInfo(st.x,st.z);
         if(st.y<lavaY(s9)+2 || (nI>=0 && feat[nI]===9 && st.y<ht[nI]-0.6)){ lavaFall(); return; }
-        if(racing) showMsg('溶岩ジャンプ成功！',1.6); }
+        if(racing) showMsg(lava.water?'ワニの川ジャンプ成功！':'溶岩ジャンプ成功！',1.6); }
       if(st.zone===7){                                             // the railway jump
         st.zone=0;
         if(st.y<rail.y+2.5 || (nI>=0 && feat[nI]===7 && st.y<ht[nI]-0.6)){ st.respawnAt=wrapI(rail.g0-150); crash('線路に落ちた！'); return; }   // short: down the cutting wall
