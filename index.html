@@ -2827,7 +2827,7 @@ function startRace(){
   initSound(); if(ac&&ac.state==='suspended') ac.resume();
   $('ov').hidden=true; placeStart(); resetRivals(); st.progress=startIdx(); st.respawnAt=-1; st.cine=-1; st.jump=0; mode='count'; countT=3.2; raceT=0; lap=1; lapTimes=[]; cps=new Set(); bestAir=0; bestSlide=0; lives=LIVES; renderLives();
   // phones: the browser's "exit full screen" notice covers the buttons for a few seconds, so wait it out before 3-2-1
-  if(MOBILE){ const since=(performance.now()-fsT)/1000; countT+= !wasFull ? 3 : Math.max(0,4-since); }
+  if(MOBILE && !wasFull) countT+=4;
   nearest(st.x,st.z); lastIdx=nI; canvas.focus&&canvas.focus();
 }
 function finishRace(){
@@ -2902,7 +2902,8 @@ function frame(now){
   camCine+=((st.cine>=0?1:0)-camCine)*Math.min(1,rdt*(st.cine>=0?2.2:1.4));
   const dt=rdt*timeScale;
   if(mode==='title'){ titleT+=dt; }
-  if(mode==='count'){ countT-=dt; const n=Math.ceil(countT-0.2); showMsg(n>3?'READY':n>0?String(n):'GO!',0.3); if(countT<=0.2){ mode='race'; lapT0=0; } }
+  if(mode==='count'){ countT-=dt; if(MOBILE && performance.now()-fsT<4000) countT=Math.max(countT,3.21);   // hold READY until 4 s after going full screen
+    const n=Math.ceil(countT-0.2); showMsg(n>3?'READY':n>0?String(n):'GO!',0.3); if(countT<=0.2){ mode='race'; lapT0=0; } }
   if(mode==='race') raceT+=dt;
   step(dt);
   updateCamera(rdt);
