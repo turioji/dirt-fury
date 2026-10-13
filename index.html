@@ -974,12 +974,17 @@ function railSpan(){
 }
 
 // ---------- cliff: one-way, one-life night climb along a Chinese-style sheer ridge ----------
+function cvn(x,z){ const ix=Math.floor(x), iz=Math.floor(z), fx=x-ix, fz=z-iz, u=fx*fx*(3-2*fx), v=fz*fz*(3-2*fz);
+  const h=(a,b)=>{ const q=Math.sin(a*127.1+b*311.7)*43758.5453; return (q-Math.floor(q))*2-1; };
+  return lerp(lerp(h(ix,iz),h(ix+1,iz),u),lerp(h(ix,iz+1),h(ix+1,iz+1),u),v); }
+// broken rock: random bumps and lumps the bike bounces over
+function cliffBump(x,z){ const l=Math.max(0,cvn(x/3.2+7,z/3.2)-0.45)*0.9; return 0.07*cvn(x/1.9,z/1.9)+0.03*cvn(x/0.95+3,z/0.95)+l*0.8; }
 function cliffAt(x,z,rh){
   const C=cliffC, f=feat[nI];
   if(f===4) return C.floor;                                              // a jump gap / a hole in the road
   if(f===13){ const T=C.tileOf[nI]; if(T>=0 && C.tiles[T].gone) return C.floor; }
   const hw=roadHalf[nI], d=nD;
-  if(d<=hw+0.2) return rh;
+  if(d<=hw+0.2) return C.rough[nI]>0 ? rh+cliffBump(x,z)*C.rough[nI] : rh;
   const ws=C.wall[nI];
   if(ws){ const [lx,lz]=lateral(nI), lat=(x-pts[nI].x)*lx+(z-pts[nI].z)*lz; if(lat*ws>0) return rh+30*sstep(hw+0.2,hw+0.9,d); }   // rock face on the wall side
   return C.floor;                                                        // everything else is air
@@ -1049,6 +1054,8 @@ function buildCliffTrack(c){
   { const tp=(s,h0,h1)=>{ const a0=first(s), b0=last(s); for(let i=a0;i<=b0;i++) roadHalf[i]=lerp(h0,h1,(i-a0)/Math.max(1,b0-a0)); };
     tp('pre',2.0,0.8); tp('post',0.8,2.0); tp('top',2.0,4.5); }
   { const src=windK.slice(); for(let i=0;i<NS;i++){ let s=0,n=0; for(let k=-30;k<=30;k++){ const j=i+k; if(j<0||j>=NS) continue; s+=src[j]; n++; } windK[i]=s/n; } }
+  const rough=new Float32Array(NS); { const RS=new Set(['r1','run','r2','ch0','chase','bend','tpre','tend','climb','post']); for(let i=0;i<NS;i++) rough[i]=RS.has(secs[i])?(secs[i]==='r1'?0.5:1):0;
+    const src=rough.slice(); for(let i=0;i<NS;i++){ let a=0,n=0; for(let k=-24;k<=24;k+=3){ const j=i+k; if(j<0||j>=NS) continue; a+=src[j]; n++; } rough[i]=(feat[i]===0&&!/^(ramp|gap|land)/.test(secs[i]))?a/n*clamp(1-curv[i]*8,0.3,1):0; } }
   river=null; adv={spots:[],props:[]}; featMarks=[]; tunnel=null; kickers=[]; whoops=undefined; baseGrid=null; crowdSpots=[];
   grid=new Map(); pts.forEach((p,i)=>{ const k=gk(Math.floor(p.x/CELL),Math.floor(p.z/CELL)); if(!grid.has(k)) grid.set(k,[]); grid.get(k).push(i); });
   // collapsing slabs: 6 m each, a few with a 2.5 m hole after them
@@ -1058,7 +1065,7 @@ function buildCliffTrack(c){
       if(holeK) for(let i=se+1;i<=b0;i++) feat[i]=4; } }
   let fl=1e9; for(let i=0;i<NS;i++) fl=Math.min(fl,ht[i]);
   const gaps=[1,2,3].map(k=>({a:first('gap'+k),b:last('gap'+k),r0:first('ramp'+k)}));
-  cliffC={ floor:fl-120, cloudY:ht[first('wall')]-5, finish:first('plaza')+10, secs, tiles, tileOf, wall, windK, gaps,
+  cliffC={ rough, floor:fl-120, cloudY:ht[first('wall')]-5, finish:first('plaza')+10, secs, tiles, tileOf, wall, windK, gaps,
     log:{a:first('log'),b:last('log')}, ch0:{a:first('ch0'),b:last('ch0')}, chase:{a:first('chase'),b:last('chase')}, bend:first('bend'),
     tpre:first('tpre'), plaza:{a:first('plaza'),b:last('plaza')}, boulder:null, wx:0, wz:0, gust:0, gustPrev:0, gustT:0 };
   featMarks.push({i:first('r1')+30,label:'断崖の尾根'},{i:first('wall')-6,label:'桟道'},{i:first('ramp1')-30,label:'段差ジャンプ'},{i:first('r2')+5,label:'突風注意'},
@@ -1196,24 +1203,27 @@ function buildCliffProps(){
   // ----- rock body under / beside the road, in runs (no body under the log, the slabs or the jump gaps) -----
   { const DROP=[[0.15,-0.1],[0.5,-3.5],[1.4,-12],[3,-30],[5,-70]], SHEER=[[0.15,-0.1],[0.3,-6],[0.5,-18],[0.9,-40],[1.5,-70]], WALLC=[[0.15,-0.1],[0.35,6],[1.0,16],[2.2,28],[3.4,40]];
     const P=[], Col=[], I=[]; let vbase=0;
-    const rockA=new THREE.Color(0x77736c), rockB=new THREE.Color(0x2a2d36), moss=new THREE.Color(0x4a5d34), wallC=new THREE.Color(0x8a857c), cc=new THREE.Color();
+    const rockA=new THREE.Color(0x66615a), rockB=new THREE.Color(0x24262e), moss=new THREE.Color(0x4a5d34), wallC=new THREE.Color(0x8a857c), cc=new THREE.Color();
     const runs=[]; let cur=[]; for(let i=0;i<NS;i++){ const f=feat[i]; if(f===4||f===12||f===13){ if(cur.length) runs.push(cur); cur=[]; } else cur.push(i); } if(cur.length) runs.push(cur);
     for(const run of runs){ if(run.length<3) continue;
-      const rows=[]; for(let k=0;k<run.length;k+=3) rows.push(run[k]); if(rows[rows.length-1]!==run[run.length-1]) rows.push(run[run.length-1]);
+      const rows=[]; for(let k=0;k<run.length;k+=2) rows.push(run[k]); if(rows[rows.length-1]!==run[run.length-1]) rows.push(run[run.length-1]);
       let r0=vbase;
       for(const i of rows){ const hw=roadHalf[i], ws=C.wall[i], [nx,nz]=lateral(i), row=[];
-        for(const q of [-1,1]){ const ch=q===ws?WALLC:(ws?SHEER:DROP); const pts5=[]; for(let j=0;j<5;j++){ const off=ch[j][0], dy=ch[j][1]; let n1=(cHash(i,j,q)-0.5), n2=(cHash(i,j,q+7)-0.5);
-            const lat=q*(hw+off+(j>0?n1*(q===ws?0.5:0.9):0)), yy=ht[i]+dy+(j>0?n2*(q===ws?1.2:2.5):0); pts5.push([lat,yy,j,q]); }
+        for(const q of [-1,1]){ const ch0=q===ws?WALLC:(ws?SHEER:DROP); const ch=[]; for(let j=0;j<4;j++){ ch.push(ch0[j]); ch.push([(ch0[j][0]+ch0[j+1][0])/2,(ch0[j][1]+ch0[j+1][1])/2]); } ch.push(ch0[4]);
+          const pts5=[]; for(let j=0;j<9;j++){ const off=ch[j][0], dy=ch[j][1], isW=(q===ws);
+            const sm=Math.sin(i*0.11+j*1.9+q*2)*0.5+Math.sin(i*0.043-j*0.8)*0.5, n1=(cHash(i,j,q)-0.5)+sm*0.8, n2=(cHash(i,j,q+7)-0.5)+sm*0.5;
+            const amp=j>0?(isW?0.9:1.7):0;
+            const lat=q*(hw+off+n1*amp*(isW?1:Math.min(1,off*0.5))); let yy=ht[i]+dy+(j>0?n2*(isW?2.2:4.5):0); if(!isW) yy=Math.min(yy,ht[i]-0.15-j*0.2); pts5.push([lat,yy,j,q]); }
           row.push(q<0?pts5.slice().reverse():pts5); }
         for(const arr of row) for(const [lat,yy,j,q] of arr){ P.push(pts[i].x+nx*lat,yy,pts[i].z+nz*lat);
           const depth=clamp((ht[i]-yy)/60,0,1), isWall=(q===ws);
-          cc.copy(isWall?wallC:rockA).lerp(rockB,isWall?0.15:depth); const v=0.78+0.4*cHash(i,j,q+3); cc.multiplyScalar(v);
-          if(!isWall && j<=1) cc.lerp(moss,0.35*cHash(i,j+9,q)); Col.push(cc.r,cc.g,cc.b); } }
-      const W2=10;
+          cc.copy(isWall?wallC:rockA).lerp(rockB,isWall?0.2:depth*0.8); const v=(0.6+0.7*cHash(i,j,q+3))*(0.8+0.25*Math.sin(yy*1.1+i*0.02)); cc.multiplyScalar(v);
+          if(!isWall && j<=2) cc.lerp(moss,0.3*cHash(i,j+9,q)); Col.push(cc.r,cc.g,cc.b); } }
+      const W2=18;
       for(let r=0;r<rows.length-1;r++) for(let k=0;k<W2-1;k++){ const a0=r0+r*W2+k, b0=a0+1, c0=a0+W2, d0=c0+1; I.push(a0,c0,b0, b0,c0,d0); }
       // cap both ends of the run with a fan from the road centre
       for(const [rr,flip] of [[0,0],[rows.length-1,1]]){ const i=rows[rr], [nx,nz]=lateral(i); const ci=P.length/3; P.push(pts[i].x,ht[i]-0.1,pts[i].z); Col.push(0.3,0.3,0.32);
-        for(let k=0;k<W2-1;k++){ const a0=r0+rr*W2+k; flip? I.push(ci,a0+1,a0) : I.push(ci,a0,a0+1); } }
+        for(let k=0;k<W2-1;k++){ const a0=r0+rr*W2+k; if(k===8) continue; flip? I.push(ci,a0+1,a0) : I.push(ci,a0,a0+1); } }
       vbase=P.length/3; }
     const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); g.setAttribute('color',new THREE.Float32BufferAttribute(Col,3)); g.setIndex(I); g.computeVertexNormals();
     addM(new THREE.Mesh(g,new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,shininess:3,specular:0x050505,side:THREE.DoubleSide}))); }
@@ -1221,9 +1231,9 @@ function buildCliffProps(){
   { const P=[], I=[]; let n=0;
     for(let i=0;i<NS-1;i+=1){ const f=feat[i], f2=feat[i+1]; if(f===4||f2===4||f===12||f2===12||f===13||f2===13||f===11||f2===11) continue;
       const hw=roadHalf[i], hw2=roadHalf[i+1], [nx,nz]=lateral(i), [mx,mz]=lateral(i+1);
-      for(const q of [-1,1]){ const b=P.length/3;
-        P.push(pts[i].x+nx*q*(hw-0.3),ht[i]+0.075,pts[i].z+nz*q*(hw-0.3), pts[i].x+nx*q*(hw+0.12),ht[i]+0.075,pts[i].z+nz*q*(hw+0.12),
-               pts[i+1].x+mx*q*(hw2-0.3),ht[i+1]+0.075,pts[i+1].z+mz*q*(hw2-0.3), pts[i+1].x+mx*q*(hw2+0.12),ht[i+1]+0.075,pts[i+1].z+mz*q*(hw2+0.12));
+      const bz=(x,z,k)=>0.075+(C.rough[k]>0?cliffBump(x,z)*C.rough[k]:0);
+      for(const q of [-1,1]){ const b=P.length/3, xa=pts[i].x+nx*q*(hw-0.3), za=pts[i].z+nz*q*(hw-0.3), xb=pts[i].x+nx*q*(hw+0.12), zb=pts[i].z+nz*q*(hw+0.12), xc=pts[i+1].x+mx*q*(hw2-0.3), zc=pts[i+1].z+mz*q*(hw2-0.3), xd=pts[i+1].x+mx*q*(hw2+0.12), zd=pts[i+1].z+mz*q*(hw2+0.12);
+        P.push(xa,ht[i]+bz(xa,za,i),za, xb,ht[i]+bz(xb,zb,i),zb, xc,ht[i+1]+bz(xc,zc,i+1),zc, xd,ht[i+1]+bz(xd,zd,i+1),zd);
         I.push(b,b+2,b+1, b+1,b+2,b+3); } }
     const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); g.setIndex(I); g.computeVertexNormals();
     addM(new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:0xd8d2c0,emissive:0x3a362c,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}))); }
@@ -3450,9 +3460,27 @@ function buildRoad(){
   if(course.type==='jungle'){ g.fillStyle='rgba(120,48,20,.28)'; g.fillRect(0,0,128,256); const lc=['#3d6a24','#56802e','#2c4a1a','#6a5a2a']; for(let i=0;i<160;i++){ g.fillStyle=lc[Math.floor(R()*4)]; g.save(); g.translate(R()*128,R()*256); g.rotate(R()*6); g.fillRect(-3,-1.2,6,2.4); g.restore(); } }
   if(course.type==='volcano'){ g.fillStyle='rgba(28,24,23,.58)'; g.fillRect(0,0,128,256); for(let i=0;i<500;i++){ g.fillStyle=R()<.5?'rgba(15,12,11,.5)':'rgba(120,70,50,.35)'; g.fillRect(R()*128,R()*256,1+R()*2.5,1+R()*2.5); } }
   if(course.type==='koyo'){ const lc=['#b8321e','#d0601c','#e09a22','#a8401c','#c8a030']; for(let i=0;i<260;i++){ g.fillStyle=lc[Math.floor(R()*5)]; g.save(); g.translate(R()*128,R()*256); g.rotate(R()*6); g.fillRect(-2,-1.2,4,2.4); g.restore(); } }
-  if(course.type==='cliff'){ g.fillStyle='#6f6a62'; g.fillRect(0,0,128,256); for(let r=0;r<8;r++){ for(let c=0;c<3;c++){ const x=c*43+(r%2)*20-10, y=r*32; g.fillStyle=`hsl(${30+R()*10},${6+R()*8}%,${34+R()*14}%)`; g.fillRect(x+1.5,y+1.5,40,29); } } for(let i=0;i<900;i++){ g.fillStyle=R()<.5?'rgba(20,20,22,.22)':'rgba(220,214,200,.16)'; g.fillRect(R()*128,R()*256,1+R()*3,1+R()*3); } g.fillStyle='rgba(25,38,18,.22)'; g.fillRect(0,0,6,256); g.fillRect(122,0,6,256); }
+  if(course.type==='cliff'){   // the whole road surface is rough broken rock: faceted slabs with dark cracks
+    cv.width=256; cv.height=512; const W0=256,H0=512, im=g.createImageData(W0,H0), D=im.data, NSITE=95, sx=[],sy=[],sc=[],fx=[],fy=[];
+    for(let k=0;k<NSITE;k++){ sx.push(R()*W0); sy.push(R()*H0); sc.push(0.62+R()*0.5); const a=R()*6.283; fx.push(Math.cos(a)); fy.push(Math.sin(a)); }
+    for(let y=0;y<H0;y++) for(let x=0;x<W0;x++){ let d1=1e9,d2=1e9,b=0;
+      for(let k=0;k<NSITE;k++){ let dx=Math.abs(x-sx[k]); if(dx>W0/2) dx=W0-dx; let dy=Math.abs(y-sy[k]); if(dy>H0/2) dy=H0-dy; const d=dx*dx+dy*dy*0.9;
+        if(d<d1){ d2=d1; d1=d; b=k; } else if(d<d2) d2=d; }
+      const edge=Math.min(1,(Math.sqrt(d2)-Math.sqrt(d1))/5);          // dark crack between facets
+      let rx=x-sx[b], ry=y-sy[b]; if(rx>W0/2) rx-=W0; if(rx<-W0/2) rx+=W0; if(ry>H0/2) ry-=H0; if(ry<-H0/2) ry+=H0;
+      const lit=0.5+0.5*(rx*fx[b]+ry*fy[b])/26, g0=(46+70*sc[b])*(0.62+0.5*lit)*(0.45+0.55*edge)*(0.9+0.2*Math.random());
+      const o=(y*W0+x)*4; D[o]=g0*1.02; D[o+1]=g0*0.98; D[o+2]=g0*0.92; D[o+3]=255; }
+    g.putImageData(im,0,0);
+    g.fillStyle='rgba(25,38,18,.2)'; g.fillRect(0,0,10,H0); g.fillRect(W0-10,0,10,H0); }
   if(drv) drAsphalt(g);
   const tex=new THREE.CanvasTexture(cv); tex.wrapS=tex.wrapT=THREE.RepeatWrapping; tex.anisotropy=drv?Math.min(16,renderer.capabilities.getMaxAnisotropy()):4;
+  if(course.type==='cliff'){   // bumpy rock road: a grid across the width, each vertex lifted by the same bump the physics uses
+    const LC=10, rows=NS, Pp=new Float32Array(rows*(LC+1)*3), UVp=new Float32Array(rows*(LC+1)*2), Ip=[]; let acc2=0;
+    for(let i=0;i<rows;i++){ const p=pts[i], t=tan[i], nx=-t.z, nz=t.x, hw=roadHalf[i]; if(i>0) acc2+=pts[i].distanceTo(pts[i-1]);
+      for(let c=0;c<=LC;c++){ const lat=(c/LC*2-1)*hw, x=p.x+nx*lat, z=p.z+nz*lat, o=i*(LC+1)+c; Pp[o*3]=x; Pp[o*3+1]=ht[i]+0.05+(cliffC.rough[i]>0?cliffBump(x,z)*cliffC.rough[i]:0); Pp[o*3+2]=z; UVp[o*2]=0.5-lat/9; UVp[o*2+1]=acc2/9; } }
+    for(let i=0;i<rows-1;i++){ if(feat[i]!==0||feat[i+1]!==0) continue; for(let c=0;c<LC;c++){ const a=i*(LC+1)+c, b=a+1, c2=a+LC+1, d=c2+1; Ip.push(a,b,c2, b,d,c2); } }
+    const g2=new THREE.BufferGeometry(); g2.setAttribute('position',new THREE.BufferAttribute(Pp,3)); g2.setAttribute('uv',new THREE.BufferAttribute(UVp,2)); g2.setIndex(Ip); g2.computeVertexNormals();
+    const m2=new THREE.Mesh(g2,new THREE.MeshLambertMaterial({map:tex,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2,side:THREE.DoubleSide})); m2.receiveShadow=true; world.add(m2); return; }
   const n=OPEN?NS:NS+1, P=new Float32Array(n*2*3), UV=new Float32Array(n*2*2), idx=[];
   let acc=0;
   for(let j=0;j<n;j++){
@@ -4838,12 +4866,12 @@ function stepInner(dt){
   const g=22; let h=heightAt(st.x,st.z); st.dist=nD; st.hw=nI>=0?roadHalf[nI]:HALF;
   if(st.ground){
     const nvy=clamp((h-st.y)/dt,-30,14);
-    if((nvy < st.vy - g*dt*1.2 && st.speed>6) || h<st.y-0.8){ st.ground=false; st.air=0; st.takeoffY=st.y; st.zone=nI<0?0:feat[nI]===1?1:cliffW[nI]>0?2:0;
+    if((nvy < st.vy - g*dt*(cliffC?2.4:1.2) && st.speed>6) || h<st.y-0.8){ st.ground=false; st.air=0; st.takeoffY=st.y; st.zone=nI<0?0:feat[nI]===1?1:cliffW[nI]>0?2:0;
       if(trial && racing && nI>=trial.lip-14 && nI<=trial.g0+3 && st.speed>4){ st.zone=6; st.cine=0; st.jumpY=st.y; } if(rail && racing && st.speed>4 && nI>=0 && rail.g0!==undefined && cdist(nI,rail.g0)<28) st.zone=7;
       if(lava && racing && st.speed>4 && nI>=0 && lava.g0!==undefined && cdist(nI,lava.g0)<28) st.zone=9;
       st.vy=Math.max(Math.min(st.vy,cliffC?11:6),0); st.y+=st.vy*dt;
       if(cliffC && racing && nI>=0 && st.speed>6){ for(const gp of cliffC.gaps){ if(nI>=gp.a-24 && nI<=gp.a+2){ st.zone=14; break; } } } }
-    else { st.vy=nvy; st.y=h; }
+    else { if(cliffC && racing && Math.abs(nvy-st.vy)>2.5 && st.speed>8){ st.shake=Math.max(st.shake,Math.min(0.35,Math.abs(nvy-st.vy)*0.04)); if(nvy-st.vy>3) st.speed*=0.995; } st.vy=nvy; st.y=h; }
   }else{
     if(h>st.y+1.2){ st.x=ox; st.z=oz; st.vx*=-0.15; st.vz*=-0.15; st.shake=0.5; h=heightAt(st.x,st.z); }   // hit a wall in the air: bounce off it, don't pop up onto it
     st.vy-=g*dt; st.y+=st.vy*dt; st.air+=dt;
