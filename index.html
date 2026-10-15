@@ -95,6 +95,7 @@ h1.over span{font-family:var(--f-jp);font-weight:700;font-size:.3em;letter-spaci
 #mirror span{position:absolute;left:8px;top:4px;font-size:12px;font-weight:900;letter-spacing:.1em;color:var(--plate);text-shadow:0 1px 3px #000}
 #msg{left:0;right:0;top:34%;text-align:center;font-family:var(--f-num);font-weight:800;font-size:clamp(40px,8vw,96px);line-height:1.05;padding-inline:16px;
   color:var(--paper);text-shadow:0 6px 24px rgba(0,0,0,.55);letter-spacing:.02em}
+#msg.snowy{-webkit-text-stroke:4px rgba(24,36,60,.75);paint-order:stroke fill}
 #air{left:0;right:0;top:22%;text-align:center;font-family:var(--f-num);font-weight:800;font-size:44px;color:var(--plate);
   text-shadow:0 4px 14px rgba(0,0,0,.5);opacity:0;transition:opacity .25s}
 #offroad{left:0;right:0;bottom:calc(22px + env(safe-area-inset-bottom,0px));text-align:center;font-weight:700;font-size:14px;letter-spacing:.1em;
@@ -241,6 +242,7 @@ body.playing:not(.menu) #chg{display:block}
       <button class="course" data-c="koyo" role="radio"><b>紅葉の林間コース</b></button>
       <button class="course" data-c="circuit" role="radio"><b>8の字サーキット</b></button>
       <button class="course" data-c="volcano" role="radio"><b>火山のガレ場</b></button>
+      <button class="course" data-c="winter" role="radio"><b>冬の雪山コース</b></button>
       <button class="course" data-c="jungle" role="radio"><b>ジャングルコース</b></button>
       <button class="course" data-c="stream" role="radio"><b>渓流コース</b></button>
       <div class="grp race">RACE · ライバルと対戦</div>
@@ -261,6 +263,7 @@ body.playing:not(.menu) #chg{display:block}
       <kbd>Shift / SPACE</kbd><span>リアブレーキ・スライド</span>
       <kbd>R</kbd><span>コースに復帰</span>
       <kbd>M</kbd><span>エンジン音 ON/OFF</span>
+      <kbd>F11</kbd><span>フル画面（もう一度押すと戻る）</span>
     </div>
     <p class="lead tip">転倒できるのは3回まで。コツ：カーブ中にアクセルを開けると後輪が流れる。滑りすぎたら逆ハンドルで立て直そう。</p>
     <p class="lead sp">スマホの操作：「スタート」→ 3・2・1のあと、<b>GAS</b> を押しっぱなしで加速、<b>◀ ▶</b> でハンドル、<b>BRAKE</b> で減速（ハンドルと一緒に押すと後輪が滑る、止まっている時に押し続けるとバック）。コースアウトしたり動けなくなったら、右上の <b>↺ 復帰</b> でコースに戻れる。横持ちがおすすめ。</p>
@@ -303,7 +306,7 @@ const COURSES={
     eyebrow:'TRIAL · FJORD DOWNHILL · ONE RUN',
     lead:'雪の残る山頂から一本道で駆け下りる。つづら折り、ガレ場、岩棚の先は、下の見えない断崖ジャンプ。全開で飛ばないとフィヨルドに落ちる。',
     seed:6203, width:7, size:760, seg:420, fog:0xbccad2, adventure:true, type:'trial', open:true},
-  cliff:{id:'cliff',name:'断崖絶壁コース',tag:'',eyebrow:'EXTREME · SHEER CLIFF · ONE LIFE',lead:'',seed:7741,width:5,size:900,seg:24,fog:0x7a8cb4,fogFar:130,adventure:true,type:'cliff',open:true,lives:1,night:0.6},
+  cliff:{id:'cliff',name:'断崖絶壁コース',tag:'',eyebrow:'EXTREME · SHEER CLIFF · THREE LIVES',lead:'',seed:7741,width:5,size:900,seg:24,fog:0x7a8cb4,fogFar:130,adventure:true,type:'cliff',open:true,lives:3,night:0.6},
   tanada:{id:'tanada',name:'棚田と農道',tag:'あぜ道・段々ジャンプ・ぬかるみ',
     eyebrow:'SATOYAMA · RICE TERRACES · 3 LAPS',
     lead:'山の斜面に段々と広がる田んぼを縫う農道を3周。細いあぜ道、田んぼの段差を飛び降りる段々ジャンプ、ぬかるみ。水を張った田んぼに落ちたら1ミス。',
@@ -324,6 +327,10 @@ const COURSES={
     eyebrow:'RACE · MOTOCROSS GP · 4 LAPS',
     lead:'ライバル3台と4周の勝負。ゲートが倒れたら一斉にスタート。土手で固めたヘアピン、テーブルトップ、ダブルジャンプ、リズムセクション。ぶつかり合いながら1位を狙え。',
     seed:7070, width:11, size:420, seg:380, fog:0xc9d3c4, adventure:true, type:'race', laps:4},
+  winter:{id:'winter',name:'冬の雪山コース',tag:'凍結路面・吹雪・雪崩・落氷',
+    eyebrow:'WINTER · SNOW MOUNTAIN · 3 LAPS',
+    lead:'雪に埋もれた山の林道を3周。路面の一部はツルツルに凍結している。突然の吹雪で視界はゼロ、斜面からは雪崩、木からは氷の塊が降ってくる。何が起きるかは走ってみないと分からない。',
+    seed:9902, ctrl:[[0,0],[40,-2],[80,0],[110,10],[120,30],[105,45],[80,48],[60,40],[45,50],[50,68],[75,75],[100,80],[110,98],[95,112],[65,110],[40,100],[15,104],[-10,96],[-20,76],[-8,60],[10,54],[22,42],[8,30],[-18,28],[-32,12],[-20,-4]], ctrlScale:1.9, ns:2000, width:8, size:640, seg:420, fog:0xdde6ee, fogFar:300, adventure:true, type:'winter'},
   jungle:{id:'jungle',name:'ジャングルコース',tag:'ワニの川・プテラノドン襲来・ティラノの追跡',
     eyebrow:'JUNGLE · DINO VALLEY · 3 LAPS',
     lead:'恐竜が生きている密林を3周。ワニのうようよいる川は全開で飛び越え、丸太橋で渡る。翼竜ゾーンではプテラノドンが上空から赤い輪めがけて急降下し、遺跡の先ではティラノサウルスが追ってくる。捕まったら1ミス。',
@@ -793,7 +800,7 @@ function buildRaceTrack(c){
 }
 
 // ---------- volcano: black lava fields, a lava flow to jump and to cross on a rock causeway ----------
-let lava=null, bombs=[], plume=null, vents=[];
+let winter=null, blizK=0, lava=null, bombs=[], plume=null, vents=[], erupt=null, eruptK=0, eruptNext=0, eruptB=0;
 function lavaInfo(x,z){ const rx=x-lava.px, rz=z-lava.pz; return [rx*lava.dx+rz*lava.dz, Math.abs(rx*lava.dz-rz*lava.dx)]; }
 function lavaY(s){ const L=lava, k=clamp((s-L.s0)/L.ds,0,L.ys.length-1.001), k0=Math.floor(k); return L.ys[k0]+(L.ys[k0+1]-L.ys[k0])*(k-k0); }
 // the lava channel: a flat glowing bed between steep black walls. On the causeway the road keeps its height.
@@ -892,6 +899,94 @@ function buildVolcano(){
   kickers=[];   // the purpose-built jumps above are enough; plain kickers on the long downhill swells flew riders off the road
 }
 
+// ---------- winter: a snowbound forest road with frozen stretches and sudden weather ----------
+const BLIZC=new THREE.Color(0xf2f6fa);
+function buildWinter(){
+  const taken=[0];
+  const free=(i,gap)=>taken.every(j=>cdist(i,j)>gap);
+  const pickStraight=(f0,f1,gap,win)=>{ let best=-1,bc=1e9;
+    for(let i=Math.floor(NS*f0);i<Math.floor(NS*f1);i++){ const ii=i%NS; if(!free(ii,gap)) continue;
+      let cv=0; for(let k=-win;k<=win;k+=5) cv=Math.max(cv,curv[(ii+k+NS)%NS]);
+      if(cv<bc){bc=cv;best=ii;} }
+    if(best>=0) taken.push(best); return best; };
+  adv={spots:[],props:[]}; gripMul=new Float32Array(NS).fill(1);
+  for(let i=0;i<NS;i++){ const u=i/NS*Math.PI*2; ht[i]+=1.6*Math.sin(u*3+0.7)+0.8*Math.sin(u*5+2.1); }   // long snowy swells
+  // 1. three frozen stretches: glassy ice, almost no grip
+  adv.ice=[];
+  [70,90,60].forEach(LS=>{ const is=pickStraight(0.04,0.96,110,10); if(is<0) return;
+    for(let k=-8;k<=LS+8;k++){ const i=(is+k+NS)%NS; gripMul[i]=Math.min(gripMul[i],lerp(1,0.16,sstep(-8,4,k)*sstep(LS+8,LS-4,k))); }
+    for(let k=0;k<=LS;k+=10) taken.push((is+k)%NS);
+    adv.ice.push({s:is,L:LS}); featMarks.push({i:(is-14+NS)%NS,label:'凍結注意'}); });
+  // 2. a stretch where lumps of ice fall from the trees
+  { const ib=pickStraight(0.05,0.95,100,20); if(ib>=0){ adv.bombs={s:ib-40,L:150}; featMarks.push({i:(ib-52+NS)%NS,label:'落氷注意'}); } }
+  // 3. a tabletop and two ordinary kickers
+  const prof=(i0,arr)=>arr.forEach((v,k)=>{ ht[(i0+k)%NS]+=v; });
+  { const i=pickStraight(0.04,0.96,70,30); if(i>=0){ const a=[], up=15, top=11, dn=20, H=2.4;
+      for(let k=0;k<up;k++) a.push(H*Math.pow((k+1)/up,1.8)); for(let k=0;k<top;k++) a.push(H); for(let k=0;k<dn;k++) a.push(H*(1-(k+1)/dn));
+      prof(i,a); featMarks.push({i:(i-26+NS)%NS,label:'テーブルトップ'}); adv.spots.push([i+up+top+30,1,'jump']); for(let k=-30;k<=70;k+=10) taken.push((i+k+NS)%NS); } }
+  kickers=[]; for(let n=0;n<2;n++){ const k=pickStraight(0.04,0.95,90,60); if(k>=0) kickers.push(k); }
+  kickers.sort((a,b)=>a-b);
+}
+function buildWinterProps(){
+  winter={ice:adv.ice||[],on:false,t:0,k:0,next:18+Math.random()*22,ph:0,av:null,avNext:30+Math.random()*30,snow:null};
+  blizK=0; bombs=[]; bombT=1.5;
+  // glassy ice laid over the road
+  const imat=new THREE.MeshPhongMaterial({color:0x8fbcd8,specular:0xffffff,shininess:160,transparent:true,opacity:0.82,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4,side:THREE.DoubleSide});
+  for(const ic of winter.ice){ const P=[],I=[];
+    for(let k=0;k<=ic.L;k++){ const i=(ic.s+k)%NS, t=tan[i], nx=-t.z, nz=t.x, hw=roadHalf[i]-0.1, y=ht[i]+0.1, p=pts[i];
+      P.push(p.x+nx*hw,y,p.z+nz*hw, p.x-nx*hw,y,p.z-nz*hw); if(k<ic.L){ const b=k*2; I.push(b,b+2,b+1, b+1,b+2,b+3); } }
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); g.setIndex(I); g.computeVertexNormals();
+    const m=new THREE.Mesh(g,imat); m.receiveShadow=true; world.add(m); }
+  // falling snow, wrapped around the camera
+  const N=1100, pos=new Float32Array(N*3);
+  for(let i=0;i<N;i++){ pos[i*3]=camera.position.x+(Math.random()-.5)*90; pos[i*3+1]=camera.position.y-6+Math.random()*32; pos[i*3+2]=camera.position.z+(Math.random()-.5)*90; }
+  const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const pm=new THREE.Points(geo,new THREE.PointsMaterial({color:0xffffff,size:0.2,transparent:true,opacity:0.85,depthWrite:false,sizeAttenuation:true}));
+  pm.frustumCulled=false; world.add(pm); winter.snow={pm,pos,N,geo};
+}
+// an avalanche: a wall of snow sweeps across the road a few seconds ahead
+function startAvalanche(){
+  const v=Math.hypot(st.vx,st.vz), d=Math.max(40,Math.min(90,v*3.0));
+  let i=st.lastIdx, acc=0; while(acc<d){ const j=(i+1)%NS; acc+=pts[i].distanceTo(pts[j]); i=j; }
+  if(feat[i]!==0) return false;
+  let cv=0; for(let k=-14;k<=14;k+=7) cv=Math.max(cv,curv[(i+k+NS)%NS]); if(cv>0.05) return false;
+  const side=Math.random()<0.5?-1:1, hw=roadHalf[i], [lx,lz]=lateral(i), p=pts[i], y=ht[i];
+  const grp=new THREE.Group(), wm=new THREE.MeshLambertMaterial({color:0xdce6f2,flatShading:true});
+  for(let k=0;k<20;k++){ const r=1.3+Math.random()*1.3, m=new THREE.Mesh(new THREE.IcosahedronGeometry(r,0),wm); m.position.set((Math.random()-.5)*8,r*0.55,(Math.random()-.5)*4.6); m.scale.y=0.8; m.rotation.set(Math.random()*3,Math.random()*3,Math.random()*3); grp.add(m); }
+  const t=tan[i]; grp.rotation.y=Math.atan2(t.x,t.z); world.add(grp);
+  const band=new THREE.Mesh(new THREE.PlaneGeometry(2*hw,4),new THREE.MeshBasicMaterial({color:0xff3a1a,transparent:true,opacity:0.5,side:THREE.DoubleSide,depthWrite:false}));
+  band.rotation.order='YXZ'; band.rotation.set(-Math.PI/2,Math.atan2(t.x,t.z),0); band.position.set(p.x,y+0.14,p.z); world.add(band);
+  winter.av={i,side,hw,lx,lz,ax:p.x,az:p.z,ay:y,t:0,grp,band,pushed:false}; winter.avNext=0;
+  showMsg('雪崩だ！ 気をつけろ！',2.2); rockSnd(0.8); st.shake=Math.max(st.shake,0.3);
+  return true;
+}
+function updateWinter(dt){
+  const W=winter; if(!W||!world) return;
+  const racing=mode==='race'&&!st.crash; W.ph+=dt;
+  // blizzard: whiteout, a gusting side wind
+  if(racing && !W.on){ W.next-=dt; if(W.next<=0){ W.on=true; W.t=0; showMsg('猛吹雪だ！ 前が見えない',2.4); } }
+  if(W.on){ W.t+=dt; W.k=Math.max(0,Math.min(1,W.t/3)*Math.min(1,(14-W.t)/3)); if(W.t>=14){ W.on=false; W.k=0; W.next=40+Math.random()*45; } }
+  else W.k=Math.max(0,W.k-dt*0.5);
+  blizK=W.k;
+  if(racing && W.k>0.15){ const side=Math.sin(W.ph*0.9)*W.k, hh=st.h; st.vx+=Math.cos(hh)*side*2.2*dt; st.vz+=-Math.sin(hh)*side*2.2*dt; }
+  // snow
+  const S=W.snow; if(S){ const cx=camera.position.x, cy=camera.position.y, cz=camera.position.z, fall=3+7*W.k, wx=0.8+7*W.k*Math.sin(W.ph*0.9+1), p=S.pos;
+    for(let q=0;q<S.N;q++){ const o=q*3; p[o]+=wx*dt+Math.sin(W.ph*1.3+q)*0.3*dt; p[o+1]-=fall*dt; p[o+2]+=Math.cos(W.ph*0.9+q*0.7)*0.4*dt;
+      if(p[o]<cx-45) p[o]+=90; else if(p[o]>cx+45) p[o]-=90; if(p[o+2]<cz-45) p[o+2]+=90; else if(p[o+2]>cz+45) p[o+2]-=90; if(p[o+1]<cy-6) p[o+1]+=32; }
+    S.geo.attributes.position.needsUpdate=true; S.geo.setDrawRange(0,Math.floor(S.N*(0.4+0.6*W.k))); S.pm.material.size=0.2+0.12*W.k; }
+  // avalanche
+  if(racing && !W.av){ W.avNext-=dt; if(W.avNext<=0){ if(!startAvalanche()) W.avNext=4; } }
+  const A=W.av;
+  if(A){ A.t+=dt; const t=A.t, u=Math.max(0,Math.min(1,(t-2)/1.8)), e=u*u*(3-2*u), cl=A.side*lerp(A.hw+10,-(A.hw+10),e);
+    A.grp.position.set(A.ax+A.lx*cl,A.ay,A.az+A.lz*cl); A.grp.visible=t>=1.2;
+    A.band.material.opacity=t<2?0.25+0.3*Math.abs(Math.sin(t*9)):Math.max(0,0.5-(t-2)*0.3);
+    if(t<2.2 && t>1.2){ st.shake=Math.max(st.shake,0.1); }
+    if(t>2&&t<3.8&&Math.random()<0.7) emitDust(A.ax+A.lx*(cl+A.side*3),A.ay+0.3,A.az+A.lz*(cl+A.side*3),(Math.random()-.5)*4,(Math.random()-.5)*4);
+    if(racing && t>=2 && t<4){ const dx=st.x-A.ax, dz=st.z-A.az, t0=tan[A.i], along=dx*t0.x+dz*t0.z, lat=dx*A.lx+dz*A.lz;
+      if(Math.abs(along)<5.4 && Math.abs(lat-cl)<4.2 && st.y<A.ay+2.6){ rockSnd(1); st.shake=1; crash('雪崩に巻き込まれた！'); } }
+    if(t>5){ world.remove(A.grp); world.remove(A.band); A.band.geometry.dispose(); A.band.material.dispose(); A.grp.traverse(m=>{ if(m.geometry) m.geometry.dispose(); }); W.av=null; W.avNext=50+Math.random()*60; } }
+}
+
 // ---------- koyo: autumn woods crossed by a local railway ----------
 let rail=null, train=null, leafFx=null, trainNear=0;
 function railInfo(x,z){ const rx=x-rail.px, rz=z-rail.pz; return [rx*rail.dx+rz*rail.dz, Math.abs(rx*rail.dz-rz*rail.dx)]; }   // [along, distance]
@@ -978,7 +1073,9 @@ function cvn(x,z){ const ix=Math.floor(x), iz=Math.floor(z), fx=x-ix, fz=z-iz, u
   const h=(a,b)=>{ const q=Math.sin(a*127.1+b*311.7)*43758.5453; return (q-Math.floor(q))*2-1; };
   return lerp(lerp(h(ix,iz),h(ix+1,iz),u),lerp(h(ix,iz+1),h(ix+1,iz+1),u),v); }
 // broken rock: random bumps and lumps the bike bounces over
-function cliffBump(x,z){ const l=Math.max(0,cvn(x/3.2+7,z/3.2)-0.45)*0.9; return 0.07*cvn(x/1.9,z/1.9)+0.03*cvn(x/0.95+3,z/0.95)+l*0.8; }
+function cliffBump(x,z){ const l=Math.max(0,cvn(x/3.2+7,z/3.2)-0.45)*0.9;
+  // hills and valleys: slow swells (about 14 m crest to crest) with a medium chop on top, then the small broken-rock bumps and lumps
+  return 0.4*cvn(x/9+11,z/9)+0.14*cvn(x/3.6+5,z/3.6)+0.07*cvn(x/1.9,z/1.9)+0.03*cvn(x/0.95+3,z/0.95)+l*0.8; }
 function cliffAt(x,z,rh){
   const C=cliffC, f=feat[nI];
   if(f===4) return C.floor;                                              // a jump gap / a hole in the road
@@ -1009,7 +1106,7 @@ function buildCliffTrack(c){
   fwd(120,0.03,'wall');
   // 3) three step-up jumps, each longer than the last
   fwd(40,0,'run'); fwd(12,0,'ramp1'); fwd(12,0,'gap1'); fwd(22,0,'land1');
-  arc(40,60,0,'run'); fwd(40,0,'run'); fwd(12,0,'ramp2'); fwd(16,0,'gap2'); fwd(24,0,'land2');
+  arc(40,60,0,'run'); fwd(40,0,'run'); fwd(12,0,'ramp2'); fwd(14,0,'gap2'); fwd(24,0,'land2');
   arc(-40,60,0,'run'); fwd(80,0,'run'); fwd(12,0,'ramp3'); fwd(20,0,'gap3'); fwd(32,0,'land3');
   // 4) windy ridge
   arc(30,70,0.03,'r2'); fwd(30,0.03,'r2'); arc(-60,45,0.03,'r2'); fwd(30,0.02,'r2'); arc(70,40,0.03,'r2'); fwd(26,0.02,'r2'); arc(-50,50,0.03,'r2'); fwd(40,0.02,'r2');
@@ -1054,7 +1151,7 @@ function buildCliffTrack(c){
   { const tp=(s,h0,h1)=>{ const a0=first(s), b0=last(s); for(let i=a0;i<=b0;i++) roadHalf[i]=lerp(h0,h1,(i-a0)/Math.max(1,b0-a0)); };
     tp('pre',2.0,0.8); tp('post',0.8,2.0); tp('top',2.0,4.5); }
   { const src=windK.slice(); for(let i=0;i<NS;i++){ let s=0,n=0; for(let k=-30;k<=30;k++){ const j=i+k; if(j<0||j>=NS) continue; s+=src[j]; n++; } windK[i]=s/n; } }
-  const rough=new Float32Array(NS); { const RS=new Set(['r1','run','r2','ch0','chase','bend','tpre','tend','climb','post']); for(let i=0;i<NS;i++) rough[i]=RS.has(secs[i])?(secs[i]==='r1'?0.5:1):0;
+  const rough=new Float32Array(NS); { const RS=new Set(['r1','r2','ch0','chase','bend','tpre','tend','climb','post']); for(let i=0;i<NS;i++) rough[i]=RS.has(secs[i])?(secs[i]==='r1'?0.5:(secs[i]==='chase'||secs[i]==='bend'||secs[i]==='ch0')?0.35:secs[i]==='r2'?0.5:1):0;
     const src=rough.slice(); for(let i=0;i<NS;i++){ let a=0,n=0; for(let k=-24;k<=24;k+=3){ const j=i+k; if(j<0||j>=NS) continue; a+=src[j]; n++; } rough[i]=(feat[i]===0&&!/^(ramp|gap|land)/.test(secs[i]))?a/n*clamp(1-curv[i]*8,0.3,1):0; } }
   river=null; adv={spots:[],props:[]}; featMarks=[]; tunnel=null; kickers=[]; whoops=undefined; baseGrid=null; crowdSpots=[];
   grid=new Map(); pts.forEach((p,i)=>{ const k=gk(Math.floor(p.x/CELL),Math.floor(p.z/CELL)); if(!grid.has(k)) grid.set(k,[]); grid.get(k).push(i); });
@@ -1067,6 +1164,7 @@ function buildCliffTrack(c){
   const gaps=[1,2,3].map(k=>({a:first('gap'+k),b:last('gap'+k),r0:first('ramp'+k)}));
   cliffC={ rough, floor:fl-120, cloudY:ht[first('wall')]-5, finish:first('plaza')+10, secs, tiles, tileOf, wall, windK, gaps,
     log:{a:first('log'),b:last('log')}, ch0:{a:first('ch0'),b:last('ch0')}, chase:{a:first('chase'),b:last('chase')}, bend:first('bend'),
+    cps:[first('wall'),first('ramp1')-60,first('ramp2')-100,first('ramp3')-120,first('r2'),first('pre')-10,first('ch0'),first('tpre'),first('climb')],
     tpre:first('tpre'), plaza:{a:first('plaza'),b:last('plaza')}, boulder:null, wx:0, wz:0, gust:0, gustPrev:0, gustT:0 };
   featMarks.push({i:first('r1')+30,label:'断崖の尾根'},{i:first('wall')-6,label:'桟道'},{i:first('ramp1')-30,label:'段差ジャンプ'},{i:first('r2')+5,label:'突風注意'},
     {i:first('pre')+2,label:'丸太の一本橋'},{i:first('ch0')+4,label:'後ろから大岩！'},{i:first('tpre')+10,label:'足場が崩れる 止まるな'},{i:first('climb')+4,label:'頂上まで あと少し'});
@@ -2237,7 +2335,7 @@ function driveAtmos(){
 
 // ---------- track generation ----------
 function buildTrack(c){
-  drv=null; trial=null; cliffC=null; baseGrid=null; gripMul=null; OPEN=false; tana=null; rail=null; train=null; leafFx=null; circ=null; gravel=null; xo=null; lava=null; race=null; bank=null; jungle=null;
+  drv=null; trial=null; cliffC=null; baseGrid=null; gripMul=null; OPEN=false; tana=null; rail=null; train=null; leafFx=null; circ=null; gravel=null; xo=null; lava=null; winter=null; blizK=0; race=null; bank=null; jungle=null;
   if(c.type==='trial'){ buildTrialTrack(c); return; }
   if(c.type==='cliff'){ buildCliffTrack(c); return; }
   if(c.type==='drive'){ buildDriveTrack(c); return; }
@@ -2266,7 +2364,7 @@ function buildTrack(c){
     kickers=picks.slice(0,4); whoops=picks[4];
   }else{
     whoops=undefined;
-    if(c.type==='mine') buildMine(); else if(c.type==='tanada') buildTanada(); else if(c.type==='koyo') buildKoyo(); else if(c.type==='volcano') buildVolcano(); else if(c.type==='jungle') buildJungle(); else if(c.type==='stream') buildStream(); else buildAdventure();
+    if(c.type==='mine') buildMine(); else if(c.type==='tanada') buildTanada(); else if(c.type==='koyo') buildKoyo(); else if(c.type==='volcano') buildVolcano(); else if(c.type==='winter') buildWinter(); else if(c.type==='jungle') buildJungle(); else if(c.type==='stream') buildStream(); else buildAdventure();
   }
   for(const k0 of kickers){ for(let j=0;j<K;j++){ const u=j/(K-1); const v = u<.85 ? Math.pow(u/.85,1.6) : (1-u)/.15; ht[(k0+j)%NS]+=2.5*v; } }
   if(whoops!==undefined){ for(let j=0;j<66;j++){ ht[(whoops+j)%NS]+=0.38*(1-Math.cos(2*Math.PI*j/6))/2; } }
@@ -2406,7 +2504,7 @@ sun.shadow.bias=-0.0006;
 scene.add(sun); scene.add(sun.target);
 
 // ---------- sky dome, sun glow, drifting clouds and layered distant ridges (all follow the camera) ----------
-const SKYC={forest:[0x4f88cf,0x9cc3e8],mine:[0x4f88cf,0x9cc3e8],canyon:[0x4a86d0,0xa4c8e6],trial:[0x5a8cc0,0xb4cfe0],tanada:[0x62a0dc,0xb6d4ea],koyo:[0x6a98c8,0xe2cfae],circuit:[0x3f84d8,0xa8cff0],volcano:[0x3a302c,0x8a7468],race:[0x3f84d8,0xa8cff0],jungle:[0x5a98c0,0xa8c8a8],drive:[0x4a90dc,0xb6d6ee],cliff:[0x16225a,0x5a6c9c]};
+const SKYC={forest:[0x4f88cf,0x9cc3e8],mine:[0x4f88cf,0x9cc3e8],canyon:[0x4a86d0,0xa4c8e6],trial:[0x5a8cc0,0xb4cfe0],tanada:[0x62a0dc,0xb6d4ea],koyo:[0x6a98c8,0xe2cfae],circuit:[0x3f84d8,0xa8cff0],volcano:[0x3a302c,0x8a7468],winter:[0x8fa9c8,0xeef3f8],race:[0x3f84d8,0xa8cff0],jungle:[0x5a98c0,0xa8c8a8],drive:[0x4a90dc,0xb6d6ee],cliff:[0x16225a,0x5a6c9c]};
 const skyG=new THREE.Group(); scene.add(skyG);
 const skyMat=new THREE.MeshBasicMaterial({side:THREE.BackSide,fog:false,depthWrite:false});
 const skyDome=new THREE.Mesh(new THREE.SphereGeometry(500,24,16),skyMat); skyDome.renderOrder=-20; skyDome.frustumCulled=false; skyG.add(skyDome);
@@ -2431,12 +2529,12 @@ function setSky(c){ const type=c.type; if(skyKey===c.id) return; skyKey=c.id; co
   const vol=type==='volcano', jun=type==='jungle';
   clouds.forEach(m=>{ m.material.color.setHex(vol?0x6a5c58:koy(type)?0xfff0dc:0xffffff); m.material.opacity=vol?0.75:0.92; });
   sunGlow.material.color.setHex(vol?0xff8a50:type==='koyo'?0xffc888:type==='cliff'?0xb8ccff:0xfff0cc); sunGlow.material.opacity=vol?0.55:0.9;
-  const rt=vol?'#3a302c':type==='koyo'?'#9a7a66':jun?'#4a6a58':type==='trial'?'#8aa0b8':type==='cliff'?'#4a5a80':'#6a86a4', rt2=vol?'#2c2422':type==='koyo'?'#7a5848':jun?'#365a44':type==='trial'?'#6a8098':type==='cliff'?'#3a4868':'#58748c';
+  const rt=type==='winter'?'#b8c8d8':vol?'#3a302c':type==='koyo'?'#9a7a66':jun?'#4a6a58':type==='trial'?'#8aa0b8':type==='cliff'?'#4a5a80':'#6a86a4', rt2=type==='winter'?'#9fb2c6':vol?'#2c2422':type==='koyo'?'#7a5848':jun?'#365a44':type==='trial'?'#6a8098':type==='cliff'?'#3a4868':'#58748c';
   ridges.forEach((m,i)=>{ if(m.material.map) m.material.map.dispose(); const fc='#'+fogc.getHexString(); m.material.map=ridgeTex(i?rt2:rt,fc,m.userData.bias,2.4+i*1.7+(c.seed%7)); m.material.needsUpdate=true; m.visible=type!=='mine'; }); }
 function koy(t){ return t==='koyo'; }
 function updateSky(dt,dark,t){ skyG.position.copy(camera.position);
   const L=new THREE.Vector3(40,70,25).normalize(); sunGlow.position.set(L.x*450,L.y*450-30,L.z*450);
-  const k=1-0.93*dark; skyMat.color.setScalar(k); sunGlow.visible=dark<0.4||!!course.night; starPts.visible=!!course.night; ridges.forEach((m,i)=>{ m.material.color.setScalar(k); m.position.y=(i?-34:-30)+m.userData.hh/2-camera.position.y; });
+  const k=1-0.93*dark; skyMat.color.setScalar(k); if(eruptK>0) skyMat.color.setRGB(k*(1-0.5*eruptK),k*(1-0.72*eruptK),k*(1-0.78*eruptK)); sunGlow.visible=dark<0.4||!!course.night; starPts.visible=!!course.night; ridges.forEach((m,i)=>{ m.material.color.setScalar(k); m.position.y=(i?-34:-30)+m.userData.hh/2-camera.position.y; });
   for(const m of clouds){ const u=m.userData; u.a+=dt*u.sp; m.position.set(Math.cos(u.a)*u.r,u.h-camera.position.y*0+0,Math.sin(u.a)*u.r); m.material.color.multiplyScalar(1); m.visible=dark<0.5; }
 }
 // ---------- bike ----------
@@ -3370,7 +3468,7 @@ const GEAR_TOP=[0,9.5,15.5,21.5,27,32], GEAR_F=[0,9,7.2,5.6,4.6,3.8];
 function buildCourse(id){
   course=COURSES[id]||COURSES.forest; LAPS=course.laps||3;
   disposeWorld(); world=new THREE.Group(); scene.add(world);
-  trees=[]; tgrid=new Map(); rgrid=new Map(); crowd=[]; crocs=[]; dinos=[]; rexG=null; fallTex=null; streamTex=null; fallSpr=[]; jWaterTex=null; bridgeG=null; waterTex=null; wheelG=null; plume=null; vents=[]; lavaTex=null; bombs=[];
+  trees=[]; tgrid=new Map(); rgrid=new Map(); crowd=[]; crocs=[]; dinos=[]; rexG=null; fallTex=null; streamTex=null; fallSpr=[]; jWaterTex=null; bridgeG=null; waterTex=null; wheelG=null; plume=null; vents=[]; lavaTex=null; bombs=[]; erupt=null; eruptK=0;
   buildTrack(course); if(rail) railSpan();
   GEAR_TOP[5]=(drv&&drv.race)?37.5:32;
   LIVES=course.lives||3; lives=LIVES; renderLives(); eye=course.night||0;
@@ -3378,6 +3476,7 @@ function buildCourse(id){
   scene.fog.color.setHex(course.fog); scene.background.setHex(course.fog);
   setSky(course);
   { const v=course.type==='volcano', j=course.type==='jungle', n=course.type==='cliff'; sun.color.setHex(v?0xffdcc0:j?0xfff2c8:n?0xb4c4f0:0xfff0d0); hemi.color.setHex(v?0xcac0ba:j?0xd8f0c8:n?0x9fb0e0:0xdfeaff); hemi.groundColor.setHex(v?0x2e2420:j?0x30481e:n?0x1c2236:0x4b5a2c); dust.material.color.setHex(v?0x4e4846:j?0x8a5e40:0xb08e64); }
+  if(course.type==='winter'){ sun.color.setHex(0xfff4e6); hemi.color.setHex(0xe6f0ff); hemi.groundColor.setHex(0x9aaabe); dust.material.color.setHex(0xf2f7fb); }
   buildTerrain(); buildRoad(); buildTrees(); buildGate();
   if(course.type==='canyon') buildAdventureProps();
   if(course.type==='mine') buildMineProps();
@@ -3387,6 +3486,7 @@ function buildCourse(id){
   if(course.type==='koyo') buildKoyoProps();
   if(course.type==='circuit') buildCircuitProps();
   if(course.type==='volcano') buildVolcanoProps();
+  if(course.type==='winter') buildWinterProps();
   if(course.type==='race') buildRaceProps();
   if(course.type==='jungle') buildJungleProps();
   if(course.type==='stream') buildStreamProps();
@@ -3404,7 +3504,7 @@ function buildTerrain(){
   const geo=new THREE.PlaneGeometry(SIZE,SIZE,SEG,SEG); geo.rotateX(-Math.PI/2);
   const pos=geo.attributes.position, col=new Float32Array(pos.count*3), hole=tunnel?new Uint8Array(pos.count):null;
   if(tana){ tana.wv=new Float32Array(pos.count); tana.ty=new Uint8Array(pos.count); }
-  const dirt=new THREE.Color(course.type==='volcano'?0x4a3a30:course.type==='jungle'?0x6a3f26:0x6e4f31), grass=new THREE.Color(course.type==='jungle'?0x24421a:course.type==='volcano'?0x262220:course.type==='koyo'?0x7a6a30:course.adventure?0x435c2a:0x46642a), grass2=new THREE.Color(course.type==='jungle'?0x386024:course.type==='volcano'?0x3c322c:course.type==='koyo'?0x96512a:course.adventure?0x56702e:0x5d7a30), c=new THREE.Color();
+  const dirt=new THREE.Color(course.type==='winter'?0x8c8478:course.type==='volcano'?0x4a3a30:course.type==='jungle'?0x6a3f26:0x6e4f31), grass=new THREE.Color(course.type==='winter'?0xe9f0f6:course.type==='jungle'?0x24421a:course.type==='volcano'?0x262220:course.type==='koyo'?0x7a6a30:course.adventure?0x435c2a:0x46642a), grass2=new THREE.Color(course.type==='winter'?0xcddbe8:course.type==='jungle'?0x386024:course.type==='volcano'?0x3c322c:course.type==='koyo'?0x96512a:course.adventure?0x56702e:0x5d7a30), c=new THREE.Color();
   for(let i=0;i<pos.count;i++){
     const x=pos.getX(i), z=pos.getZ(i), y=heightAt(x,z,true); pos.setY(i,y);
     if(tana){ tanaColor(c,x,z,i); col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b; continue; }
@@ -3413,7 +3513,7 @@ function buildTerrain(){
     c.copy(grass).lerp(grass2,g);
     const t=sstep(HALF+0.3,HALF+(drv?1.7:5),nD);
     if(circ){ circColor(c,x,z); }
-    else if(!race){ const pat=Math.sin(x*0.045+z*0.031)*Math.sin(z*0.052-x*0.027)+0.5*Math.sin(x*0.19+z*0.11)*Math.sin(z*0.17-x*0.13); c.lerp(pat>0.25?GMEAD:GDARK,Math.min(1,Math.abs(pat))*0.38*t); if(pat<-0.55&&nD>HALF+9) c.lerp(GMOSS,0.3); }
+    else if(!race && course.type!=='winter'){ const pat=Math.sin(x*0.045+z*0.031)*Math.sin(z*0.052-x*0.027)+0.5*Math.sin(x*0.19+z*0.11)*Math.sin(z*0.17-x*0.13); c.lerp(pat>0.25?GMEAD:GDARK,Math.min(1,Math.abs(pat))*0.38*t); if(pat<-0.55&&nD>HALF+9) c.lerp(GMOSS,0.3); }
     c.lerp(dirt,1-t);
     if(nI>=0 && nD>HALF+0.2 && nD<HALF+1.6) c.lerp(GWET,0.45*(1-sstep(HALF+0.2,HALF+1.6,nD)));   // darker, damp verge along the road
     const v=0.92+R()*0.12; col[i*3]=c.r*v; col[i*3+1]=c.g*v; col[i*3+2]=c.b*v;
@@ -3423,7 +3523,7 @@ function buildTerrain(){
   if(tana){ tana.gpos=pos.array; tana.seg=SEG; }
   if(drv) drPaint(pos,col);
   if(course.adventure && !tana){ // river banks and cliff faces: bare rock with moss
-    const nrm=geo.attributes.normal, rock=new THREE.Color(course.type==='volcano'?0x2c2624:course.type==='jungle'?0x5a4630:0x7b7466), moss=new THREE.Color(course.type==='volcano'?0x7a3a1c:0x58693a), k=new THREE.Color();
+    const nrm=geo.attributes.normal, rock=new THREE.Color(course.type==='winter'?0x8a929c:course.type==='volcano'?0x2c2624:course.type==='jungle'?0x5a4630:0x7b7466), moss=new THREE.Color(course.type==='winter'?0xe4edf4:course.type==='volcano'?0x7a3a1c:0x58693a), k=new THREE.Color();
     for(let i=0;i<pos.count;i++){ const steep=sstep(0.86,0.6,nrm.getY(i)); if(steep<=0) continue;
       const x=pos.getX(i), z=pos.getZ(i), mm=0.5+0.5*Math.sin(x*0.31+z*0.17)*Math.sin(z*0.23-x*0.11);
       k.copy(rock).lerp(moss,mm*0.6);
@@ -3461,17 +3561,22 @@ function buildRoad(){
   if(course.type==='volcano'){ g.fillStyle='rgba(28,24,23,.58)'; g.fillRect(0,0,128,256); for(let i=0;i<500;i++){ g.fillStyle=R()<.5?'rgba(15,12,11,.5)':'rgba(120,70,50,.35)'; g.fillRect(R()*128,R()*256,1+R()*2.5,1+R()*2.5); } }
   if(course.type==='koyo'){ const lc=['#b8321e','#d0601c','#e09a22','#a8401c','#c8a030']; for(let i=0;i<260;i++){ g.fillStyle=lc[Math.floor(R()*5)]; g.save(); g.translate(R()*128,R()*256); g.rotate(R()*6); g.fillRect(-2,-1.2,4,2.4); g.restore(); } }
   if(course.type==='cliff'){   // the whole road surface is rough broken rock: faceted slabs with dark cracks
-    cv.width=256; cv.height=512; const W0=256,H0=512, im=g.createImageData(W0,H0), D=im.data, NSITE=95, sx=[],sy=[],sc=[],fx=[],fy=[];
-    for(let k=0;k<NSITE;k++){ sx.push(R()*W0); sy.push(R()*H0); sc.push(0.62+R()*0.5); const a=R()*6.283; fx.push(Math.cos(a)); fy.push(Math.sin(a)); }
+    cv.width=256; cv.height=512; const W0=256,H0=512, im=g.createImageData(W0,H0), D=im.data, NSITE=230, sx=[],sy=[],sc=[],fx=[],fy=[];
+    for(let k=0;k<NSITE;k++){ sx.push(R()*W0); sy.push(R()*H0); sc.push(0.35+R()*0.75); const a=R()*6.283; fx.push(Math.cos(a)); fy.push(Math.sin(a)); }
     for(let y=0;y<H0;y++) for(let x=0;x<W0;x++){ let d1=1e9,d2=1e9,b=0;
       for(let k=0;k<NSITE;k++){ let dx=Math.abs(x-sx[k]); if(dx>W0/2) dx=W0-dx; let dy=Math.abs(y-sy[k]); if(dy>H0/2) dy=H0-dy; const d=dx*dx+dy*dy*0.9;
         if(d<d1){ d2=d1; d1=d; b=k; } else if(d<d2) d2=d; }
-      const edge=Math.min(1,(Math.sqrt(d2)-Math.sqrt(d1))/5);          // dark crack between facets
+      const edge=Math.min(1,(Math.sqrt(d2)-Math.sqrt(d1))/5);          // dark gap between the stones
       let rx=x-sx[b], ry=y-sy[b]; if(rx>W0/2) rx-=W0; if(rx<-W0/2) rx+=W0; if(ry>H0/2) ry-=H0; if(ry<-H0/2) ry+=H0;
-      const lit=0.5+0.5*(rx*fx[b]+ry*fy[b])/26, g0=(46+70*sc[b])*(0.62+0.5*lit)*(0.45+0.55*edge)*(0.9+0.2*Math.random());
-      const o=(y*W0+x)*4; D[o]=g0*1.02; D[o+1]=g0*0.98; D[o+2]=g0*0.92; D[o+3]=255; }
+      const dome=Math.max(0,1-Math.sqrt(d1)/(9+9*sc[b])), lit=0.5+0.5*(rx*fx[b]+ry*fy[b])/20;   // rounded river stones
+      const tone=sc[b]*13+((b*37)%7)*3, g0=(62+70*sc[b])*(0.45+0.8*dome+0.3*lit)*(0.4+0.6*edge)*(0.88+0.24*Math.random());
+      const o=(y*W0+x)*4; D[o]=g0*(1.0+((b%3)-1)*0.06); D[o+1]=g0*(0.96+((b%5)-2)*0.02); D[o+2]=g0*(0.9+((b%4)-1.5)*0.05); D[o+3]=255; }
     g.putImageData(im,0,0);
+    for(let i=0;i<90;i++){ g.fillStyle=['rgba(176,92,36,.55)','rgba(150,70,30,.5)','rgba(196,150,60,.5)','rgba(110,60,28,.5)'][i&3]; g.save(); g.translate(R()*W0,R()*H0); g.rotate(R()*6); g.beginPath(); g.ellipse(0,0,3+R()*4,1.6+R()*2,0,0,6.283); g.fill(); g.restore(); }   // fallen leaves
     g.fillStyle='rgba(25,38,18,.2)'; g.fillRect(0,0,10,H0); g.fillRect(W0-10,0,10,H0); }
+  if(course.type==='winter'){ g.fillStyle='rgba(236,243,250,.78)'; g.fillRect(0,0,128,256);
+    for(const cx of [40,88]){ g.strokeStyle='rgba(118,104,92,.55)'; g.lineWidth=9; g.beginPath(); for(let y=0;y<=256;y+=8){ const x=cx+Math.sin(y/256*Math.PI*2)*4; y?g.lineTo(x,y):g.moveTo(x,y); } g.stroke(); }
+    for(let i=0;i<500;i++){ g.fillStyle=R()<.5?'rgba(255,255,255,.5)':'rgba(120,130,145,.25)'; g.fillRect(R()*128,R()*256,1+R()*3,1+R()*2); } }
   if(drv) drAsphalt(g);
   const tex=new THREE.CanvasTexture(cv); tex.wrapS=tex.wrapT=THREE.RepeatWrapping; tex.anisotropy=drv?Math.min(16,renderer.capabilities.getMaxAnisotropy()):4;
   if(course.type==='cliff'){   // bumpy rock road: a grid across the width, each vertex lifted by the same bump the physics uses
@@ -3517,7 +3622,7 @@ function buildTrees(){
     if(course.type==='stream' && lava){ const [ls,ld]=lavaInfo(x,z); if(ld<lava.hw+5 || (lava.fall && Math.abs(ls-lava.fall.s-8)<42 && ld<lava.hw+18)) continue; }
     if(d>45 && R()<0.78) continue;
     const s=0.75+R()*0.9;
-    trees.push({x,z,y:heightAt(x,z),s,r:0.28*s+0.5,type:course.type==='jungle'?(R()<0.38?2:1):R()<(course.type==='koyo'?0.42:.78)?0:1});
+    trees.push({x,z,y:heightAt(x,z),s,r:0.28*s+0.5,type:course.type==='jungle'?(R()<0.38?2:1):R()<(course.type==='koyo'?0.42:course.type==='winter'?0.9:.78)?0:1});
   }
   const trunkG=new THREE.CylinderGeometry(0.18,0.28,2.2,6); trunkG.translate(0,1.1,0);
   const coneG=new THREE.ConeGeometry(1.6,4.6,7); coneG.translate(0,4.3,0);
@@ -3536,15 +3641,15 @@ function buildTrees(){
   const b3=new THREE.InstancedMesh(crown3G,new THREE.MeshPhongMaterial({color:0xffffff,flatShading:true,shininess:0,specular:0x000000}),broad.length);
   const M=new THREE.Matrix4(), Q=new THREE.Quaternion(), S=new THREE.Vector3(), V=new THREE.Vector3(), C=new THREE.Color();
   trees.forEach((t,i)=>{ Q.setFromAxisAngle(new THREE.Vector3(0,1,0),R()*6.28); const lean=(R()-.5)*0.08; S.set(t.s*(0.9+R()*0.2),t.s*(0.9+R()*0.35),t.s*(0.9+R()*0.2)); V.set(t.x,t.y-0.2,t.z); M.compose(V,Q,S); trunk.setMatrixAt(i,M); t.m=M.clone();
-    t.birch=t.type===1 && course.type!=='volcano' && course.type!=='jungle' && R()<0.22; C.setHex(t.birch?0xe6e2d6:course.type==='volcano'?0x3a2e28:0x5a3f28); C.offsetHSL(0,0,(R()-.5)*0.05); trunk.setColorAt(i,C);
+    t.birch=t.type===1 && course.type!=='volcano' && course.type!=='jungle' && course.type!=='winter' && R()<0.22; C.setHex(t.birch?0xe6e2d6:course.type==='volcano'?0x3a2e28:0x5a3f28); C.offsetHSL(0,0,(R()-.5)*0.05); trunk.setColorAt(i,C);
     if(t.type===2) trunk.setMatrixAt(i,new THREE.Matrix4().makeScale(0,0,0));
     const k=(Math.floor(t.x/TCELL)+200)*1000+(Math.floor(t.z/TCELL)+200); if(!tgrid.has(k)) tgrid.set(k,[]); tgrid.get(k).push(t); });
-  pine.forEach((t,i)=>{ c0.setMatrixAt(i,t.m); c1.setMatrixAt(i,t.m); c2.setMatrixAt(i,t.m); if(course.type==='koyo' && R()<0.22) C.setHSL(0.09+R()*0.03,0.6+R()*0.15,0.42+R()*0.06); else if(course.type==='volcano') C.setHSL(0.07,0.1,0.1+R()*0.05); else C.setHSL(0.27+R()*0.06,0.42+R()*0.15,0.2+R()*0.08);
-    C.offsetHSL(0,0,-0.03); c0.setColorAt(i,C); C.offsetHSL(0,0,0.03); c1.setColorAt(i,C); C.offsetHSL(0,0,0.04); c2.setColorAt(i,C); });
+  pine.forEach((t,i)=>{ c0.setMatrixAt(i,t.m); c1.setMatrixAt(i,t.m); c2.setMatrixAt(i,t.m); if(course.type==='koyo' && R()<0.22) C.setHSL(0.09+R()*0.03,0.6+R()*0.15,0.42+R()*0.06); else if(course.type==='volcano') C.setHSL(0.07,0.1,0.1+R()*0.05); else if(course.type==='winter') C.setHSL(0.42+R()*0.05,0.22+R()*0.1,0.2+R()*0.07); else C.setHSL(0.27+R()*0.06,0.42+R()*0.15,0.2+R()*0.08);
+    C.offsetHSL(0,0,-0.03); c0.setColorAt(i,C); C.offsetHSL(0,0,0.03); if(course.type==='winter') C.setHSL(0.5,0.18,0.55+R()*0.1); c1.setColorAt(i,C); C.offsetHSL(0,0,0.04); if(course.type==='winter') C.setHSL(0.58,0.25,0.84+R()*0.08); c2.setColorAt(i,C); });
   { const Mb=new THREE.Matrix4(), Sb=new THREE.Vector3(); const D=new THREE.Vector3(), Qd=new THREE.Quaternion(), Sd=new THREE.Vector3();
   broad.forEach((t,i)=>{ t.m.decompose(D,Qd,Sd); if(t.birch) Sb.set(Sd.x*0.72,Sd.y*1.12,Sd.z*0.72); else Sb.copy(Sd); Mb.compose(D,Qd,Sb); b1.setMatrixAt(i,Mb); b2.setMatrixAt(i,Mb); b3.setMatrixAt(i,Mb);
     if(t.birch) C.setHSL(0.19+R()*0.05,0.55+R()*0.2,0.42+R()*0.08);
-    else if(course.type==='koyo'){ const r=R(); C.setHSL(r<0.4?R()*0.025:r<0.72?0.05+R()*0.035:0.115+R()*0.03,0.72+R()*0.2,0.4+R()*0.1); } else if(course.type==='volcano') C.setHSL(0.06,0.12,0.12+R()*0.05); else if(course.type==='jungle') C.setHSL(0.23+R()*0.1,0.5+R()*0.25,0.16+R()*0.1); else C.setHSL(0.17+R()*0.1,0.45+R()*0.2,0.3+R()*0.08);
+    else if(course.type==='koyo'){ const r=R(); C.setHSL(r<0.4?R()*0.025:r<0.72?0.05+R()*0.035:0.115+R()*0.03,0.72+R()*0.2,0.4+R()*0.1); } else if(course.type==='winter') C.setHSL(0.58,0.12,0.76+R()*0.1); else if(course.type==='volcano') C.setHSL(0.06,0.12,0.12+R()*0.05); else if(course.type==='jungle') C.setHSL(0.23+R()*0.1,0.5+R()*0.25,0.16+R()*0.1); else C.setHSL(0.17+R()*0.1,0.45+R()*0.2,0.3+R()*0.08);
     b1.setColorAt(i,C); C.offsetHSL(0.012,0.04,0.045); b2.setColorAt(i,C); C.offsetHSL(-0.02,-0.02,-0.07); b3.setColorAt(i,C); }); }
   { const palm=trees.filter(t=>t.type===2);   // jungle palms: a tall thin trunk and a crown of drooping fronds
     if(palm.length){ const pt=new THREE.CylinderGeometry(0.16,0.26,7.6,6).translate(0,3.6,0), P=[];
@@ -3559,7 +3664,7 @@ function buildTrees(){
   if(race) return;
   // rocks along the shoulder (with collision)
   const rockG=new THREE.DodecahedronGeometry(0.6,0);
-  const rocks=new THREE.InstancedMesh(rockG,new THREE.MeshPhongMaterial({color:course.type==='volcano'?0x3c3634:course.type==='jungle'?0x66705a:0x8a8576,flatShading:true,shininess:0,specular:0x000000}),70);
+  const rocks=new THREE.InstancedMesh(rockG,new THREE.MeshPhongMaterial({color:course.type==='winter'?0xaab4be:course.type==='volcano'?0x3c3634:course.type==='jungle'?0x66705a:0x8a8576,flatShading:true,shininess:0,specular:0x000000}),70);
   for(let i=0;i<70;i++){ let j=Math.floor(R()*NS), side=R()<.5?-1:1; const off=HALF+1+R()*2.5;
     if(course.type==='canyon'){ if(feat[j]) j=(j+60)%NS; if(cliffW[j]>0) side=-cliffSide; }
     else if(course.adventure){ let g=0; while(feat[j] && g++<60) j=(j+37)%NS; }
@@ -3762,36 +3867,51 @@ function buildVolcanoProps(){
     const glow=new THREE.Mesh(new THREE.CircleGeometry(33,32),new THREE.MeshBasicMaterial({color:0xff6a1a})); glow.rotation.x=-Math.PI/2; glow.position.set(vx,H-25.5,vz); world.add(glow);
     const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:smokeTex(255,120,40),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0.9,fog:false})); halo.position.set(vx,H-18,vz); halo.scale.set(130,60,1); world.add(halo);
     const tex=smokeTex(70,62,60), sp=[]; for(let k=0;k<34;k++){ const m=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,opacity:0.8,fog:false})); world.add(m); sp.push({m,t:k/34}); }
-    plume={sp,x:vx,y:H-25,z:vz}; }
+    const fire=new THREE.Sprite(new THREE.SpriteMaterial({map:smokeTex(255,170,60),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0,fog:false})); fire.position.set(vx,H+10,vz); fire.scale.set(210,170,1); world.add(fire);
+    plume={sp,x:vx,y:H-25,z:vz,fire}; }
   // fumaroles: steam rising from cracks beside the road
   { const tex=smokeTex(235,232,226); vents=[];
     for(let n=0;n<6;n++){ const i=Math.floor((n+0.4)/6*NS), sd=n%2?1:-1, [x,z]=onTrack(i,sd*(HALF+9+R()*8)); nearest(x,z); if(nD<HALF+6) continue; const y=heightAt(x,z);
       const crack=new THREE.Mesh(new THREE.CircleGeometry(1.2,10),new THREE.MeshBasicMaterial({color:0xd8c86a})); crack.rotation.x=-Math.PI/2; crack.position.set(x,y+0.05,z); world.add(crack);
       const sp=[]; for(let k=0;k<7;k++){ const m=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,opacity:0.5})); world.add(m); sp.push({m,t:k/7}); }
       vents.push({x,y,z,sp}); } }
-  bombs=[]; bombT=1.5;
+  bombs=[]; bombT=1.5; erupt=null; eruptK=0; eruptNext=18+Math.random()*25;
 }
-let bombT=0;
+function spawnBomb(i,T){ const [x,z]=onTrack(i,(R()-.5)*2*(roadHalf[i]-0.6)), y=heightAt(x,z);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(1.6,2.2,28),new THREE.MeshBasicMaterial({color:0xff3a1a,transparent:true,opacity:0.8,side:THREE.DoubleSide,depthWrite:false}));
+  ring.rotation.x=-Math.PI/2; ring.position.set(x,y+0.1,z); world.add(ring);
+  const rock=new THREE.Mesh(new THREE.IcosahedronGeometry(0.75,0),new THREE.MeshBasicMaterial({color:bombCol()})); rock.position.set(x-12,y+45,z+6); world.add(rock);
+  bombs.push({x,y,z,ring,rock,t:0,T,hit:false,life:0}); }
+function bombCol(){ return course.type==='winter'?0xe6f6ff:0xff7a2a; }
+let bombT=0; const ASHC=new THREE.Color(0x4a2c22);
 function updateVolcano(dt){
   if(lavaTex) lavaTex.offset.y-=dt*0.05;
-  if(plume) for(const p of plume.sp){ p.t=(p.t+dt*0.022)%1; const t=p.t, s=18+t*90; p.m.position.set(plume.x+t*60,plume.y+4+t*170,plume.z+t*25); p.m.scale.set(s,s,1); p.m.material.opacity=0.75*(1-t)*Math.min(1,t*8); }
+  if(plume) for(const p of plume.sp){ p.t=(p.t+dt*0.022*(1+2.5*eruptK))%1; const t=p.t, s=(18+t*90)*(1+0.9*eruptK); p.m.position.set(plume.x+t*60,plume.y+4+t*170*(1+0.8*eruptK),plume.z+t*25); p.m.scale.set(s,s,1); p.m.material.opacity=Math.min(1,0.75*(1+0.3*eruptK))*(1-t)*Math.min(1,t*8); }
+  if(plume&&plume.fire) plume.fire.material.opacity=eruptK*(0.7+0.3*Math.sin(performance.now()*0.017));
   for(const v of vents) for(const p of v.sp){ p.t=(p.t+dt*0.35)%1; const t=p.t, s=1.5+t*5; p.m.position.set(v.x+t*1.5,v.y+0.6+t*7,v.z); p.m.scale.set(s,s,1); p.m.material.opacity=0.45*(1-t); }
   // volcanic bombs: a red ring shows where one will land
-  if(!adv || !adv.bombs || !world) return;
-  if(mode==='race' && !st.crash){ bombT-=dt; const idx=st.lastIdx, inZone=((idx-adv.bombs.s+NS)%NS)<adv.bombs.L;
+  // great eruption: now and then the mountain blows. Ash dims the sky, the ground shakes and a barrage of bombs comes down on the road
+  if(plume && mode==='race' && !st.crash && !erupt){ eruptNext-=dt; if(eruptNext<=0){ erupt={t:0}; eruptB=0; showMsg('火山が大噴火！',3); rockSnd(1); st.shake=Math.max(st.shake,0.6); } }
+  if(erupt){ erupt.t+=dt; const t=erupt.t; eruptK=Math.min(Math.min(1,t/3),Math.max(0,(15-t)/4));
+    if(t<11 && mode==='race' && !st.crash) st.shake=Math.max(st.shake,t<3?0.14:0.09);
+    if(t>2.5 && t<11 && mode==='race' && !st.crash){ eruptB-=dt;
+      if(eruptB<=0 && bombs.length<7){ eruptB=0.22+R()*0.25; const i=(st.lastIdx+30+Math.floor(R()*50))%NS; if(feat[i]===0) spawnBomb(i,1.7); } }
+    if(t>=15){ erupt=null; eruptK=0; eruptNext=45+Math.random()*50; } }
+  if(!world) return;
+  if(adv && adv.bombs && mode==='race' && !st.crash){ bombT-=dt; const idx=st.lastIdx, inZone=((idx-adv.bombs.s+NS)%NS)<adv.bombs.L;
     if(inZone && bombT<=0 && bombs.length<3){ bombT=0.8+R()*0.9;
       const i=(idx+35+Math.floor(R()*45))%NS, [x,z]=onTrack(i,(R()-.5)*2*(roadHalf[i]-0.6)), y=heightAt(x,z);
       const ring=new THREE.Mesh(new THREE.RingGeometry(1.6,2.2,28),new THREE.MeshBasicMaterial({color:0xff3a1a,transparent:true,opacity:0.8,side:THREE.DoubleSide,depthWrite:false}));
       ring.rotation.x=-Math.PI/2; ring.position.set(x,y+0.1,z); world.add(ring);
-      const rock=new THREE.Mesh(new THREE.IcosahedronGeometry(0.75,0),new THREE.MeshBasicMaterial({color:0xff7a2a})); rock.position.set(x-12,y+45,z+6); world.add(rock);
+      const rock=new THREE.Mesh(new THREE.IcosahedronGeometry(0.75,0),new THREE.MeshBasicMaterial({color:bombCol()})); rock.position.set(x-12,y+45,z+6); world.add(rock);
       bombs.push({x,y,z,ring,rock,t:0,T:1.6,hit:false,life:0}); } }
   for(let k=bombs.length-1;k>=0;k--){ const b=bombs[k];
     if(!b.hit){ b.t+=dt; const u=Math.min(1,b.t/b.T); b.rock.position.set(b.x-12*(1-u),b.y+0.6+44*(1-u*u),b.z+6*(1-u)); b.rock.rotation.x+=dt*6;
       const pulse=1+0.25*Math.sin(b.t*18); b.ring.scale.set(pulse,pulse,1); b.ring.material.opacity=0.5+0.4*u;
-      if(u>=1){ b.hit=true; world.remove(b.ring); b.ring.geometry.dispose(); b.ring.material.dispose(); b.rock.material.color.setHex(0x5a3020);
+      if(u>=1){ b.hit=true; world.remove(b.ring); b.ring.geometry.dispose(); b.ring.material.dispose(); b.rock.material.color.setHex(course.type==='winter'?0x8fa6b8:0x5a3020);
         for(let i=0;i<22;i++) emitDust(b.x,b.y,b.z,(R()-.5)*10,(R()-.5)*10);
-        const d=Math.hypot(st.x-b.x,st.z-b.z); if(d<16) st.shake=Math.max(st.shake,0.5*(1-d/16));
-        if(mode==='race' && !st.crash && d<2.3 && st.y-b.y<2.5){ crash('噴石に当たった！'); } } }
+        const d=Math.hypot(st.x-b.x,st.z-b.z); if(d<16) st.shake=Math.max(st.shake,0.5*(1-d/16)); if(d<45) rockSnd(1-d/45);
+        if(mode==='race' && !st.crash && d<2.3 && st.y-b.y<2.5){ crash(course.type==='winter'?'落ちてきた氷塊に当たった！':'噴石に当たった！'); } } }
     else{ b.life+=dt; if(b.life>5){ world.remove(b.rock); b.rock.geometry.dispose(); b.rock.material.dispose(); bombs.splice(k,1); } } }
 }
 
@@ -4647,7 +4767,7 @@ function crash(m){
   if(mode==='race' && (!drv||drv.race)){ lives=Math.max(0,lives-1); renderLives(); const el=document.querySelector('.lives'); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }
   showMsg(drv&&!drv.race ? (m||'転倒！') : lives<=0&&mode==='race' ? (LIVES===1&&m ? m : 'GAME OVER') : (m||'転倒！')+'  残り'+lives, 1.5);
 }
-let msgT=0; function showMsg(s,t){ const m=$('msg'); m.textContent=s; m.style.fontSize=drv?'clamp(24px,4.2vw,52px)':''; msgT=t; }
+let msgT=0; function showMsg(s,t){ const m=$('msg'); m.classList.toggle('snowy',course.type==='winter'); m.textContent=s; m.style.fontSize=drv?'clamp(24px,4.2vw,52px)':''; msgT=t; }
 let airT=0; function showAir(s){ $('air').textContent=s; $('air').style.opacity=1; airT=1.3; }
 
 // ---------- loop ----------
@@ -4676,7 +4796,7 @@ function frame(now){
   updateDust(dt); updateSpray(dt);
   updateCrowd(dt);
   if(waterTex) waterTex.offset.y-=dt*0.32;
-  updateTrain(dt); updateLeaves(dt,raceT+titleT); updateVolcano(dt); if(race) updateRace(dt); if(jungle && world) updateJungle(dt); if(cliffC && world) updateCliff(dt);
+  updateTrain(dt); updateLeaves(dt,raceT+titleT); updateVolcano(dt); updateWinter(dt); if(race) updateRace(dt); if(jungle && world) updateJungle(dt); if(cliffC && world) updateCliff(dt);
   if(wheelG) wheelG.userData.spin.rotation.z+=dt*0.06;
   if(bridgeG){ const on=st.ground && feat[nI>=0?nI:0]===1, v=Math.min(1,Math.hypot(st.vx,st.vz)/20);
     bridgeG.rotation.z=0.012*Math.sin(titleT*1.3+raceT*1.3)+(on?0.03*Math.sin(raceT*7)*v:0); }
@@ -4705,9 +4825,11 @@ function frame(now){
   hemi.intensity=lerp(0.78,0.15,dark); sun.intensity=lerp(0.95,0.02,dark);
   scene.fog.color.setHex(course.fog).lerp(DARKC,dark); scene.background.copy(scene.fog.color);
   scene.fog.near=lerp(45,5,dark); scene.fog.far=lerp(course.fogFar||250,85,dark);
+  if(eruptK>0){ scene.fog.color.lerp(ASHC,eruptK*0.75); scene.background.copy(scene.fog.color); scene.fog.far*=1-0.35*eruptK; hemi.intensity*=1-0.3*eruptK; sun.intensity*=1-0.45*eruptK; }
+  if(blizK>0){ scene.fog.color.lerp(BLIZC,blizK*0.85); scene.background.copy(scene.fog.color); scene.fog.near=lerp(scene.fog.near,2,blizK); scene.fog.far=lerp(scene.fog.far,64,blizK); hemi.intensity*=1-0.15*blizK; }
   head.intensity=Math.min(1,dark*1.5)*2.4;
   eye+=(dark-eye)*Math.min(1,dt*(dark>eye?1.3:0.75));
-  $('glare').style.opacity=clamp((eye-dark)*1.7,0,0.92); $('dim').style.opacity=clamp((dark-eye)*0.85,0,0.65);
+  $('glare').style.opacity=clamp((eye-dark)*1.7+0.34*blizK,0,0.92); $('dim').style.opacity=clamp((dark-eye)*0.85+0.3*eruptK,0,0.65);
   if(lampMat) lampMat.color.setHSL(0.09,1,0.62+0.05*Math.sin(raceT*23)*Math.sin(raceT*7.3));
   sun.position.set(st.x+40,st.y+70,st.z+25); sun.target.position.set(st.x,st.y,st.z);
   updateSky(dt,dark,raceT+titleT); if(course&&course.type==='stream') updateStream(dt,raceT+titleT);
@@ -4742,7 +4864,7 @@ function stepInner(dt){
   if(st.crash>0){
     st.crash-=dt; leanG.rotation.z+=dt*5; st.speed*=0.9;
     if(st.falling){ st.vy-=22*dt; st.y+=st.vy*dt; st.x+=st.fvx*dt; st.z+=st.fvz*dt; pitchG.rotation.x+=dt*2.2; }
-    if(st.crash<=0){ leanG.rotation.z=0; if(lives<=0 && mode==='race'){ gameOver(); return; } placeAt(st.respawnAt>=0?st.respawnAt:idx); st.respawnAt=-1; if(drv) drv.ghost=2.5; }
+    if(st.crash<=0){ leanG.rotation.z=0; if(lives<=0 && mode==='race'){ gameOver(); return; } if(cliffC&&st.respawnAt<0){ let cp=cliffC.cps[0]; for(const c of cliffC.cps) if(c<=st.progress) cp=c; st.respawnAt=cp; st.progress=cp; cliffReset(); } placeAt(st.respawnAt>=0?st.respawnAt:idx); st.respawnAt=-1; if(drv) drv.ghost=2.5; }
     bike.position.set(st.x,st.y,st.z); return;
   }
   if(cliffC && racing){ const am=st.ground?1:0.4; st.vx+=cliffC.wx*dt*am; st.vz+=cliffC.wz*dt*am; }
@@ -4777,12 +4899,13 @@ function stepInner(dt){
       st.rpm=fwd/GEAR_TOP[st.gear];
     }
     let a=0;
-    if(st.shiftT<=0 && st.rpm<1) a+=st.thrPos*torque(st.rpm)*GEAR_F[st.gear]*(onRoad?1:0.8);
+    const ice=(winter&&gripMul)?clamp((0.7-gripMul[idx])/0.5,0,1):0;   // on glare ice the wheels spin and the brakes barely bite
+    if(st.shiftT<=0 && st.rpm<1) a+=st.thrPos*torque(st.rpm)*GEAR_F[st.gear]*(onRoad?1:0.8)*(1-0.35*ice);
     if(st.rpm>=1 && st.thrPos>0.1) a-=1.2;                       // rev limiter
     if(st.thrPos<0.15 && fwd>0.5) a-=0.4+Math.min(1,st.rpm)*1.4/st.gear*2;   // engine braking, stronger in low gears
     if(st.speed>maxV) a-=onRoad?(mud>0.2?10:4):12;
     rearSlide = racing && st.speed>8 && (keys.slide || (brk && Math.abs(st.steer)>0.4));
-    if(brk){ a-= st.speed>0.3 ? 3+11*st.brkPos : 6.5; }   // holding brake at a standstill reverses, strongly enough to back up a bank
+    if(brk){ a-= (st.speed>0.3 ? 3+11*st.brkPos : 6.5)*(1-0.6*ice); }   // holding brake at a standstill reverses, strongly enough to back up a bank
     if(keys.slide&&racing&&!brk){ a-= st.speed>0.3?5:0; }
     st.speed+=a*dt;
     if(st.speed<-5) st.speed=-5;
