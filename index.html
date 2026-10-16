@@ -253,7 +253,7 @@ body.playing:not(.menu) #chg{display:block}
       <div class="grp drive">DRIVE · のんびり走る</div>
       <button class="course trialc" data-c="drive" role="radio"><b>のんびりドライブ</b><em class="drive">ドライブ</em></button>
       <button class="course trialc" data-c="driverace" role="radio"><b>海岸ダウンヒル・レース</b><em class="race">レース</em></button>
-      <button class="course trialc" data-c="tour" role="radio"><b>日本名所めぐりコース</b><em class="drive">ドライブ</em></button>
+      <button class="course trialc" data-c="tour" role="radio"><b>のんびりドライブ2</b><em class="drive">ドライブ</em></button>
     </div>
     <div class="padsw" role="group" aria-label="ボタン配置">ボタン配置：<button type="button" data-pad="steerL">ハンドル左（ファミコン式）</button><button type="button" data-pad="gasL">アクセル左</button></div>
     <p class="lead" id="courseLead"></p>
@@ -344,7 +344,9 @@ const COURSES={
     eyebrow:'RACE · MOUNTAIN TO LIGHTHOUSE · ONE WAY RACE',
     lead:'のんびりドライブと同じ道を、ライバルのリョウとバトルする一本道レース。リョウのペースは「あなたの自己ベスト −1秒」（ベスト未記録のときは標準ペース）で、コーナーは滑らかに駆け抜ける。走る車や歩行者はいない代わりに、沿道は大勢のギャラリー。道には故障車が止まり、山ではクマ・イノシシ・キツネ・タヌキ・リスが飛び出してくる（出る場所と動物は毎回ランダム）。ぶつかるとライフが減り、3回でゲームオーバー。ゴールは海岸の灯台。',
     seed:8128, width:8, size:1560, seg:460, fog:0xcfe0ea, fogFar:420, adventure:true, type:'drive', open:true, drive:true, racev:true},
-  tour:{id:'tour',name:'日本名所めぐりコース',tag:'',eyebrow:'TOUR · JAPAN SCENIC DRIVE · ONE WAY',lead:'',
+  tour:{id:'tour',name:'のんびりドライブ2',tag:'お釜 → 鉄橋の湖 → 村と町 → 千本鳥居 → 海岸線',
+    eyebrow:'RELAX 2 · JAPAN SCENIC DRIVE · ONE WAY',
+    lead:'のんびりドライブの続き。山の上のお釜を見下ろし、湖に架かる赤い鉄橋を眺め、白川郷のような村と町を抜ける。千本鳥居をくぐった先にはお寺。踏切ではSLや電車が通り、最後は海沿いを走って道の駅がゴール。タイムも順位もなし。',
     seed:8190, width:8, size:1900, seg:520, fog:0xcfe0ea, fogFar:420, adventure:true, type:'drive', open:true, drive:true, tour:true},
   stream:{id:'stream',name:'渓流コース',tag:'ロングジャンプ・滝・カギ型の連続コーナー',
     eyebrow:'MOUNTAIN STREAM · HOOK CHICANE · 3 LAPS',
