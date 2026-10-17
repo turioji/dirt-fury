@@ -305,7 +305,7 @@ const COURSES={
     seed:9157, NC:16, rad:180, radVar:58, ns:1800, width:8, size:680, seg:440, fog:0xb7c5c2, adventure:true, type:'canyon'},
   trial:{id:'trial',name:'フィヨルド・ダウンヒル',tag:'断崖ジャンプ2回・北欧の町・浮き橋',
     eyebrow:'TRIAL · FJORD DOWNHILL · ONE RUN',
-    lead:'雪の残る山頂から一本道で駆け下りる。つづら折り、ガレ場、岩棚の先は、下の見えない断崖ジャンプ。着地したらもう一段の大ジャンプ、北欧風の町をクネクネ抜けて、最後は湖に浮かぶ不安定な浮き橋。対岸にたどり着けばゴール。',
+    lead:'雪の残る山頂から一本道で駆け下りる。つづら折り、ガレ場、岩棚の先は、下の見えない断崖ジャンプ。着地したらもう一段の大ジャンプ、北欧風の町をクネクネ抜けて、最後はフィヨルドの海に浮かぶ不安定な浮き橋。対岸にたどり着けばゴール。',
     seed:6203, width:7, size:1700, seg:620, fog:0xbccad2, adventure:true, type:'trial', open:true},
   cliff:{id:'cliff',name:'断崖絶壁コース',tag:'',eyebrow:'EXTREME · SHEER CLIFF · THREE LIVES',lead:'',seed:7741,width:5,size:900,seg:24,fog:0x7a8cb4,fogFar:130,adventure:true,type:'cliff',open:true,lives:3,night:0.6},
   tanada:{id:'tanada',name:'棚田と農道',tag:'あぜ道・段々ジャンプ・ぬかるみ',
@@ -1404,7 +1404,7 @@ function trialAct2(){
           nearest(x,z); if(nD<HALF+1.0+dp*0.45) continue;
           const y=heightAt(x,z)-0.3; if(y<1.2) continue;
           bryggenHouse(G,x,y,z,-nx*sd,-nz*sd,t.x,t.z,w,dp,7.0+R()*3.6,WALL[Math.floor(R()*WALL.length)],ROOF[Math.floor(R()*ROOF.length)]);
-          addBlock(x,z,{r:Math.max(w,dp)*0.40,top:y+12,big:true,msg:'建物にぶつかった！'});
+          for(let a=-w/2+0.7;a<=w/2-0.6;a+=1.3) for(const b of [dp/2-0.7,dp/2-2.4,dp/2-4.2,0]) addBlock(x+t.x*a-nx*sd*b,z+t.z*a-nz*sd*b,{r:1.5,top:y+12,big:true,msg:'家の壁に激突！'});
           if(adv&&adv.props) adv.props.push([x,z,dp*0.6+4]); }
         s+=5+R()*9; } }
     // cast-iron street lamps along the kerb
@@ -1436,7 +1436,7 @@ function trialAct2(){
   // --- the far shore: a red boathouse beside the finish ---
   { const G=gNew(), i=T.finish, [nx,nz]=lateral(i), t=tan[i], x=pts[i].x+nx*(HALF+8), z=pts[i].z+nz*(HALF+8), y=heightAt(x,z)-0.25;
     bryggenHouse(G,x,y,z,-nx,-nz,t.x,t.z,6.5,9,5.2,0xb03a2a,0x3f4348);
-    addBlock(x,z,{r:3.6,top:y+10,big:true});
+    addBlock(x,z,{r:3.6,top:y+10,big:true,msg:'小屋の壁に激突！'});
     world.add(gMesh(G,new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide}))); }
 }
 function trialFloat(dt){
@@ -5544,7 +5544,7 @@ function stepInner(dt){
   if(st.ground){ const md=Math.hypot(nx-st.x,nz-st.z), hn=heightAt(nx,nz);
     if(md>1e-4 && hn-st.y>0.04 && (hn-st.y)/md>1.7){
       const i=nI>=0?nI:st.lastIdx, [wx,wz]=lateral(i), lat=(nx-pts[i].x)*wx+(nz-pts[i].z)*wz, sg=Math.sign(lat)||1, ux=wx*sg, uz=wz*sg, vn=st.vx*ux+st.vz*uz;
-      if(vn>0){ if(racing && vn>14){ crash(feat[i]===3?'坑道の壁に激突！':'岩壁に激突！'); return; }
+      if(vn>0){ if(racing && vn>14){ crash(feat[i]===3?'坑道の壁に激突！':(trial&&trial.secs[i]==='twn')?'家の壁に激突！':'岩壁に激突！'); return; }
         st.vx-=1.3*vn*ux; st.vz-=1.3*vn*uz; st.vx*=0.85; st.vz*=0.85; st.shake=Math.max(st.shake,0.25); }
       nx=st.x; nz=st.z; } }
   const ox=st.x, oz=st.z;
@@ -5567,7 +5567,7 @@ function stepInner(dt){
     if(trial && st.y<(trialLake()?-1.1:0.4)){ for(let i=0;i<50;i++) emitSpray(st.x,0.2,st.z,(R()-.5)*4,(R()-.5)*4,8);
       st.cine=-1; st.zone=0;
       const lake=trialLake();
-      if(racing){ crash(lake?'湖に落ちた！':'フィヨルドに落ちた！'); return; }
+      if(racing){ crash(lake?'フィヨルドの海に落ちた！':'フィヨルドに落ちた！'); return; }
       let cp=trial.cps[0]; for(const c of trial.cps) if(c<=st.progress) cp=c; placeAt(cp); return; }
     if(tunnel && nI>=0 && feat[nI]===3 && nD<tunnel.TH){ const top=ht[nI]+tunnel.ceil-1.95; if(st.y>top){ st.y=top; if(st.vy>0) st.vy=0; } }   // no flying through the roof
     if(st.y<=h){
