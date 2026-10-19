@@ -1,5 +1,8 @@
 <!doctype html>
 <meta charset="utf-8">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DIRT FURY</title>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-65WZN97GBX"></script>
 <script>
@@ -9,9 +12,6 @@
 
   gtag('config', 'G-65WZN97GBX');
 </script>
-<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DIRT FURY</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Extra+Condensed:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
 <style>
@@ -203,7 +203,7 @@ body.playing:not(.menu) #chg{display:block}
   #tach{width:110px;margin:4px 0 6px auto}
 }
 /* short screens (laptops, phones held sideways): tighten the title screen so the start button stays visible */
-@media (max-height:720px){
+@media (max-height:720px) and (orientation:landscape), (max-height:720px) and (pointer:fine){
   .card{max-width:640px}
   .lead{font-size:13px;line-height:1.55;max-width:52ch}
   .keys{grid-template-columns:auto 1fr auto 1fr;font-size:13px;gap:5px 12px}
